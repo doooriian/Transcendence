@@ -12,5 +12,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+
+
 volumes:
   postgres_data:
