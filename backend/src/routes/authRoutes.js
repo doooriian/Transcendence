@@ -2,6 +2,7 @@ import express from "express";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import prisma from "../prismaClient.js";
+import authToken from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -71,6 +72,31 @@ router.post("/login", async (req, res) => {
     });
 
     res.json({ token });
+  } catch (err) {
+    console.error(err.message);
+    res.sendStatus(500);
+  }
+});
+
+router.get("/me", authToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.userId,
+      },
+      select: {
+        id: true,
+        username: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ user });
   } catch (err) {
     console.error(err.message);
     res.sendStatus(500);
