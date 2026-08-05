@@ -1,21 +1,47 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const navigate = useNavigate();
 
-	function handleLogin() {
-		console.log(username);
-		console.log(password);
+	async function handleLogin() {
+		setError("");
+		const response = await fetch(
+			`${import.meta.env.VITE_API_URL}/api/auth/login`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					username,
+					password,
+				}),
+			}
+		);
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			setError(data.message);
+			console.log(data.message);
+			return;
+		}
+
+		localStorage.setItem("token", data.token);
+		
+		navigate("/");
 	}
 
 	return (
-		<div>
-
+		<main>
 			<h1>Login</h1>
 
 			<input
+				type="text"
 				placeholder="Username"
 				value={username}
 				onChange={(event) => {
@@ -24,8 +50,8 @@ function Login() {
 			/>
 
 			<input
-				placeholder="Password"
 				type="password"
+				placeholder="Password"
 				value={password}
 				onChange={(event) => {
 					setPassword(event.target.value);
@@ -36,7 +62,10 @@ function Login() {
 				Login
 			</button>
 
-		</div>
+			{error && 
+				<p>{error}</p>
+			}
+		</main>
 	);
 }
 
