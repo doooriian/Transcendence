@@ -3,17 +3,18 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
+import validateAuthInput from "../utils/authValidation.js";
 
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const validation = validateAuthInput(req.body.username, req.body.password);
 
-  if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username and password are required" });
+  if (validation.error) {
+    return res.status(400).json({ message: validation.error });
   }
+
+  const { username, password } = validation;
 
   try {
     const hashedPassword = await argon2.hash(password);
@@ -42,13 +43,13 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const validation = validateAuthInput(req.body.username, req.body.password);
 
-  if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username and password are required" });
+  if (validation.error) {
+    return res.status(400).json({ message: validation.error });
   }
+
+  const { username, password } = validation;
 
   try {
     const user = await prisma.user.findUnique({
@@ -58,13 +59,13 @@ router.post("/login", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
     const passwordIsValid = await argon2.verify(user.passwordHash, password);
 
     if (!passwordIsValid) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
