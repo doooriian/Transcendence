@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const navigate = useNavigate();
 
 	async function handleLogin() {
+		setError("");
 		const response = await fetch(
 			`${import.meta.env.VITE_API_URL}/api/auth/login`,
 			{
@@ -22,13 +26,14 @@ function Login() {
 		const data = await response.json();
 
 		if (!response.ok) {
+			setError(data.message);
 			console.log(data.message);
 			return;
 		}
 
 		localStorage.setItem("token", data.token);
-
-		console.log("Connexion réussie !");
+		
+		navigate("/");
 	}
 
 	return (
@@ -56,6 +61,10 @@ function Login() {
 			<button onClick={handleLogin}>
 				Login
 			</button>
+
+			{error && 
+				<p>{error}</p>
+			}
 		</main>
 	);
 }
