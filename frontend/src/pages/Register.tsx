@@ -98,7 +98,7 @@ function Register() {
 						<button
 							onClick={() => navigate("/login")}
 							className="w-full rounded-lg bg-slate-700 py-3 font-semibold hover:bg-slate-600 transition"
-						>
+						>	
 							Login
 						</button>
 
