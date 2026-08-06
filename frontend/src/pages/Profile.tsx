@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getUser, type User } from "../services/users";
+import { getMyProfile, getUser, type User } from "../services/users";
 
 function Profile() {
 	const { username } = useParams();
@@ -11,11 +11,20 @@ function Profile() {
 			if (!username)
 				return;
 
-			const result = await getUser(username);
+			const myUsername = localStorage.getItem("username");
 
-			if (result.ok)
+			let result;
+
+			if (username !== myUsername)
+				result = await getUser(username);
+			else
+				result = await getMyProfile();
+
+			if (result.ok) {
 				setUser(result.data);
+			}
 		}
+
 		loadUser();
 	}, [username]);
 
