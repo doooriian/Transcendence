@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../services/auth";
 
 function Login() {
 	const [username, setUsername] = useState("");
@@ -9,30 +10,15 @@ function Login() {
 
 	async function handleLogin() {
 		setError("");
-		const response = await fetch(
-			`${import.meta.env.VITE_API_URL}/api/auth/login`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					username,
-					password,
-				}),
-			}
-		);
+		const result = await login(username, password);
 
-		const data = await response.json();
-
-		if (!response.ok) {
-			setError(data.message);
-			console.log(data.message);
+		if (!result.ok) {
+			setError(result.data.message);
 			return;
 		}
 
-		localStorage.setItem("token", data.token);
-		
+		localStorage.setItem("token", result.data.token);
+		localStorage.setItem("username", username);
 		navigate("/");
 	}
 
