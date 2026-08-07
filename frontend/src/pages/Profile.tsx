@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getMyProfile, getUser, type User } from "../services/users";
+import Header from "../components/Header";
 
 function Profile() {
 	const { username } = useParams();
@@ -39,6 +40,8 @@ function Profile() {
 	}
 
 	return (
+		<>
+		<Header/>
 		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
 
 			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
@@ -104,6 +107,7 @@ function Profile() {
 			</section>
 
 		</main>
+		</>
 	);
 }
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/auth";
+import Header from "../components/Header";
 
 function Register() {
 	const [username, setUsername] = useState("");
@@ -23,6 +24,8 @@ function Register() {
 	}
 
 	return (
+		<>
+		<Header/>
 		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
 
 			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
@@ -109,6 +112,7 @@ function Register() {
 			</section>
 
 		</main>
+		</>
 	);
 }
 
