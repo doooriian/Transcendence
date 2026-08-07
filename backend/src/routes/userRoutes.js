@@ -11,7 +11,7 @@ router.get("/:username", authToken, async (req, res) => {
         username: req.params.username,
       },
       select: {
-		id: true,
+        id: true,
         username: true,
         createdAt: true,
         updatedAt: true,

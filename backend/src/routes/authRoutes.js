@@ -26,7 +26,7 @@ router.post("/register", async (req, res) => {
       },
     });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ sub: user.authId }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
 
@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ sub: user.authId }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
 
@@ -83,7 +83,7 @@ router.get("/me", authToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id: req.userId,
+        authId: req.authId,
       },
       select: {
         id: true,
@@ -94,7 +94,7 @@ router.get("/me", authToken, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid session" });
     }
 
     res.json({ user });
