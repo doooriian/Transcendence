@@ -1,42 +1,54 @@
 NAME = transcendence
 
+COMPOSE = docker compose
+COMPOSE_DEV = docker compose -f docker-compose.yaml -f docker-compose.dev.yaml
+
 all: up
 
 up:
-	docker compose up -d --build
+	$(COMPOSE) up -d --build
+
+dev:
+	$(COMPOSE_DEV) up --build
 
 build:
-	docker compose build
+	$(COMPOSE) build
 
 down:
-	docker compose down
+	$(COMPOSE) down
 
 stop:
-	docker compose stop
+	$(COMPOSE) stop
+
+start:
+	$(COMPOSE) start
 
 restart: down up
 
 ps:
-	docker compose ps
+	$(COMPOSE) ps
 
 logs:
-	docker compose logs -f
+	$(COMPOSE) logs -f
+
+logs-frontend:
+	$(COMPOSE) logs -f frontend
 
 logs-backend:
-	docker compose logs -f backend
+	$(COMPOSE) logs -f backend
 
 logs-db:
-	docker compose logs -f db
+	$(COMPOSE) logs -f db
 
 db:
-	docker compose up -d db
+	$(COMPOSE) up -d db
 
 clean:
-	docker compose down --remove-orphans
+	$(COMPOSE) down --remove-orphans
 
 fclean:
-	docker compose down -v --rmi all --remove-orphans
+	$(COMPOSE) down -v --rmi all --remove-orphans
 
 re: fclean all
 
-.PHONY: all up build down stop restart ps logs logs-backend logs-db db migrate migrate-status migrate-deploy clean fclean re
+.PHONY: all up dev build down stop restart ps logs logs-backend logs-db db clean fclean re
