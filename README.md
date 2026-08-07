@@ -2,10 +2,10 @@
 
 A 42 school web project built as a multiplayer online gaming platform.
 
-The project is currently in its bootstrap phase.
-The current setup includes a React frontend, an Express backend, TypeScript, Tailwind CSS, and a basic frontend/backend healthcheck.
+The project is currently in its backend setup phase.
+It includes a React frontend bootstrap, an Express backend, PostgreSQL, Prisma, Docker, and a first authentication flow.
 
-## Tech stack
+## Tech Stack
 
 ### Frontend
 
@@ -18,122 +18,156 @@ The current setup includes a React frontend, an Express backend, TypeScript, Tai
 
 * Node.js
 * Express
-* TypeScript
-
-### Planned
-
+* JavaScript ESM
+* Prisma 7
 * PostgreSQL
-* Prisma
-* WebSockets
-* Docker
-* HTTPS reverse proxy
+* argon2
+* jsonwebtoken
 
-## Project structure
+### DevOps
+
+* Docker
+* Docker Compose
+* Makefile
+
+## Project Structure
 
 ```txt
 Transcendence/
 ├── backend/
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   └── schema.prisma
 │   ├── src/
-│   │   └── server.ts
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   └── healthRoutes.js
+│   │   ├── generated/
+│   │   ├── prismaClient.js
+│   │   └── server.js
+│   ├── Dockerfile
 │   ├── package.json
-│   └── tsconfig.json
+│   └── prisma.config.ts
 ├── frontend/
 │   ├── src/
 │   │   └── App.tsx
 │   ├── package.json
 │   └── vite.config.ts
-├── README.md
-└── .gitignore
+├── docker-compose.yaml
+├── Makefile
+├── .env.example
+└── README.md
 ```
 
 ## Requirements
 
 Before running the project, make sure you have:
 
-* Node.js
-* npm
+* Docker
+* Docker Compose
+* Make
 
-## Environment variables
+Node.js and npm are only required if you want to run the frontend, the backend, or Prisma commands outside Docker.
 
-Environment files are required locally, but must not be committed.
+## Environment Variables
 
-### Backend
+Create a `.env` file at the root of the project:
 
-Create:
-
-```txt
-backend/.env
+```bash
+cp .env.example .env
 ```
 
 Example:
 
 ```env
-BACKEND_PORT=1414
+JWT_SECRET="change_me"
+
+VITE_API_URL=http://localhost:3000
+
+POSTGRES_PORT=5432
+POSTGRES_DB=transcendence_dev
+POSTGRES_USER=transcendence_user
+POSTGRES_PASSWORD=change_me
 ```
 
-### Frontend
+The backend receives its Docker database URL from `docker-compose.yaml`.
 
-Create:
+Inside Docker, the backend connects to PostgreSQL through:
 
 ```txt
-frontend/.env
+db:5432
 ```
 
-Example:
+If you want to run Prisma commands from your machine, you can use a local database URL like this:
 
 ```env
-VITE_API_URL=http://localhost:1414
+DATABASE_URL="postgresql://transcendence_user:change_me@localhost:5432/transcendence_dev?schema=public"
 ```
 
-The frontend uses `VITE_API_URL` to contact the backend API.
+## Run With Docker
 
-## Installation
-
-Install backend dependencies:
+Start the backend and database:
 
 ```bash
-cd backend
-npm install
+make up
 ```
 
-Install frontend dependencies:
+Or directly:
 
 ```bash
-cd frontend
-npm install
+docker compose up -d --build
 ```
 
-## Run the project in development
-
-Start the backend:
-
-```bash
-cd backend
-npm run dev
-```
-
-The backend should run on:
+The backend runs on:
 
 ```txt
-http://localhost:1414
+http://localhost:3000
 ```
 
-Start the frontend in another terminal:
+The database is exposed on:
+
+```txt
+localhost:5432
+```
+
+## Makefile Commands
 
 ```bash
-cd frontend
-npm run dev
+make up             # build and start containers
+make build          # build Docker images
+make down           # stop and remove containers
+make stop           # stop containers
+make restart        # restart containers
+make ps             # show services status
+make logs           # follow all logs
+make logs-backend   # follow backend logs
+make logs-db        # follow database logs
+make db             # start only the database
+make clean          # remove containers and orphans
+make fclean         # remove containers, images, volumes and orphans
+make re             # full clean rebuild
 ```
 
-The frontend should run on:
+## Backend
+
+The backend is an Express API using JavaScript ESM.
+
+It listens on port `3000`.
+
+Main middlewares:
+
+* `cors`
+* `express.json()`
+
+CORS currently allows:
 
 ```txt
 http://localhost:5173
 ```
 
-## Healthcheck
+## API Endpoints
 
-The backend exposes a healthcheck endpoint:
+### Healthcheck
 
 ```txt
 GET /health
@@ -143,45 +177,189 @@ Expected response:
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "service": "backend"
 }
 ```
 
-The frontend calls this endpoint and displays the backend status on the homepage.
-
-If the backend is running, the frontend should display:
+### Register
 
 ```txt
-Backend status: ok
+POST /api/auth/register
 ```
 
-If the backend is stopped or unreachable, the frontend should display:
+Body:
+
+```json
+{
+  "username": "john",
+  "password": "doe"
+}
+```
+
+Expected success response:
+
+```json
+{
+  "token": "jwt_token"
+}
+```
+
+Possible errors:
+
+* `400` if username or password is missing
+* `409` if username already exists
+* `500` on server error
+
+### Login
 
 ```txt
-Backend status: unreachable
+POST /api/auth/login
 ```
 
-## Build
+Body:
 
-Build the backend:
+```json
+{
+  "username": "john",
+  "password": "doe"
+}
+```
+
+Expected success response:
+
+```json
+{
+  "token": "jwt_token"
+}
+```
+
+Possible errors:
+
+* `400` if username or password is missing
+* `404` if user does not exist
+* `401` if password is invalid
+* `500` on server error
+
+## Database
+
+The database uses PostgreSQL with Prisma.
+
+Current Prisma model:
+
+```prisma
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+```
+
+Passwords are hashed with `argon2`.
+
+Authentication tokens are generated with `jsonwebtoken`.
+
+## Prisma Migrations
+
+Prisma migrations are stored in:
+
+```txt
+backend/prisma/migrations/
+```
+
+They must be committed to Git.
+
+When the backend container starts, `npm start` automatically runs:
+
+```bash
+npx prisma migrate deploy
+```
+
+This is done through the `prestart` script in `backend/package.json`.
+
+So when someone runs:
+
+```bash
+docker compose up -d --build
+```
+
+Docker starts PostgreSQL, starts the backend, applies pending Prisma migrations, then launches the server.
+
+To create a new migration after editing `schema.prisma`, start the database first:
+
+```bash
+make db
+```
+
+Then run Prisma locally from the backend folder:
 
 ```bash
 cd backend
-npm run build
+DATABASE_URL="postgresql://transcendence_user:change_me@localhost:5432/transcendence_dev?schema=public" npx prisma migrate dev --name migration_name
 ```
 
-Build the frontend:
+Then commit both:
+
+```txt
+backend/prisma/schema.prisma
+backend/prisma/migrations/
+```
+
+## Frontend
+
+The frontend is a Vite React app.
+
+Install dependencies:
 
 ```bash
 cd frontend
-npm run build
+npm install
 ```
 
-Generated `dist/` folders are ignored by Git and should not be committed.
+Start the frontend:
 
-## Git workflow
+```bash
+npm run dev
+```
 
-We use the following branch workflow:
+The frontend runs on:
+
+```txt
+http://localhost:5173
+```
+
+It calls the backend healthcheck endpoint using:
+
+```txt
+VITE_API_URL
+```
+
+## Local Backend Development
+
+Install backend dependencies:
+
+```bash
+cd backend
+npm install
+```
+
+Start the backend locally:
+
+```bash
+npm run dev
+```
+
+The dev script loads the root `.env` file with:
+
+```txt
+--env-file=../.env
+```
+
+## Git Workflow
+
+Main branches:
 
 ```txt
 main = stable branch
@@ -189,7 +367,7 @@ dev = integration branch
 feature branches = temporary development branches
 ```
 
-New work should be done from an up-to-date `dev` branch:
+Create a branch from `dev`:
 
 ```bash
 git checkout dev
@@ -197,42 +375,45 @@ git pull origin dev
 git checkout -b feature-branch-name
 ```
 
-After the work is done:
-
-```bash
-git add .
-git commit -m "type(scope): short description"
-git push -u origin feature-branch-name
-```
-
-Then open a pull request into `dev`.
-
-Branches should be deleted after they are merged.
-
-## Commit examples
+Commit format examples:
 
 ```txt
-chore(frontend): add Tailwind CSS
-feat(frontend): add backend healthcheck
-chore(backend): update TypeScript config
+feat(backend): add authentication routes
+feat(db): add initial Prisma migration
+chore(devops): add Docker workflow
 docs: update README setup instructions
 ```
 
-## Current status
+Open pull requests into `dev`.
+
+Branches should be deleted after they are merged.
+
+## Current Status
 
 Implemented:
 
-* frontend bootstrap with React, Vite and TypeScript
+* React frontend bootstrap
 * Tailwind CSS setup
-* backend bootstrap with Express and TypeScript
-* backend `/health` endpoint
-* frontend healthcheck call to the backend
+* frontend/backend healthcheck display
+* Express backend setup
+* PostgreSQL Docker service
+* Prisma 7 setup
+* initial User model
+* Prisma migration workflow
+* user registration route
+* user login route
+* password hashing with argon2
+* JWT generation
+* Dockerfile for backend
+* Docker Compose setup for backend and database
+* Makefile Docker workflow
 
 Next steps:
 
-* add PostgreSQL
-* add Prisma
-* create the first database models
-* add backend database healthcheck
-* prepare authentication and user management
+* add frontend authentication pages
+* add authentication middleware
+* protect private backend routes
+* improve backend error handling
+* add database healthcheck endpoint
 * prepare WebSocket architecture for multiplayer games
+* add game and match history models
