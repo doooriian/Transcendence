@@ -1,5 +1,16 @@
 import jwt from "jsonwebtoken";
 
+/**
+ * Verifies the JWT sent in the Authorization header.
+ *
+ * Expects the following format:
+ * Authorization: Bearer <token>
+ *
+ * If the token is valid, its `sub` claim is stored in `req.authId`
+ * so protected routes can identify the authenticated user.
+ *
+ * This middleware only validates the token and does not query the database.
+ */
 function authToken(req, res, next) {
   const authorizationHeader = req.headers.authorization;
 

@@ -4,6 +4,11 @@ import authToken from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+/**
+ * Returns the public profile of a user identified by username.
+ *
+ * Authentication is required before accessing this route.
+ */
 router.get("/:username", authToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({

@@ -8,6 +8,7 @@ all: up
 up:
 	$(COMPOSE) up -d --build
 
+# Start the development environment with hot reload.
 dev:
 	$(COMPOSE_DEV) up --build
 
@@ -40,12 +41,14 @@ logs-backend:
 logs-db:
 	$(COMPOSE) logs -f db
 
+# Start only PostgreSQL, useful for local Prisma commands.
 db:
 	$(COMPOSE) up -d db
 
 clean:
 	$(COMPOSE) down --remove-orphans
 
+# Full reset including Docker images and the PostgreSQL volume.
 fclean:
 	$(COMPOSE) down -v --rmi all --remove-orphans
 
