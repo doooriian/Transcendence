@@ -51,4 +51,4 @@ fclean:
 
 re: fclean all
 
-.PHONY: all up dev build down stop restart ps logs logs-backend logs-db db clean fclean re
+.PHONY: all up dev build down stop start restart ps logs logs-frontend logs-backend logs-db db clean fclean re

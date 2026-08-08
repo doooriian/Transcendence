@@ -1,419 +1,227 @@
-# Transcendence
+# ft_transcendence
 
-A 42 school web project built as a multiplayer online gaming platform.
+A full-stack multiplayer gaming platform developed as part of the **42 curriculum**.
 
-The project is currently in its backend setup phase.
-It includes a React frontend bootstrap, an Express backend, PostgreSQL, Prisma, Docker, and a first authentication flow.
+The project brings together a modern React frontend, an Express API, PostgreSQL persistence and real-time-oriented architecture in a fully Dockerized environment.
 
-## Tech Stack
+---
 
-### Frontend
+## ✨ Features
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
+* User registration and login
+* JWT-based authentication
+* User profiles
+* Responsive navigation
+* Persistent PostgreSQL database
+* Frontend and backend hot reload
+* Dockerized development environment
 
-### Backend
+More social and multiplayer features will be added as the project evolves.
 
-* Node.js
-* Express
-* JavaScript ESM
-* Prisma 7
-* PostgreSQL
-* argon2
-* jsonwebtoken
 
-### DevOps
+## 🛠️ Tech Stack
 
-* Docker
-* Docker Compose
-* Makefile
+| Frontend     | Backend      | Database   | Tools          |
+| ------------ | ------------ | ---------- | -------------- |
+| React        | Node.js      | PostgreSQL | Docker         |
+| TypeScript   | Express      | Prisma     | Docker Compose |
+| Vite         | JavaScript   |            | Makefile       |
+| Tailwind CSS | JWT / Argon2 |            |                |
 
-## Project Structure
 
-```txt
+## 🏗️ Architecture
+
+```text
+        ┌──────────────────┐
+        │     Frontend     │
+        │   React + Vite   │
+        │      :5173       │
+        └────────┬─────────┘
+                 │
+                 │ HTTP
+                 ▼
+        ┌──────────────────┐
+        │     Backend      │
+        │ Node.js + Express│
+        │      :3000       │
+        └────────┬─────────┘
+                 │
+                 │ Prisma
+                 ▼
+        ┌──────────────────┐
+        │    PostgreSQL    │
+        │      :5432       │
+        └──────────────────┘
+```
+
+The application is split into three Docker services:
+
+* **frontend** — user interface
+* **backend** — API and application logic
+* **db** — persistent PostgreSQL database
+
+
+## 📁 Project Structure
+
+```text
 Transcendence/
 ├── backend/
-│   ├── prisma/
-│   │   ├── migrations/
-│   │   └── schema.prisma
-│   ├── src/
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   └── healthRoutes.js
-│   │   ├── generated/
-│   │   ├── prismaClient.js
-│   │   └── server.js
-│   ├── Dockerfile
-│   ├── package.json
-│   └── prisma.config.ts
+│   ├── prisma/               # Database schema and migrations
+│   ├── src/                  # Backend application source code
+│   └── Dockerfile
+│
 ├── frontend/
-│   ├── src/
-│   │   └── App.tsx
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yaml
-├── Makefile
-├── .env.example
+│   ├── src/                  # React application source code
+│   └── Dockerfile
+│
+├── docker-compose.yaml       # Main Docker environment
+├── docker-compose.dev.yaml   # Development and hot reload overrides
+├── Makefile                  # Project commands
+├── .env.example              # Environment variables template
 └── README.md
 ```
 
-## Requirements
 
-Before running the project, make sure you have:
+## 🚀 Getting Started
+
+### Requirements
+
+You only need:
 
 * Docker
 * Docker Compose
 * Make
 
-Node.js and npm are only required if you want to run the frontend, the backend, or Prisma commands outside Docker.
+### Environment
 
-## Environment Variables
-
-Create a `.env` file at the root of the project:
+Create your local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Example:
+Then update the values if needed.
 
-```env
-JWT_SECRET="change_me"
 
-VITE_API_URL=http://localhost:3000
+## ▶️ Run the Project
 
-POSTGRES_PORT=5432
-POSTGRES_DB=transcendence_dev
-POSTGRES_USER=transcendence_user
-POSTGRES_PASSWORD=change_me
-```
-
-The backend receives its Docker database URL from `docker-compose.yaml`.
-
-Inside Docker, the backend connects to PostgreSQL through:
-
-```txt
-db:5432
-```
-
-If you want to run Prisma commands from your machine, you can use a local database URL like this:
-
-```env
-DATABASE_URL="postgresql://transcendence_user:change_me@localhost:5432/transcendence_dev?schema=public"
-```
-
-## Run With Docker
-
-Start the backend and database:
+### Standard mode
 
 ```bash
-make up
+make
 ```
 
-Or directly:
+The application will be available at:
+
+```text
+Frontend  → http://localhost:5173
+Backend   → http://localhost:3000
+```
+
+### Development mode
 
 ```bash
-docker compose up -d --build
+make dev
 ```
 
-The backend runs on:
+Development mode enables hot reload for both the frontend and backend.
 
-```txt
-http://localhost:3000
-```
+Changes to React files are immediately reflected by Vite, while backend changes automatically restart the Node.js server.
 
-The database is exposed on:
+No Docker rebuild is required after each source code modification.
 
-```txt
-localhost:5432
-```
 
-## Makefile Commands
+## 🔧 Makefile Commands
+
+The project provides shortcuts for the most common Docker operations:
 
 ```bash
-make up             # build and start containers
-make build          # build Docker images
-make down           # stop and remove containers
-make stop           # stop containers
-make restart        # restart containers
-make ps             # show services status
-make logs           # follow all logs
-make logs-backend   # follow backend logs
-make logs-db        # follow database logs
-make db             # start only the database
-make clean          # remove containers and orphans
-make fclean         # remove containers, images, volumes and orphans
-make re             # full clean rebuild
+make               # Build and start the project
+make up            # Same as make
+make dev           # Start the development environment with hot reload
+
+make build         # Build Docker images
+make start         # Start existing stopped containers
+make stop          # Stop containers without removing them
+make restart       # Recreate and restart the standard environment
+make down          # Stop and remove containers
+
+make ps            # Show container status
+
+make logs          # Follow logs from all services
+make logs-frontend # Follow frontend logs
+make logs-backend  # Follow backend logs
+make logs-db       # Follow PostgreSQL logs
+
+make db            # Start PostgreSQL only
+
+make clean         # Remove containers and orphan containers
+make fclean        # Remove containers, images, volumes and database data
+make re            # Full clean rebuild
 ```
 
-## Backend
 
-The backend is an Express API using JavaScript ESM.
 
-It listens on port `3000`.
+## 🔐 Authentication
 
-Main middlewares:
+Authentication is handled by the backend using **JWT**.
 
-* `cors`
-* `express.json()`
+Passwords are never stored directly in the database and are hashed using **Argon2**.
 
-CORS currently allows:
+The authentication system supports two entry points:
 
-```txt
-http://localhost:5173
+```text
+Register ──┐
+           ├──> JWT token ──> Authenticated session ──> User profile
+Login ─────┘
 ```
 
-## API Endpoints
 
-### Healthcheck
+Protected API routes require:
 
-```txt
-GET /health
+```text
+Authorization: Bearer <token>
 ```
 
-Expected response:
+## 🗄️ Database
 
-```json
-{
-  "status": "ok",
-  "service": "backend"
-}
+The project uses **PostgreSQL** with **Prisma ORM**.
+
+Database changes are versioned through Prisma migrations and are automatically applied when the backend starts.
+
+The PostgreSQL data is persisted in a Docker volume and therefore survives normal container restarts.
+
+
+## 🌿 Git Workflow
+
+Development is done from the `dev` branch.
+
+```text
+main
+ └── stable milestones
+
+dev
+ └── integration branch
+
+feature / fix / chore / docs branches
+ └── individual tasks
 ```
 
-### Register
-
-```txt
-POST /api/auth/register
-```
-
-Body:
-
-```json
-{
-  "username": "john",
-  "password": "doe"
-}
-```
-
-Expected success response:
-
-```json
-{
-  "token": "jwt_token"
-}
-```
-
-Possible errors:
-
-* `400` if username or password is missing
-* `409` if username already exists
-* `500` on server error
-
-### Login
-
-```txt
-POST /api/auth/login
-```
-
-Body:
-
-```json
-{
-  "username": "john",
-  "password": "doe"
-}
-```
-
-Expected success response:
-
-```json
-{
-  "token": "jwt_token"
-}
-```
-
-Possible errors:
-
-* `400` if username or password is missing
-* `404` if user does not exist
-* `401` if password is invalid
-* `500` on server error
-
-## Database
-
-The database uses PostgreSQL with Prisma.
-
-Current Prisma model:
-
-```prisma
-model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-```
-
-Passwords are hashed with `argon2`.
-
-Authentication tokens are generated with `jsonwebtoken`.
-
-## Prisma Migrations
-
-Prisma migrations are stored in:
-
-```txt
-backend/prisma/migrations/
-```
-
-They must be committed to Git.
-
-When the backend container starts, `npm start` automatically runs:
-
-```bash
-npx prisma migrate deploy
-```
-
-This is done through the `prestart` script in `backend/package.json`.
-
-So when someone runs:
-
-```bash
-docker compose up -d --build
-```
-
-Docker starts PostgreSQL, starts the backend, applies pending Prisma migrations, then launches the server.
-
-To create a new migration after editing `schema.prisma`, start the database first:
-
-```bash
-make db
-```
-
-Then run Prisma locally from the backend folder:
-
-```bash
-cd backend
-DATABASE_URL="postgresql://transcendence_user:change_me@localhost:5432/transcendence_dev?schema=public" npx prisma migrate dev --name migration_name
-```
-
-Then commit both:
-
-```txt
-backend/prisma/schema.prisma
-backend/prisma/migrations/
-```
-
-## Frontend
-
-The frontend is a Vite React app.
-
-Install dependencies:
-
-```bash
-cd frontend
-npm install
-```
-
-Start the frontend:
-
-```bash
-npm run dev
-```
-
-The frontend runs on:
-
-```txt
-http://localhost:5173
-```
-
-It calls the backend healthcheck endpoint using:
-
-```txt
-VITE_API_URL
-```
-
-## Local Backend Development
-
-Install backend dependencies:
-
-```bash
-cd backend
-npm install
-```
-
-Start the backend locally:
-
-```bash
-npm run dev
-```
-
-The dev script loads the root `.env` file with:
-
-```txt
---env-file=../.env
-```
-
-## Git Workflow
-
-Main branches:
-
-```txt
-main = stable branch
-dev = integration branch
-feature branches = temporary development branches
-```
-
-Create a branch from `dev`:
+Typical workflow:
 
 ```bash
 git checkout dev
-git pull origin dev
-git checkout -b feature-branch-name
+git pull
+git checkout -b feature/my-feature
 ```
 
-Commit format examples:
+Once the task is ready, a Pull Request is opened into `dev`.
 
-```txt
-feat(backend): add authentication routes
-feat(db): add initial Prisma migration
-chore(devops): add Docker workflow
-docs: update README setup instructions
-```
+Stable versions of `dev` are then merged into `main`.
 
-Open pull requests into `dev`.
 
-Branches should be deleted after they are merged.
+## 🎮 What's Next
 
-## Current Status
+The current foundation provides authentication, profiles, frontend navigation, database persistence and the development environment required for the rest of the project.
 
-Implemented:
-
-* React frontend bootstrap
-* Tailwind CSS setup
-* frontend/backend healthcheck display
-* Express backend setup
-* PostgreSQL Docker service
-* Prisma 7 setup
-* initial User model
-* Prisma migration workflow
-* user registration route
-* user login route
-* password hashing with argon2
-* JWT generation
-* Dockerfile for backend
-* Docker Compose setup for backend and database
-* Makefile Docker workflow
-
-Next steps:
-
-* add frontend authentication pages
-* add authentication middleware
-* protect private backend routes
-* improve backend error handling
-* add database healthcheck endpoint
-* prepare WebSocket architecture for multiplayer games
-* add game and match history models
+Next development phases will focus on the multiplayer and social aspects of the platform.
