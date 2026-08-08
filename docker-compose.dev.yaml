@@ -1,11 +1,16 @@
 services:
   frontend:
     volumes:
+      # Mount local frontend source code for Vite hot reload.
       - ./frontend:/app
+      # Keep container dependencies separate from host dependencies.
       - /app/node_modules
 
   backend:
     volumes:
+      # Mount local backend source code for Node watch mode.
       - ./backend:/app
+      # Keep container dependencies separate from host dependencies.
       - /app/node_modules
+    # Override the Dockerfile command to run the backend in watch mode.
     command: npm run dev

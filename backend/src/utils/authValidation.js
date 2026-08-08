@@ -5,6 +5,12 @@ const PASSWORD_MAX_LENGTH = 128;
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 
+/**
+ * Validates and normalizes authentication credentials.
+ *
+ * Returns an `error` message if the username or password is invalid.
+ * Otherwise, returns the normalized username and the original password.
+ */
 function validateAuthInput(username, password) {
   if (typeof username !== "string" || typeof password !== "string") {
     return {

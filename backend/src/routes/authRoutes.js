@@ -7,6 +7,12 @@ import validateAuthInput from "../utils/authValidation.js";
 
 const router = express.Router();
 
+/**
+ * Registers a new user.
+ *
+ * Validates the provided credentials, hashes the password,
+ * stores the user in the database and returns a JWT.
+ */
 router.post("/register", async (req, res) => {
   const validation = validateAuthInput(req.body.username, req.body.password);
 
@@ -34,6 +40,7 @@ router.post("/register", async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
+    // Prisma P2002: unique constraint violation (username already exists).
     if (err.code === "P2002") {
       return res.status(409).json({ message: "Username already exists" });
     }
@@ -42,6 +49,12 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * Authenticates an existing user.
+ *
+ * Verifies the username and password and returns a JWT
+ * when the credentials are valid.
+ */
 router.post("/login", async (req, res) => {
   const validation = validateAuthInput(req.body.username, req.body.password);
 
@@ -79,6 +92,12 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * Returns the currently authenticated user's profile.
+ *
+ * The authentication middleware verifies the JWT and exposes
+ * the user's authentication identifier through `req.authId`.
+ */
 router.get("/me", authToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
