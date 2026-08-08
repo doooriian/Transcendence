@@ -2,7 +2,8 @@
 
 A full-stack multiplayer gaming platform developed as part of the **42 curriculum**.
 
-The project brings together a modern React frontend, an Express API, PostgreSQL persistence and real-time-oriented architecture in a fully Dockerized environment.
+The project brings together a modern React frontend, an Express API,
+PostgreSQL persistence and a fully Dockerized development environment.
 
 ---
 
@@ -11,7 +12,7 @@ The project brings together a modern React frontend, an Express API, PostgreSQL 
 * User registration and login
 * JWT-based authentication
 * User profiles
-* Responsive navigation
+* Frontend navigation
 * Persistent PostgreSQL database
 * Frontend and backend hot reload
 * Dockerized development environment
