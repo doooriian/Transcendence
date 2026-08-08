@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getMyProfile, getUser, type User } from "../services/users";
 import Header from "../components/Header";
+import { useAuth } from "../context/AuthContext";
 
 function Profile() {
 	const { username } = useParams();
 	const [user, setUser] = useState<User | null>(null);
+	const { username: myUsername } = useAuth();
 
 	useEffect(() => {
 		async function loadUser() {
 			if (!username)
 				return;
-
-			const myUsername = localStorage.getItem("username");
 
 			let result;
 

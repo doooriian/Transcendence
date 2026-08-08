@@ -1,15 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Header() {
+	const { isLoggedIn, username, logout } = useAuth();
 	const navigate = useNavigate();
 
-	const token = localStorage.getItem("token");
-	const username = localStorage.getItem("username");
-
 	function handleLogout() {
-		localStorage.removeItem("token");
-		localStorage.removeItem("username");
-
+		logout();
 		navigate("/");
 	}
 
@@ -27,21 +24,13 @@ function Header() {
 
 				<nav className="flex items-center gap-6">
 
-					<Link
-						to="/"
-						className="text-slate-300 hover:text-blue-400 transition"
-					>
-						Home
-					</Link>
-
-
-					{token ? (
+					{isLoggedIn ? (
 						<>
 							<Link
 								to={`/profile/${username}`}
 								className="text-slate-300 hover:text-blue-400 transition"
 							>
-								Profile
+								{username}
 							</Link>
 
 							<button

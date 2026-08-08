@@ -1,20 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
+import { useAuth } from "../context/AuthContext";
 
 type BackendHealth = {
 	status: string;
 };
 
 function Home() {
+	const { isLoggedIn, username, logout } = useAuth();
 	const navigate = useNavigate();
 
 	const [backendStatus, setBackendStatus] = useState("loading");
-	const [isLoggedIn, setIsLoggedIn] = useState(
-		localStorage.getItem("token") !== null
-	);
-
-	const username = localStorage.getItem("username");
 
 	useEffect(() => {
 		async function checkBackendHealth() {
@@ -43,11 +40,7 @@ function Home() {
 	}, []);
 
 	function handleLogout() {
-		localStorage.removeItem("token");
-		localStorage.removeItem("username");
-
-		setIsLoggedIn(false);
-
+		logout();
 		navigate("/");
 	}
 

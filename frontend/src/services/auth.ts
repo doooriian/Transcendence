@@ -21,7 +21,7 @@ export async function register(username: string, password: string) {
 	};
 }
 
-export async function login(username: string, password: string) {
+export async function loginResponse(username: string, password: string) {
 	const response = await fetch(
 		`${import.meta.env.VITE_API_URL}/api/auth/login`,
 		{
