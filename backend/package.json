@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch --env-file=../.env ./src/server.js",
+    "predev": "npx prisma generate && npx prisma migrate deploy",
+    "dev": "node --watch ./src/server.js",
     "prestart": "npx prisma generate && npx prisma migrate deploy",
     "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
