@@ -1,238 +1,228 @@
-# Transcendence
+# ft_transcendence
 
-A 42 school web project built as a multiplayer online gaming platform.
+A full-stack multiplayer gaming platform developed as part of the **42 curriculum**.
 
-The project is currently in its bootstrap phase.
-The current setup includes a React frontend, an Express backend, TypeScript, Tailwind CSS, and a basic frontend/backend healthcheck.
+The project brings together a modern React frontend, an Express API,
+PostgreSQL persistence and a fully Dockerized development environment.
 
-## Tech stack
+---
 
-### Frontend
+## ✨ Features
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
+* User registration and login
+* JWT-based authentication
+* User profiles
+* Frontend navigation
+* Persistent PostgreSQL database
+* Frontend and backend hot reload
+* Dockerized development environment
 
-### Backend
+More social and multiplayer features will be added as the project evolves.
 
-* Node.js
-* Express
-* TypeScript
 
-### Planned
+## 🛠️ Tech Stack
 
-* PostgreSQL
-* Prisma
-* WebSockets
-* Docker
-* HTTPS reverse proxy
+| Frontend     | Backend      | Database   | Tools          |
+| ------------ | ------------ | ---------- | -------------- |
+| React        | Node.js      | PostgreSQL | Docker         |
+| TypeScript   | Express      | Prisma     | Docker Compose |
+| Vite         | JavaScript   |            | Makefile       |
+| Tailwind CSS | JWT / Argon2 |            |                |
 
-## Project structure
 
-```txt
+## 🏗️ Architecture
+
+```text
+        ┌──────────────────┐
+        │     Frontend     │
+        │   React + Vite   │
+        │      :5173       │
+        └────────┬─────────┘
+                 │
+                 │ HTTP
+                 ▼
+        ┌──────────────────┐
+        │     Backend      │
+        │ Node.js + Express│
+        │      :3000       │
+        └────────┬─────────┘
+                 │
+                 │ Prisma
+                 ▼
+        ┌──────────────────┐
+        │    PostgreSQL    │
+        │      :5432       │
+        └──────────────────┘
+```
+
+The application is split into three Docker services:
+
+* **frontend** — user interface
+* **backend** — API and application logic
+* **db** — persistent PostgreSQL database
+
+
+## 📁 Project Structure
+
+```text
 Transcendence/
 ├── backend/
-│   ├── src/
-│   │   └── server.ts
-│   ├── package.json
-│   └── tsconfig.json
+│   ├── prisma/               # Database schema and migrations
+│   ├── src/                  # Backend application source code
+│   └── Dockerfile
+│
 ├── frontend/
-│   ├── src/
-│   │   └── App.tsx
-│   ├── package.json
-│   └── vite.config.ts
-├── README.md
-└── .gitignore
+│   ├── src/                  # React application source code
+│   └── Dockerfile
+│
+├── docker-compose.yaml       # Main Docker environment
+├── docker-compose.dev.yaml   # Development and hot reload overrides
+├── Makefile                  # Project commands
+├── .env.example              # Environment variables template
+└── README.md
 ```
 
-## Requirements
 
-Before running the project, make sure you have:
+## 🚀 Getting Started
 
-* Node.js
-* npm
+### Requirements
 
-## Environment variables
+You only need:
 
-Environment files are required locally, but must not be committed.
+* Docker
+* Docker Compose
+* Make
 
-### Backend
+### Environment
 
-Create:
-
-```txt
-backend/.env
-```
-
-Example:
-
-```env
-BACKEND_PORT=1414
-```
-
-### Frontend
-
-Create:
-
-```txt
-frontend/.env
-```
-
-Example:
-
-```env
-VITE_API_URL=http://localhost:1414
-```
-
-The frontend uses `VITE_API_URL` to contact the backend API.
-
-## Installation
-
-Install backend dependencies:
+Create your local environment file:
 
 ```bash
-cd backend
-npm install
+cp .env.example .env
 ```
 
-Install frontend dependencies:
+Then update the values if needed.
+
+
+## ▶️ Run the Project
+
+### Standard mode
 
 ```bash
-cd frontend
-npm install
+make
 ```
 
-## Run the project in development
+The application will be available at:
 
-Start the backend:
+```text
+Frontend  → http://localhost:5173
+Backend   → http://localhost:3000
+```
+
+### Development mode
 
 ```bash
-cd backend
-npm run dev
+make dev
 ```
 
-The backend should run on:
+Development mode enables hot reload for both the frontend and backend.
 
-```txt
-http://localhost:1414
-```
+Changes to React files are immediately reflected by Vite, while backend changes automatically restart the Node.js server.
 
-Start the frontend in another terminal:
+No Docker rebuild is required after each source code modification.
+
+
+## 🔧 Makefile Commands
+
+The project provides shortcuts for the most common Docker operations:
 
 ```bash
-cd frontend
-npm run dev
+make               # Build and start the project
+make up            # Same as make
+make dev           # Start the development environment with hot reload
+
+make build         # Build Docker images
+make start         # Start existing stopped containers
+make stop          # Stop containers without removing them
+make restart       # Recreate and restart the standard environment
+make down          # Stop and remove containers
+
+make ps            # Show container status
+
+make logs          # Follow logs from all services
+make logs-frontend # Follow frontend logs
+make logs-backend  # Follow backend logs
+make logs-db       # Follow PostgreSQL logs
+
+make db            # Start PostgreSQL only
+
+make clean         # Remove containers and orphan containers
+make fclean        # Remove containers, images, volumes and database data
+make re            # Full clean rebuild
 ```
 
-The frontend should run on:
 
-```txt
-http://localhost:5173
+
+## 🔐 Authentication
+
+Authentication is handled by the backend using **JWT**.
+
+Passwords are never stored directly in the database and are hashed using **Argon2**.
+
+The authentication system supports two entry points:
+
+```text
+Register ──┐
+           ├──> JWT token ──> Authenticated session ──> User profile
+Login ─────┘
 ```
 
-## Healthcheck
 
-The backend exposes a healthcheck endpoint:
+Protected API routes require:
 
-```txt
-GET /health
+```text
+Authorization: Bearer <token>
 ```
 
-Expected response:
+## 🗄️ Database
 
-```json
-{
-  "status": "ok"
-}
+The project uses **PostgreSQL** with **Prisma ORM**.
+
+Database changes are versioned through Prisma migrations and are automatically applied when the backend starts.
+
+The PostgreSQL data is persisted in a Docker volume and therefore survives normal container restarts.
+
+
+## 🌿 Git Workflow
+
+Development is done from the `dev` branch.
+
+```text
+main
+ └── stable milestones
+
+dev
+ └── integration branch
+
+feature / fix / chore / docs branches
+ └── individual tasks
 ```
 
-The frontend calls this endpoint and displays the backend status on the homepage.
-
-If the backend is running, the frontend should display:
-
-```txt
-Backend status: ok
-```
-
-If the backend is stopped or unreachable, the frontend should display:
-
-```txt
-Backend status: unreachable
-```
-
-## Build
-
-Build the backend:
-
-```bash
-cd backend
-npm run build
-```
-
-Build the frontend:
-
-```bash
-cd frontend
-npm run build
-```
-
-Generated `dist/` folders are ignored by Git and should not be committed.
-
-## Git workflow
-
-We use the following branch workflow:
-
-```txt
-main = stable branch
-dev = integration branch
-feature branches = temporary development branches
-```
-
-New work should be done from an up-to-date `dev` branch:
+Typical workflow:
 
 ```bash
 git checkout dev
-git pull origin dev
-git checkout -b feature-branch-name
+git pull
+git checkout -b feature/my-feature
 ```
 
-After the work is done:
+Once the task is ready, a Pull Request is opened into `dev`.
 
-```bash
-git add .
-git commit -m "type(scope): short description"
-git push -u origin feature-branch-name
-```
+Stable versions of `dev` are then merged into `main`.
 
-Then open a pull request into `dev`.
 
-Branches should be deleted after they are merged.
+## 🎮 What's Next
 
-## Commit examples
+The current foundation provides authentication, profiles, frontend navigation, database persistence and the development environment required for the rest of the project.
 
-```txt
-chore(frontend): add Tailwind CSS
-feat(frontend): add backend healthcheck
-chore(backend): update TypeScript config
-docs: update README setup instructions
-```
-
-## Current status
-
-Implemented:
-
-* frontend bootstrap with React, Vite and TypeScript
-* Tailwind CSS setup
-* backend bootstrap with Express and TypeScript
-* backend `/health` endpoint
-* frontend healthcheck call to the backend
-
-Next steps:
-
-* add PostgreSQL
-* add Prisma
-* create the first database models
-* add backend database healthcheck
-* prepare authentication and user management
-* prepare WebSocket architecture for multiplayer games
+Next development phases will focus on the multiplayer and social aspects of the platform.
