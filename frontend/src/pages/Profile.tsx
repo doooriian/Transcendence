@@ -31,11 +31,14 @@ function Profile() {
 
 	if (!user) {
 		return (
+			<>
+			<Header/>
 			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
 				<p className="text-xl text-slate-400">
-					Loading profile...
+					Profile not found
 				</p>
 			</main>
+			</>
 		);
 	}
 
