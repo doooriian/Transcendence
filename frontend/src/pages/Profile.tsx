@@ -59,7 +59,6 @@ function Profile() {
 					</p>
 				</div>
 
-
 				<div className="space-y-4">
 
 					<div className="rounded-lg bg-slate-800 p-4">
@@ -72,7 +71,6 @@ function Profile() {
 						</p>
 					</div>
 
-
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
 							Username
@@ -82,7 +80,6 @@ function Profile() {
 							{user.username}
 						</p>
 					</div>
-
 
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
@@ -94,7 +91,6 @@ function Profile() {
 						</p>
 					</div>
 
-
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
 							Last update
@@ -104,11 +100,8 @@ function Profile() {
 							{user.updatedAt}
 						</p>
 					</div>
-
 				</div>
-
 			</section>
-
 		</main>
 		</>
 	);

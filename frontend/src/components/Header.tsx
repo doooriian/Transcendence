@@ -23,14 +23,15 @@ function Header() {
 					♟ ft_transcendence
 				</Link>
 
+
 				<nav className="flex items-center gap-6">
 
 					{isLoggedIn ? (
 						<>
 							<form
 								onSubmit={(event) => {
-									event.preventDefault();
 									navigate(`/profile/${searchName}`)
+									event.preventDefault();
 								}}
 								className="space-y-5"
 							>
@@ -47,7 +48,7 @@ function Header() {
 
 							<Link
 								to={`/profile/${username}`}
-								className="text-green-500 hover:text-green-600 transition"
+								className="text-slate-300 hover:text-blue-400 transition"
 							>
 								{username}
 							</Link>
@@ -76,7 +77,9 @@ function Header() {
 							</Link>
 						</>
 					)}
+
 				</nav>
+
 			</div>
 		</header>
 	);
