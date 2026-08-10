@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 function Header() {
+	const [searchName, setSearchName] = useState("");
 	const { isLoggedIn, username, logout } = useAuth();
 	const navigate = useNavigate();
 
@@ -21,14 +23,31 @@ function Header() {
 					♟ ft_transcendence
 				</Link>
 
-
 				<nav className="flex items-center gap-6">
 
 					{isLoggedIn ? (
 						<>
+							<form
+								onSubmit={(event) => {
+									event.preventDefault();
+									navigate(`/profile/${searchName}`)
+								}}
+								className="space-y-5"
+							>
+								<input
+									type="text"
+									placeholder="rechercher"
+									value={searchName}
+									onChange={(event) => {
+										setSearchName(event.target.value);
+									}}
+									className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
+								/>
+							</form>
+
 							<Link
 								to={`/profile/${username}`}
-								className="text-slate-300 hover:text-blue-400 transition"
+								className="text-green-500 hover:text-green-600 transition"
 							>
 								{username}
 							</Link>
@@ -57,9 +76,7 @@ function Header() {
 							</Link>
 						</>
 					)}
-
 				</nav>
-
 			</div>
 		</header>
 	);
