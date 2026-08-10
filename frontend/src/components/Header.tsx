@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 function Header() {
+	const [searchName, setSearchName] = useState("");
 	const { isLoggedIn, username, logout } = useAuth();
 	const navigate = useNavigate();
 
@@ -26,6 +28,24 @@ function Header() {
 
 					{isLoggedIn ? (
 						<>
+							<form
+								onSubmit={(event) => {
+									navigate(`/profile/${searchName}`)
+									event.preventDefault();
+								}}
+								className="space-y-5"
+							>
+								<input
+									type="text"
+									placeholder="rechercher"
+									value={searchName}
+									onChange={(event) => {
+										setSearchName(event.target.value);
+									}}
+									className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
+								/>
+							</form>
+
 							<Link
 								to={`/profile/${username}`}
 								className="text-slate-300 hover:text-blue-400 transition"
