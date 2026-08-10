@@ -11,6 +11,7 @@ function Profile() {
 
 	useEffect(() => {
 		async function loadUser() {
+
 			if (!username)
 				return;
 
@@ -24,6 +25,8 @@ function Profile() {
 			if (result.ok) {
 				setUser(result.data);
 			}
+			else
+				setUser(null);
 		}
 
 		loadUser();
