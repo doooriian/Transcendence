@@ -31,11 +31,14 @@ function Profile() {
 
 	if (!user) {
 		return (
+			<>
+			<Header/>
 			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
 				<p className="text-xl text-slate-400">
-					Loading profile...
+					Profile not found
 				</p>
 			</main>
+			</>
 		);
 	}
 
@@ -56,7 +59,6 @@ function Profile() {
 					</p>
 				</div>
 
-
 				<div className="space-y-4">
 
 					<div className="rounded-lg bg-slate-800 p-4">
@@ -69,7 +71,6 @@ function Profile() {
 						</p>
 					</div>
 
-
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
 							Username
@@ -79,7 +80,6 @@ function Profile() {
 							{user.username}
 						</p>
 					</div>
-
 
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
@@ -91,7 +91,6 @@ function Profile() {
 						</p>
 					</div>
 
-
 					<div className="rounded-lg bg-slate-800 p-4">
 						<p className="text-sm text-slate-400">
 							Last update
@@ -101,11 +100,8 @@ function Profile() {
 							{user.updatedAt}
 						</p>
 					</div>
-
 				</div>
-
 			</section>
-
 		</main>
 		</>
 	);
