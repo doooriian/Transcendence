@@ -30,14 +30,18 @@ function Header() {
 						<>
 							<form
 								onSubmit={(event) => {
-									navigate(`/profile/${searchName}`)
 									event.preventDefault();
+
+									if (!searchName.trim())
+										return;
+
+									navigate(`/profile/${searchName.trim()}`);
+									setSearchName("");
 								}}
-								className="space-y-5"
 							>
 								<input
 									type="text"
-									placeholder="rechercher"
+									placeholder="Rechercher un joueur..."
 									value={searchName}
 									onChange={(event) => {
 										setSearchName(event.target.value);
