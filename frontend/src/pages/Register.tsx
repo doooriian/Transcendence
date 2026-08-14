@@ -85,9 +85,9 @@ function Register() {
 								<button
 									type="button"
 									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+									className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
 								>
-									{showPassword ? "🙈" : "👁️"}
+									{showPassword ? "Hide" : "Show"}
 								</button>
 
 							</div>
