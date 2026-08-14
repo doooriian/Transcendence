@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 
@@ -8,10 +8,8 @@ type BackendHealth = {
 };
 
 function Home() {
-	const { isLoggedIn, username, logout } = useAuth();
-	const navigate = useNavigate();
-
 	const [backendStatus, setBackendStatus] = useState("loading");
+	const { isLoggedIn, username } = useAuth();
 
 	useEffect(() => {
 		async function checkBackendHealth() {
@@ -25,9 +23,10 @@ function Home() {
 				}
 
 				const data: BackendHealth = await response.json();
+
 				setBackendStatus(data.status);
 			} catch (error) {
-				console.error(error);
+				console.error("Failed to reach backend:", error);
 				setBackendStatus("unreachable");
 			}
 		}
@@ -36,79 +35,174 @@ function Home() {
 
 		const intervalId = setInterval(checkBackendHealth, 2000);
 
-		return () => clearInterval(intervalId);
+		return () => {
+			clearInterval(intervalId);
+		};
 	}, []);
 
-	function handleLogout() {
-		logout();
-		navigate("/");
-	}
-
 	return (
-		<>
-		<Header/>
-		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-			<section className="text-center rounded-xl bg-slate-900 border border-slate-800 p-8">
-				<h1 className="text-6xl font-bold">
-					♟ ft_transcendence
-				</h1>
+		<main className="min-h-screen bg-slate-950 text-white">
 
-				<p className="mt-4 text-xl text-slate-300">
-					Play Chess Online
-				</p>
+			<Header />
 
-				<p className="mt-2 text-slate-400">
-					Affrontez vos amis en ligne en temps réel.
-				</p>
+			<section className="min-h-[calc(100vh-73px)] flex items-center justify-center px-6">
 
-				<div className="mt-6 rounded-lg bg-slate-800 p-4">
-					<p className="text-sm text-slate-400">
-						Backend status
-					</p>
+				<div className="w-full max-w-5xl text-center">
 
-					<p className="mt-1 text-xl font-bold">
-						{backendStatus}
-					</p>
+					{/* Hero */}
+
+					<div className="mb-12">
+
+						<p className="text-blue-400 font-semibold tracking-widest uppercase">
+							Online Chess
+						</p>
+
+						<h1 className="mt-4 text-6xl md:text-7xl font-bold">
+							♟ Play Chess.
+							<br />
+							<span className="text-blue-500">
+								Challenge Everyone.
+							</span>
+						</h1>
+
+						<p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
+							Affrontez vos amis et prouvez que vous êtes
+							le meilleur joueur sur ft_transcendence.
+						</p>
+
+						{/* User state */}
+
+						{isLoggedIn ? (
+							<div className="mt-10">
+
+								<p className="text-xl text-slate-300">
+									Welcome back,{" "}
+									<span className="font-bold text-white">
+										{username}
+									</span>
+									!
+								</p>
+
+								<div className="mt-6 flex justify-center gap-4">
+
+									<Link
+										to="/chess"
+										className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold hover:bg-blue-700 transition"
+									>
+										♟ Play Now
+									</Link>
+
+									<Link
+										to={`/profile/${username}`}
+										className="rounded-lg bg-slate-800 border border-slate-700 px-8 py-4 text-lg font-semibold hover:bg-slate-700 transition"
+									>
+										View Profile
+									</Link>
+
+								</div>
+
+							</div>
+						) : (
+							<div className="mt-10 flex justify-center gap-4">
+
+								<Link
+									to="/login"
+									className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold hover:bg-blue-700 transition"
+								>
+									Login
+								</Link>
+
+								<Link
+									to="/register"
+									className="rounded-lg bg-slate-800 border border-slate-700 px-8 py-4 text-lg font-semibold hover:bg-slate-700 transition"
+								>
+									Register
+								</Link>
+
+							</div>
+						)}
+
+					</div>
+
+					{/* Information cards */}
+
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
+
+							<div className="text-3xl">
+								♟
+							</div>
+
+							<h2 className="mt-4 text-xl font-bold">
+								Play
+							</h2>
+
+							<p className="mt-2 text-slate-400">
+								Jouez des parties d'échecs contre
+								d'autres joueurs.
+							</p>
+
+						</div>
+
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
+
+							<div className="text-3xl">
+								🏆
+							</div>
+
+							<h2 className="mt-4 text-xl font-bold">
+								Compete
+							</h2>
+
+							<p className="mt-2 text-slate-400">
+								Montez dans le classement et améliorez
+								votre Elo.
+							</p>
+
+						</div>
+
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
+
+							<div className="text-3xl">
+								⚡
+							</div>
+
+							<h2 className="mt-4 text-xl font-bold">
+								Real-time
+							</h2>
+
+							<p className="mt-2 text-slate-400">
+								Affrontez vos adversaires en temps réel.
+							</p>
+
+						</div>
+
+					</div>
+
+					{/* Backend status */}
+
+					<div className="mt-8 text-sm text-slate-500">
+
+						<span>Backend: </span>
+
+						<span
+							className={
+								backendStatus === "ok"
+									? "text-green-400"
+									: "text-red-400"
+							}
+						>
+							{backendStatus}
+						</span>
+
+					</div>
+
 				</div>
 
-				<div className="mt-10 flex justify-center gap-6">
-					{isLoggedIn ? (
-						<>
-							<Link
-								to={`/profile/${username}`}
-								className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
-							>
-								Profile
-							</Link>
-
-							<button
-								onClick={handleLogout}
-								className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600"
-							>
-								Logout
-							</button>
-						</>
-					) : (
-						<>
-							<Link
-								to="/login"
-								className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
-							>
-								Login
-							</Link>
-
-							<Link
-								to="/register"
-								className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600"
-							>
-								Register
-							</Link>
-						</>
-					)}
-				</div>
 			</section>
+
 		</main>
-		</>
 	);
 }
 
