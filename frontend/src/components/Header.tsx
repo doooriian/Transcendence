@@ -8,6 +8,7 @@ function Header() {
 	const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
 
 	const searchRef = useRef<HTMLDivElement>(null);
+	const [selectedIndex, setSelectedIndex] = useState(-1);
 
 	const { isLoggedIn, username, logout } = useAuth();
 	const navigate = useNavigate();
@@ -20,6 +21,7 @@ function Header() {
 	useEffect(() => {
 		if (searchName.trim().length < 2) {
 			setSuggestions([]);
+			setSelectedIndex(-1);
 			return;
 		}
 
@@ -27,13 +29,17 @@ function Header() {
 			try {
 				const result = await searchUsers(searchName.trim());
 
-				if (result.ok)
+				if (result.ok) {
 					setSuggestions(result.users);
-				else
+					setSelectedIndex(-1);
+				} else {
 					setSuggestions([]);
+					setSelectedIndex(-1);
+				}
 			} catch (error) {
 				console.error("User search failed:", error);
 				setSuggestions([]);
+				setSelectedIndex(-1);
 			}
 		}, 300);
 
@@ -91,11 +97,15 @@ function Header() {
 									onSubmit={(event) => {
 										event.preventDefault();
 
+										if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+											handleSelectUser(suggestions[selectedIndex].username);
+											return;
+										}
+
 										if (!searchName.trim())
 											return;
 
 										navigate(`/profile/${searchName.trim()}`);
-
 										setSearchName("");
 										setSuggestions([]);
 									}}
@@ -107,6 +117,38 @@ function Header() {
 										onChange={(event) => {
 											setSearchName(event.target.value);
 										}}
+										onKeyDown={(event) => {
+											if (event.key === "ArrowDown") {
+												event.preventDefault();
+
+												if (suggestions.length === 0)
+													return;
+
+												setSelectedIndex((current) =>
+													current < suggestions.length - 1
+														? current + 1
+														: 0
+												);
+											}
+
+											if (event.key === "ArrowUp") {
+												event.preventDefault();
+
+												if (suggestions.length === 0)
+													return;
+
+												setSelectedIndex((current) =>
+													current > 0
+														? current - 1
+														: suggestions.length - 1
+												);
+											}
+
+											if (event.key === "Escape") {
+												setSuggestions([]);
+												setSelectedIndex(-1);
+											}
+										}}
 										className="w-64 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 outline-none focus:border-blue-500"
 									/>
 								</form>
@@ -116,14 +158,16 @@ function Header() {
 								{suggestions.length > 0 && (
 									<div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
 
-										{suggestions.map((user) => (
+										{suggestions.map((user, index) => (
 											<button
 												key={user.username}
 												type="button"
-												onClick={() =>
-													handleSelectUser(user.username)
-												}
-												className="block w-full px-4 py-3 text-left text-slate-300 hover:bg-slate-800 hover:text-blue-400 transition"
+												onClick={() => handleSelectUser(user.username)}
+												className={`block w-full px-4 py-3 text-left transition ${
+													index === selectedIndex
+														? "bg-blue-600 text-white"
+														: "text-slate-300 hover:bg-slate-800 hover:text-blue-400"
+												}`}
 											>
 												{user.username}
 											</button>

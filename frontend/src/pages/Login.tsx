@@ -44,7 +44,13 @@ function Login() {
 					</p>
 				</div>
 
-
+				<form
+						onSubmit={(event) => {
+							event.preventDefault();
+							handleLogin();
+						}}
+						className="space-y-5"
+					>
 				<div className="space-y-5">
 
 					<div>
@@ -63,63 +69,64 @@ function Login() {
 						/>
 					</div>
 
+						<div>
 
-					<div>
-						<label className="block text-sm text-slate-300 mb-2">
-							Password
-						</label>
+							<label className="block text-sm text-slate-300 mb-2">
+								Password
+							</label>
 
-						<div className="relative">
-								<input
-									type={showPassword ? "text" : "password"}
-									placeholder="Votre mot de passe"
-									value={password}
-									onChange={(event) => setPassword(event.target.value)}
-									className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 pr-12 outline-none focus:border-blue-500"
-								/>
+							<div className="relative">
+									<input
+										type={showPassword ? "text" : "password"}
+										placeholder="Votre mot de passe"
+										value={password}
+										onChange={(event) => setPassword(event.target.value)}
+										className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 pr-12 outline-none focus:border-blue-500"
+									/>
 
-								<button
-									type="button"
-									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-								>
-									{showPassword ? "Hide" : "Show"}
-								</button>
+									<button
+										type="button"
+										onClick={() => setShowPassword(!showPassword)}
+										className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+									>
+										{showPassword ? "Hide" : "Show"}
+									</button>
 
-							</div>
-					</div>
+								</div>
+						</div>
 
-
-					<button
-						onClick={handleLogin}
-						className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition"
-					>
-						Login
-					</button>
-
-
-					{error && (
-						<p className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-center text-red-300">
-							{error}
-						</p>
-					)}
-
-				<div className="border-t border-slate-800 pt-5 text-center">
-
-						<p className="text-slate-400 mb-3">
-							No account ?
-						</p>
 
 						<button
-							onClick={() => navigate("/register")}
-							className="w-full rounded-lg bg-slate-700 py-3 font-semibold hover:bg-slate-600 transition"
+							onClick={handleLogin}
+							className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition"
 						>
-							Register	
+							Login
 						</button>
 
-					</div>
 
-				</div>
+						{error && (
+							<p className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-center text-red-300">
+								{error}
+							</p>
+						)}
+
+					<div className="border-t border-slate-800 pt-5 text-center">
+
+							<p className="text-slate-400 mb-3">
+								No account ?
+							</p>
+
+							<button
+								onClick={() => navigate("/register")}
+								className="w-full rounded-lg bg-slate-700 py-3 font-semibold hover:bg-slate-600 transition"
+							>
+								Register	
+							</button>
+
+						</div>
+
+					</div>
+				</form>
 			</section>
 
 		</main>
