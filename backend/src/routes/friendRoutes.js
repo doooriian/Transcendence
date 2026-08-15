@@ -3,8 +3,22 @@ import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+// All friend routes require a valid authentication token
 router.use(authToken);
 
+/**
+ * Returns the authenticated user's friends.
+ *
+ * GET /api/friends
+ *
+ * Response:
+ * {
+ *   friends: [
+ *     { username: "John" }
+ *   ]
+ * }
+ */
 router.get("/", async (req, res) => {
   try {
     const friendList = await prisma.user.findUnique({
@@ -25,7 +39,7 @@ router.get("/", async (req, res) => {
     });
 
     if (!friendList) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid session" });
     }
 
     const friends = friendList.friendships.map((friendship) => {
@@ -39,6 +53,21 @@ router.get("/", async (req, res) => {
   }
 });
 
+/**
+ * Returns the authenticated user's received and sent friend requests.
+ *
+ * GET /api/friends/requests
+ *
+ * Response:
+ * {
+ *   received: [
+ *     { id: 1, username: "John" }
+ *   ],
+ *   sent: [
+ *     { id: 2, username: "Doe" }
+ *   ]
+ * }
+ */
 router.get("/requests", async (req, res) => {
   try {
     const requestList = await prisma.user.findUnique({
@@ -70,8 +99,8 @@ router.get("/requests", async (req, res) => {
     });
 
     if (!requestList) {
-      return res.status(404).json({
-        message: "User not found",
+      return res.status(401).json({
+        message: "Invalid session",
       });
     }
 
@@ -99,6 +128,18 @@ router.get("/requests", async (req, res) => {
   }
 });
 
+/**
+ * Sends a friend request to another user.
+ *
+ * POST /api/friends/requests
+ *
+ * Body:
+ * {
+ *   username: "John"
+ * }
+ *
+ * Returns 201 when the request is successfully created.
+ */
 router.post("/requests", async (req, res) => {
   try {
     const username = req.body?.username;
@@ -181,6 +222,15 @@ router.post("/requests", async (req, res) => {
   }
 });
 
+/**
+ * Accepts a received friend request.
+ *
+ * POST /api/friends/requests/:id/accept
+ *
+ * `id` is the FriendRequest id returned by GET /api/friends/requests.
+ *
+ * Returns 200 when the friendship is successfully created.
+ */
 router.post("/requests/:id/accept", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
@@ -266,6 +316,16 @@ router.post("/requests/:id/accept", async (req, res) => {
   }
 });
 
+/**
+ * Deletes a friend request.
+ *
+ * DELETE /api/friends/requests/:id
+ *
+ * The receiver can use this route to reject a request.
+ * The sender can use it to cancel a sent request.
+ *
+ * `id` is the FriendRequest id returned by GET /api/friends/requests.
+ */
 router.delete("/requests/:id", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
@@ -331,7 +391,17 @@ router.delete("/requests/:id", async (req, res) => {
   }
 });
 
-router.delete("/:username", async (req, res) => {
+/**
+ * Removes a user from the authenticated user's friend list.
+ *
+ * DELETE /api/friends/users/:username
+ *
+ * Example:
+ * DELETE /api/friends/users/John
+ *
+ * Returns 200 when the friendship is successfully removed.
+ */
+router.delete("/users/:username", async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: {

@@ -6,6 +6,8 @@ const SEARCH_MIN_LENGTH = 2;
 const SEARCH_RESULT_LIMIT = 3;
 
 const router = express.Router();
+
+// All user routes require a valid authentication token
 router.use(authToken);
 
 /**
