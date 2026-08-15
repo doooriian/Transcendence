@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import friendRoutes from "./routes/friendRoutes.js";
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/friends", friendRoutes);
 
 // Start the HTTP server
 app.listen(PORT, () => {
