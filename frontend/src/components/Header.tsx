@@ -179,6 +179,13 @@ function Header() {
 							</div>
 
 							{/* My profile */}
+							
+							<Link
+								to="/friends"
+								className="text-slate-300 hover:text-blue-400 transition"
+							>
+								Friends
+							</Link>
 
 							<Link
 								to={`/profile/${username}`}
