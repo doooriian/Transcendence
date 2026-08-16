@@ -7,13 +7,16 @@ const SEARCH_RESULT_LIMIT = 3;
 
 const router = express.Router();
 
+// All user routes require a valid authentication token
+router.use(authToken);
+
 /**
  * Returns username suggestions matching the provided search query.
  *
  * Searches usernames by prefix, ignoring case, and limits the number
  * of results returned. Authentication is required to use this route.
  */
-router.get("/", authToken, async (req, res) => {
+router.get("/", async (req, res) => {
   const query = req.query.username;
 
   if (typeof query !== "string") {
@@ -59,7 +62,7 @@ router.get("/", authToken, async (req, res) => {
  *
  * Authentication is required before accessing this route.
  */
-router.get("/:username", authToken, async (req, res) => {
+router.get("/:username", async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
