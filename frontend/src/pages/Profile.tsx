@@ -4,14 +4,32 @@ import { getMyProfile, getUser, type User } from "../services/users";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 
+import {
+	getFriends,
+	getFriendRequests,
+	sendFriendRequest,
+	acceptFriendRequest,
+	deleteFriendRequest,
+	type Friend,
+	type FriendRequest,
+} from "../services/friends";
+
 function Profile() {
 	const { username } = useParams();
-	const [user, setUser] = useState<User | null>(null);
 	const { username: myUsername } = useAuth();
 
+	const [user, setUser] = useState<User | null>(null);
+
+	const [friends, setFriends] = useState<Friend[]>([]);
+	const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+	const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+
+	const [error, setError] = useState("");
+	const [loadingFriendAction, setLoadingFriendAction] = useState(false);
+
+	// Charger le profil
 	useEffect(() => {
 		async function loadUser() {
-
 			if (!username)
 				return;
 
@@ -22,90 +40,301 @@ function Profile() {
 			else
 				result = await getMyProfile();
 
-			if (result.ok) {
+			if (result.ok)
 				setUser(result.data);
-			}
 			else
 				setUser(null);
 		}
 
 		loadUser();
-	}, [username]);
+	}, [username, myUsername]);
+
+
+	// Charger les informations d'amitié
+	useEffect(() => {
+		async function loadFriendData() {
+			if (!username || username === myUsername)
+				return;
+
+			try {
+				const friendsResult = await getFriends();
+				const requestsResult = await getFriendRequests();
+
+				if (friendsResult.ok) {
+					setFriends(friendsResult.friends);
+				}
+
+				if (requestsResult.ok) {
+					setReceivedRequests(requestsResult.received);
+					setSentRequests(requestsResult.sent);
+				}
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		loadFriendData();
+	
+		const intervalId = setInterval(loadFriendData, 1000);
+
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [username, myUsername]);
+
+
+	async function handleAddFriend() {
+		if (!username)
+			return;
+
+		setLoadingFriendAction(true);
+		setError("");
+
+		const result = await sendFriendRequest(username);
+
+		if (!result.ok) {
+			setError(result.data.message);
+			setLoadingFriendAction(false);
+			return;
+		}
+
+		// On recharge les demandes envoyées
+		const requestsResult = await getFriendRequests();
+
+		if (requestsResult.ok) {
+			setReceivedRequests(requestsResult.received);
+			setSentRequests(requestsResult.sent);
+		}
+
+		setLoadingFriendAction(false);
+	}
+
+
+	async function handleAccept(id: number) {
+		setLoadingFriendAction(true);
+		setError("");
+
+		const result = await acceptFriendRequest(id);
+
+		if (!result.ok) {
+			setError(result.data.message);
+			setLoadingFriendAction(false);
+			return;
+		}
+
+		// Recharger les amis et les demandes
+		const friendsResult = await getFriends();
+		const requestsResult = await getFriendRequests();
+
+		if (friendsResult.ok)
+			setFriends(friendsResult.friends);
+
+		if (requestsResult.ok) {
+			setReceivedRequests(requestsResult.received);
+			setSentRequests(requestsResult.sent);
+		}
+
+		setLoadingFriendAction(false);
+	}
+
+
+	async function handleReject(id: number) {
+		setLoadingFriendAction(true);
+		setError("");
+
+		const result = await deleteFriendRequest(id);
+
+		if (!result.ok) {
+			setError(result.data.message);
+			setLoadingFriendAction(false);
+			return;
+		}
+
+		setReceivedRequests((current) =>
+			current.filter((request) => request.id !== id)
+		);
+
+		setLoadingFriendAction(false);
+	}
+
 
 	if (!user) {
 		return (
 			<>
-			<Header/>
-			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-				<p className="text-xl text-slate-400">
-					Profile not found
-				</p>
-			</main>
+				<Header />
+
+				<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+					<p className="text-xl text-slate-400">
+						Profile not found
+					</p>
+				</main>
 			</>
 		);
 	}
 
+
+	// Est-ce que le profil affiché est le mien ?
+	const isMyProfile = username === myUsername;
+
+	// Est-ce que je suis déjà ami avec cette personne ?
+	const isFriend = friends.some(
+		(friend) => friend.username === user.username
+	);
+
+	// Est-ce que j'ai déjà envoyé une demande ?
+	const sentRequest = sentRequests.find(
+		(request) => request.username === user.username
+	);
+
+	// Est-ce que cette personne m'a envoyé une demande ?
+	const receivedRequest = receivedRequests.find(
+		(request) => request.username === user.username
+	);
+
+
 	return (
 		<>
-		<Header/>
-		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+			<Header />
 
-			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white px-4">
 
-				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold">
-						♟ Profile
-					</h1>
+				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
 
-					<p className="mt-3 text-slate-400">
-						Player information
-					</p>
-				</div>
+					<div className="text-center mb-8">
 
-				<div className="space-y-4">
+						<h1 className="text-4xl font-bold">
+							♟ Profile
+						</h1>
 
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							ID
+						<p className="mt-3 text-slate-400">
+							Player information
 						</p>
 
-						<p className="text-xl font-semibold">
-							{user.id}
-						</p>
 					</div>
 
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Username
-						</p>
 
-						<p className="text-xl font-semibold">
-							{user.username}
-						</p>
+					<div className="space-y-4">
+
+						<div className="rounded-lg bg-slate-800 p-4">
+							<p className="text-sm text-slate-400">
+								ID
+							</p>
+
+							<p className="text-xl font-semibold">
+								{user.id}
+							</p>
+						</div>
+
+
+						<div className="rounded-lg bg-slate-800 p-4">
+							<p className="text-sm text-slate-400">
+								Username
+							</p>
+
+							<p className="text-xl font-semibold">
+								{user.username}
+							</p>
+						</div>
+
+
+						<div className="rounded-lg bg-slate-800 p-4">
+							<p className="text-sm text-slate-400">
+								Created at
+							</p>
+
+							<p className="text-sm">
+								{user.createdAt}
+							</p>
+						</div>
+
+
+						<div className="rounded-lg bg-slate-800 p-4">
+							<p className="text-sm text-slate-400">
+								Last update
+							</p>
+
+							<p className="text-sm">
+								{user.updatedAt}
+							</p>
+						</div>
+
+
+						{/* Friend system */}
+
+						{!isMyProfile && (
+							<div className="pt-4">
+
+								{isFriend ? (
+
+									<div className="rounded-lg bg-green-900/40 border border-green-700 p-3 text-center text-green-300">
+										✓ Friends
+									</div>
+
+								) : receivedRequest ? (
+
+									<div className="space-y-3">
+
+										<p className="text-center text-slate-400">
+											{user.username} sent you a friend request
+										</p>
+
+										<div className="flex gap-3">
+
+											<button
+												onClick={() => handleAccept(receivedRequest.id)}
+												disabled={loadingFriendAction}
+												className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+											>
+												Accept
+											</button>
+
+											<button
+												onClick={() => handleReject(receivedRequest.id)}
+												disabled={loadingFriendAction}
+												className="flex-1 rounded-lg bg-slate-700 px-4 py-3 font-semibold hover:bg-slate-600 transition disabled:opacity-50"
+											>
+												Reject
+											</button>
+
+										</div>
+
+									</div>
+
+								) : sentRequest ? (
+
+									<div className="rounded-lg bg-slate-800 border border-slate-700 p-3 text-center text-slate-300">
+										Request sent
+									</div>
+
+								) : (
+
+									<button
+										onClick={handleAddFriend}
+										disabled={loadingFriendAction}
+										className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+									>
+										{loadingFriendAction
+											? "Sending..."
+											: "+ Add Friend"}
+									</button>
+
+								)}
+
+							</div>
+						)}
+
+
+						{error && (
+							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
+								{error}
+							</p>
+						)}
+
 					</div>
 
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Created at
-						</p>
+				</section>
 
-						<p className="text-sm">
-							{user.createdAt}
-						</p>
-					</div>
-
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Last update
-						</p>
-
-						<p className="text-sm">
-							{user.updatedAt}
-						</p>
-					</div>
-				</div>
-			</section>
-		</main>
+			</main>
 		</>
 	);
 }

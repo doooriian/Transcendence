@@ -33,6 +33,11 @@ function Friends() {
 
 	useEffect(() => {
 		loadFriends();
+		const intervalId = setInterval(loadFriends, 1000);
+
+		return () => {
+			clearInterval(intervalId);
+		};
 	}, []);
 
 	async function handleAccept(id: number) {
