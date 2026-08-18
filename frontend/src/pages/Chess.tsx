@@ -45,8 +45,7 @@ function Chess() {
 
 					<div className="mx-auto w-full max-w-[640px]">
 
-						<div className="grid grid-cols-8 aspect-square border-4 border-slate-800">
-
+						<div className="grid grid-cols-8 grid-rows-8 aspect-square w-full border-4 border-slate-800">
 							{board.map((row, rowIndex) =>
 								row.map((piece, columnIndex) => {
 
@@ -56,17 +55,13 @@ function Chess() {
 									return (
 										<div
 											key={`${rowIndex}-${columnIndex}`}
-											className={`flex items-center justify-center text-4xl sm:text-5xl md:text-6xl select-none ${
+											className={`aspect-square flex items-center justify-center select-none ${
 												isDark
 													? "bg-blue-700"
 													: "bg-slate-200"
 											}`}
 										>
-											<span
-												className={
-													"drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
-												}
-											>
+											<span className="text-4xl sm:text-5xl md:text-6xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
 												{piece}
 											</span>
 										</div>
