@@ -1,17 +1,57 @@
+import { useState } from "react";
+
 import Header from "../components/Header";
 
-const board = [
-	["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"],
-	["♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"],
-	["", "", "", "", "", "", "", ""],
-	["", "", "", "", "", "", "", ""],
-	["", "", "", "", "", "", "", ""],
-	["", "", "", "", "", "", "", ""],
-	["♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"],
-	["♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"],
+import bb from "../assets/pieces/bb.svg";
+import bw from "../assets/pieces/bw.svg";
+import kb from "../assets/pieces/kb.svg";
+import kw from "../assets/pieces/kw.svg";
+import nb from "../assets/pieces/nb.svg";
+import nw from "../assets/pieces/nw.svg";
+import pb from "../assets/pieces/pb.svg";
+import pw from "../assets/pieces/pw.svg";
+import qb from "../assets/pieces/qb.svg";
+import qw from "../assets/pieces/qw.svg";
+import rb from "../assets/pieces/rb.svg";
+import rw from "../assets/pieces/rw.svg";
+
+const initialBoard = [
+	[rb, nb, bb, qb, kb, bb, nb, rb],
+    [pb, pb, pb, pb, pb, pb, pb, pb],
+    ["", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", ""],
+    [pw, pw, pw, pw, pw, pw, pw, pw],
+    [rw, nw, bw, qw, kw, bw, nw, rw],
 ];
 
 function Chess() {
+	const [board, setBoard] = useState(initialBoard);
+
+	const [selectedSquare, setSelectedSquare] = useState<{
+		row: number;
+		col: number;
+	} | null>(null);
+
+	const handleSquareClick = (row: number, col: number) => {
+		if (selectedSquare === null) {
+			if (board[row][col] !== "") {
+				setSelectedSquare({ row, col });
+			}
+
+			return;
+		}
+
+		const newBoard = board.map((currentRow) => [...currentRow]);
+
+		newBoard[row][col] = newBoard[selectedSquare.row][selectedSquare.col];
+		newBoard[selectedSquare.row][selectedSquare.col] = "";
+
+		setBoard(newBoard);
+		setSelectedSquare(null);
+	};
+
 	return (
 		<main className="min-h-screen bg-slate-950 text-white">
 
@@ -51,24 +91,35 @@ function Chess() {
 
 									const isDark =
 										(rowIndex + columnIndex) % 2 === 1;
+									
+									const isSelected =
+										selectedSquare?.row === rowIndex &&
+										selectedSquare?.col === columnIndex;
 
 									return (
 										<div
 											key={`${rowIndex}-${columnIndex}`}
+											onClick={() => handleSquareClick(rowIndex, columnIndex)}
 											className={`aspect-square flex items-center justify-center select-none ${
-												isDark
-													? "bg-blue-700"
-													: "bg-slate-200"
+												isSelected
+													? "bg-yellow-400"
+													: isDark
+														? "bg-blue-700"
+														: "bg-slate-200"
 											}`}
 										>
-											<span className="text-4xl sm:text-5xl md:text-6xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-												{piece}
-											</span>
+											{piece && (
+												<img
+													src={piece}
+													alt=""
+													className="w-[85%] h-[85%] object-contain select-none"
+													draggable={false}
+												/>
+											)}
 										</div>
 									);
 								})
 							)}
-
 						</div>
 
 					</div>

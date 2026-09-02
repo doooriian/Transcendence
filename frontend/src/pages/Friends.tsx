@@ -11,8 +11,6 @@ function Friends() {
 
 	async function loadFriends() {
 		try {
-			setError("");
-
 			const friendsResult = await getFriends();
 			const requestsResult = await getFriendRequests();
 
@@ -24,6 +22,7 @@ function Friends() {
 			setFriends(friendsResult.friends);
 			setReceived(requestsResult.received);
 			setSent(requestsResult.sent);
+			setError("");
 
 		} catch (error) {
 			console.error(error);
