@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import Header from "../components/Header";
 
 import bb from "../assets/pieces/bb.svg";
@@ -17,54 +16,129 @@ import rw from "../assets/pieces/rw.svg";
 
 const initialBoard = [
 	[rb, nb, bb, qb, kb, bb, nb, rb],
-    [pb, pb, pb, pb, pb, pb, pb, pb],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    [pw, pw, pw, pw, pw, pw, pw, pw],
-    [rw, nw, bw, qw, kw, bw, nw, rw],
+	[pb, pb, pb, pb, pb, pb, pb, pb],
+	["", "", "", "", "", "", "", ""],
+	["", "", "", "", "", "", "", ""],
+	["", "", "", "", "", "", "", ""],
+	["", "", "", "", "", "", "", ""]	,
+	[pw, pw, pw, pw, pw, pw, pw, pw],
+	[rw, nw, bw, qw, kw, bw, nw, rw],
 ];
 
 function Chess() {
 	const [board, setBoard] = useState(initialBoard);
 
-	const [selectedSquare, setSelectedSquare] = useState<{
+	// La pièce actuellement déplacée
+	const [draggedPiece, setDraggedPiece] = useState<{
 		row: number;
 		col: number;
+		piece: string;
 	} | null>(null);
 
-	const handleSquareClick = (row: number, col: number) => {
-		if (selectedSquare === null) {
-			if (board[row][col] !== "") {
-				setSelectedSquare({ row, col });
-			}
+	// Position actuelle de la souris
+	const [mousePosition, setMousePosition] = useState({
+		x: 0,
+		y: 0,
+	});
 
+	// Quand on appuie sur une pièce
+	const handleMouseDown = (
+		event: React.MouseEvent,
+		row: number,
+		col: number
+	) => {
+		const piece = board[row][col];
+
+		// S'il n'y a pas de pièce, on ne fait rien
+		if (piece === "") {
 			return;
 		}
 
-		const newBoard = board.map((currentRow) => [...currentRow]);
+		// On empêche le navigateur de faire son drag & drop par défaut
+		event.preventDefault();
 
-		newBoard[row][col] = newBoard[selectedSquare.row][selectedSquare.col];
-		newBoard[selectedSquare.row][selectedSquare.col] = "";
+		setDraggedPiece({
+			row,
+			col,
+			piece,
+		});
+
+		setMousePosition({
+			x: event.clientX,
+			y: event.clientY,
+		});
+	};
+
+	// Quand la souris bouge
+	const handleMouseMove = (event: React.MouseEvent) => {
+		if (!draggedPiece) {
+			return;
+		}
+
+		setMousePosition({
+			x: event.clientX,
+			y: event.clientY,
+		});
+	};
+
+	// Quand on relâche la souris
+	const handleMouseUp = (event: React.MouseEvent) => {
+		if (!draggedPiece) {
+			return;
+		}
+
+		const boardElement = event.currentTarget as HTMLElement;
+		const rect = boardElement.getBoundingClientRect();
+
+		// Position de la souris à l'intérieur du plateau
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+
+		// Si on relâche en dehors du plateau
+		if (
+			x < 0 ||
+			y < 0 ||
+			x > rect.width ||
+			y > rect.height
+		) {
+			setDraggedPiece(null);
+			return;
+		}
+
+		// Taille d'une case
+		const squareWidth = rect.width / 8;
+		const squareHeight = rect.height / 8;
+
+		// On trouve la colonne et la ligne correspondantes
+		const targetCol = Math.floor(x / squareWidth);
+		const targetRow = Math.floor(y / squareHeight);
+
+		// On crée une copie du plateau
+		const newBoard = board.map((row) => [...row]);
+
+		// On déplace la pièce
+		newBoard[targetRow][targetCol] =
+			draggedPiece.piece;
+
+		// On vide l'ancienne case
+		if (draggedPiece.row !== targetRow || draggedPiece.col !== targetCol)
+			newBoard[draggedPiece.row][draggedPiece.col] = "";
 
 		setBoard(newBoard);
-		setSelectedSquare(null);
+
+		// On arrête le déplacement
+		setDraggedPiece(null);
 	};
 
 	return (
 		<main className="min-h-screen bg-slate-950 text-white">
-
 			<Header />
 
 			<section className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-8">
-
 				<div className="w-full max-w-6xl">
 
-					{/* Player 1 */}
-
+					{/* Adversaire */}
 					<div className="mb-4 flex items-center justify-between">
-
 						<div>
 							<p className="text-lg font-bold">
 								Opponent
@@ -78,56 +152,75 @@ function Chess() {
 						<div className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2">
 							00:00
 						</div>
-
 					</div>
 
-					{/* Chess board */}
-
+					{/* Échiquier */}
 					<div className="mx-auto w-full max-w-[640px]">
-
-						<div className="grid grid-cols-8 grid-rows-8 aspect-square w-full border-4 border-slate-800">
+						<div
+							className="grid grid-cols-8 grid-rows-8 aspect-square w-full border-4 border-slate-800"
+							onMouseMove={handleMouseMove}
+							onMouseUp={handleMouseUp}
+						>
 							{board.map((row, rowIndex) =>
 								row.map((piece, columnIndex) => {
-
 									const isDark =
 										(rowIndex + columnIndex) % 2 === 1;
-									
-									const isSelected =
-										selectedSquare?.row === rowIndex &&
-										selectedSquare?.col === columnIndex;
+
+									const isDragging =
+										draggedPiece?.row === rowIndex &&
+										draggedPiece?.col === columnIndex;
 
 									return (
 										<div
 											key={`${rowIndex}-${columnIndex}`}
-											onClick={() => handleSquareClick(rowIndex, columnIndex)}
-											className={`aspect-square flex items-center justify-center select-none ${
-												isSelected
-													? "bg-yellow-400"
-													: isDark
-														? "bg-blue-700"
-														: "bg-slate-200"
+											onMouseDown={(event) =>
+												handleMouseDown(
+													event,
+													rowIndex,
+													columnIndex
+												)
+											}
+											className={`relative aspect-square flex items-center justify-center select-none cursor-grab ${
+												isDragging
+													? "opacity-30"
+													: ""
+											} ${
+												isDark
+													? "bg-blue-700"
+													: "bg-slate-200"
 											}`}
 										>
 											{piece && (
 												<img
 													src={piece}
 													alt=""
-													className="w-[85%] h-[85%] object-contain select-none"
 													draggable={false}
+													className="w-[85%] h-[85%] object-contain pointer-events-none"
 												/>
 											)}
 										</div>
 									);
 								})
 							)}
-						</div>
 
+							{/* Pièce qui suit la souris */}
+							{draggedPiece && (
+								<img
+									src={draggedPiece.piece}
+									alt=""
+									draggable={false}
+									className="fixed w-20 h-20 object-contain pointer-events-none z-50"
+									style={{
+										left: mousePosition.x - 40,
+										top: mousePosition.y - 40,
+									}}
+								/>
+							)}
+						</div>
 					</div>
 
-					{/* Player 2 */}
-
+					{/* Joueur */}
 					<div className="mt-4 flex items-center justify-between">
-
 						<div>
 							<p className="text-lg font-bold">
 								You
@@ -141,31 +234,21 @@ function Chess() {
 						<div className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2">
 							00:00
 						</div>
-
 					</div>
 
-					{/* Game controls */}
-
+					{/* Contrôles */}
 					<div className="mt-6 flex justify-center gap-4">
-
-						<button
-							className="rounded-lg bg-slate-800 border border-slate-700 px-6 py-3 font-semibold hover:bg-slate-700 transition"
-						>
+						<button className="rounded-lg bg-slate-800 border border-slate-700 px-6 py-3 font-semibold hover:bg-slate-700 transition">
 							Resign
 						</button>
 
-						<button
-							className="rounded-lg bg-red-600 px-6 py-3 font-semibold hover:bg-red-700 transition"
-						>
+						<button className="rounded-lg bg-red-600 px-6 py-3 font-semibold hover:bg-red-700 transition">
 							Draw
 						</button>
-
 					</div>
 
 				</div>
-
 			</section>
-
 		</main>
 	);
 }
