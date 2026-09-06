@@ -67,7 +67,7 @@ function Friends() {
     socket.on("friends:changed", handleFriendsChanged);
 
     return () => {
-      socket.on("connect", handleFriendsChanged);
+      socket.off("connect", handleFriendsChanged);
       socket.off("presence:changed", loadFriends);
       socket.off("friends:changed", handleFriendsChanged);
     };
