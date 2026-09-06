@@ -1,244 +1,243 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
-import { getFriends, getFriendRequests,	acceptFriendRequest, deleteFriendRequest, removeFriend, type Friend, type FriendRequest } from "../services/friends";
+import {
+  getFriends,
+  getFriendRequests,
+  acceptFriendRequest,
+  deleteFriendRequest,
+  removeFriend,
+  type Friend,
+  type FriendRequest,
+} from "../services/friends";
+import socket from "../services/socket";
 
 function Friends() {
-	const [friends, setFriends] = useState<Friend[]>([]);
-	const [received, setReceived] = useState<FriendRequest[]>([]);
-	const [sent, setSent] = useState<FriendRequest[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [received, setReceived] = useState<FriendRequest[]>([]);
+  const [sent, setSent] = useState<FriendRequest[]>([]);
 
-	const [error, setError] = useState("");
+  const [error, setError] = useState("");
 
-	async function loadFriends() {
-		try {
-			const friendsResult = await getFriends();
-			const requestsResult = await getFriendRequests();
+  async function loadFriends() {
+    try {
+      const result = await getFriends();
 
-			if (!friendsResult.ok || !requestsResult.ok) {
-				setError("Impossible de récupérer les amis.");
-				return;
-			}
+      if (!result.ok) {
+        setError("Impossible de récupérer les amis.");
+        return;
+      }
 
-			setFriends(friendsResult.friends);
-			setReceived(requestsResult.received);
-			setSent(requestsResult.sent);
-			setError("");
+      setFriends(result.friends);
+      setError("");
+    } catch (error) {
+      console.error(error);
+      setError("Impossible de contacter le serveur.");
+    }
+  }
 
-		} catch (error) {
-			console.error(error);
-			setError("Impossible de contacter le serveur.");
-		}
-	}
+  async function loadRequests() {
+    try {
+      const result = await getFriendRequests();
 
-	useEffect(() => {
-		loadFriends();
-		const intervalId = setInterval(loadFriends, 1000);
+      if (!result.ok) {
+        setError("Impossible de récupérer les demandes.");
+        return;
+      }
 
-		return () => {
-			clearInterval(intervalId);
-		};
-	}, []);
+      setReceived(result.received);
+      setSent(result.sent);
+      setError("");
+    } catch (error) {
+      console.error(error);
+      setError("Impossible de contacter le serveur.");
+    }
+  }
 
-	async function handleAccept(id: number) {
-		const result = await acceptFriendRequest(id);
+  useEffect(() => {
+    loadFriends();
+    loadRequests();
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
-		}
+    function handleFriendsChanged() {
+      loadFriends();
+      loadRequests();
+    }
 
-		await loadFriends();
-	}
+    socket.on("presence:changed", loadFriends);
+    socket.on("friends:changed", handleFriendsChanged);
 
-	async function handleReject(id: number) {
-		const result = await deleteFriendRequest(id);
+    return () => {
+      socket.off("presence:changed", loadFriends);
+      socket.off("friends:changed", handleFriendsChanged);
+    };
+  }, []);
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
-		}
+  async function handleAccept(id: number) {
+    const result = await acceptFriendRequest(id);
 
-		await loadFriends();
-	}
+    if (!result.ok) {
+      setError(result.data.message);
+      return;
+    }
 
-	async function handleCancel(id: number) {
-		const result = await deleteFriendRequest(id);
+    await loadFriends();
+    await loadRequests();
+  }
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
-		}
+  async function handleReject(id: number) {
+    const result = await deleteFriendRequest(id);
 
-		await loadFriends();
-	}
+    if (!result.ok) {
+      setError(result.data.message);
+      return;
+    }
 
-	async function handleRemove(username: string) {
-		const result = await removeFriend(username);
+    await loadRequests();
+  }
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
-		}
+  async function handleCancel(id: number) {
+    const result = await deleteFriendRequest(id);
 
-		await loadFriends();
-	}
+    if (!result.ok) {
+      setError(result.data.message);
+      return;
+    }
 
-	return (
-		<>
-			<Header />
+    await loadRequests();
+  }
 
-			<main className="min-h-screen bg-slate-950 text-white px-4 py-10">
+  async function handleRemove(username: string) {
+    const result = await removeFriend(username);
 
-				<div className="mx-auto max-w-4xl">
+    if (!result.ok) {
+      setError(result.data.message);
+      return;
+    }
 
-					<h1 className="text-4xl font-bold text-center">
-						♟ Friends
-					</h1>
+    await loadFriends();
+  }
 
-					<p className="mt-3 text-center text-slate-400">
-						Gérez vos amis et vos demandes.
-					</p>
+  return (
+    <>
+      <Header />
 
+      <main className="min-h-screen bg-slate-950 text-white px-4 py-10">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="text-4xl font-bold text-center">♟ Friends</h1>
 
-					{error && (
-						<p className="mt-6 rounded-lg border border-red-700 bg-red-900/40 p-4 text-center text-red-300">
-							{error}
-						</p>
-					)}
+          <p className="mt-3 text-center text-slate-400">
+            Gérez vos amis et vos demandes.
+          </p>
 
+          {error && (
+            <p className="mt-6 rounded-lg border border-red-700 bg-red-900/40 p-4 text-center text-red-300">
+              {error}
+            </p>
+          )}
 
-					{/* Friends */}
+          {/* Friends */}
 
-					<section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h2 className="text-2xl font-bold">Your friends</h2>
 
-						<h2 className="text-2xl font-bold">
-							Your friends
-						</h2>
+            {friends.length === 0 ? (
+              <p className="mt-4 text-slate-400">
+                You don't have any friends yet.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {friends.map((friend) => (
+                  <div
+                    key={friend.username}
+                    className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
+                  >
+                    <div>
+                      <span className="font-semibold">{friend.username}</span>
 
-						{friends.length === 0 ? (
-							<p className="mt-4 text-slate-400">
-								You don't have any friends yet.
-							</p>
-						) : (
-							<div className="mt-4 space-y-3">
+                      <span className="ml-3 text-sm">
+                        {friend.isOnline ? "Online" : "Offline"}
+                      </span>
+                    </div>
 
-								{friends.map((friend) => (
-									<div
-										key={friend.username}
-										className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
-									>
-										<span className="font-semibold">
-											{friend.username}
-										</span>
+                    <button
+                      onClick={() => handleRemove(friend.username)}
+                      className="rounded-lg bg-red-600 px-4 py-2 font-semibold hover:bg-red-700 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-										<button
-											onClick={() => handleRemove(friend.username)}
-											className="rounded-lg bg-red-600 px-4 py-2 font-semibold hover:bg-red-700 transition"
-										>
-											Remove
-										</button>
-									</div>
-								))}
+          {/* Received requests */}
 
-							</div>
-						)}
+          <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h2 className="text-2xl font-bold">Friend requests</h2>
 
-					</section>
+            {received.length === 0 ? (
+              <p className="mt-4 text-slate-400">No pending requests.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {received.map((request) => (
+                  <div
+                    key={request.id}
+                    className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
+                  >
+                    <span className="font-semibold">{request.username}</span>
 
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAccept(request.id)}
+                        className="rounded-lg bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-700 transition"
+                      >
+                        Accept
+                      </button>
 
-					{/* Received requests */}
+                      <button
+                        onClick={() => handleReject(request.id)}
+                        className="rounded-lg bg-slate-700 px-4 py-2 font-semibold hover:bg-slate-600 transition"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-					<section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          {/* Sent requests */}
 
-						<h2 className="text-2xl font-bold">
-							Friend requests
-						</h2>
+          <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h2 className="text-2xl font-bold">Sent requests</h2>
 
-						{received.length === 0 ? (
-							<p className="mt-4 text-slate-400">
-								No pending requests.
-							</p>
-						) : (
-							<div className="mt-4 space-y-3">
+            {sent.length === 0 ? (
+              <p className="mt-4 text-slate-400">No pending sent requests.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {sent.map((request) => (
+                  <div
+                    key={request.id}
+                    className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
+                  >
+                    <span className="font-semibold">{request.username}</span>
 
-								{received.map((request) => (
-									<div
-										key={request.id}
-										className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
-									>
-										<span className="font-semibold">
-											{request.username}
-										</span>
-
-										<div className="flex gap-2">
-
-											<button
-												onClick={() => handleAccept(request.id)}
-												className="rounded-lg bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-700 transition"
-											>
-												Accept
-											</button>
-
-											<button
-												onClick={() => handleReject(request.id)}
-												className="rounded-lg bg-slate-700 px-4 py-2 font-semibold hover:bg-slate-600 transition"
-											>
-												Reject
-											</button>
-
-										</div>
-									</div>
-								))}
-
-							</div>
-						)}
-
-					</section>
-
-
-					{/* Sent requests */}
-
-					<section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-						<h2 className="text-2xl font-bold">
-							Sent requests
-						</h2>
-
-						{sent.length === 0 ? (
-							<p className="mt-4 text-slate-400">
-								No pending sent requests.
-							</p>
-						) : (
-							<div className="mt-4 space-y-3">
-
-								{sent.map((request) => (
-									<div
-										key={request.id}
-										className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
-									>
-										<span className="font-semibold">
-											{request.username}
-										</span>
-
-										<button
-											onClick={() => handleCancel(request.id)}
-											className="rounded-lg bg-red-600 px-4 py-2 font-semibold hover:bg-red-700 transition"
-										>
-											Cancel
-										</button>
-									</div>
-								))}
-
-							</div>
-						)}
-
-					</section>
-
-				</div>
-
-			</main>
-		</>
-	);
+                    <button
+                      onClick={() => handleCancel(request.id)}
+                      className="rounded-lg bg-red-600 px-4 py-2 font-semibold hover:bg-red-700 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </>
+  );
 }
 
 export default Friends;

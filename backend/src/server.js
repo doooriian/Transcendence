@@ -10,6 +10,9 @@ import friendRoutes from "./routes/friendRoutes.js";
 
 import authSocket from "./middleware/socketAuthMiddleware.js";
 
+import { addUserSocket, removeUserSocket } from "./services/presenceService.js";
+import { notifyFriendsPresenceChanged } from "./services/presenceNotificationService.js";
+
 const app = express();
 
 // Create the HTTP server used by both Express and Socket.IO
@@ -21,6 +24,9 @@ const io = new Server(httpServer, {
     origin: "http://localhost:5173",
   },
 });
+
+// Make the Socket.IO server accessible from Express routes
+app.set("io", io);
 
 const PORT = 3000;
 
@@ -44,12 +50,27 @@ app.use("/api/friends", friendRoutes);
 io.use(authSocket);
 
 // Handle authenticated Socket.IO client connections
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
+  const authId = socket.data.authId;
+
+  socket.join(`user:${authId}`);
+
+  const becameOnline = addUserSocket(authId, socket.id);
+
+  if (becameOnline) {
+    await notifyFriendsPresenceChanged(io, authId);
+  }
+
   console.log(`Socket connected: ${socket.id}`);
   console.log(`Authenticated user: ${socket.data.authId}`);
 
-  // Handle client disconnection
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
+    const becameOffline = removeUserSocket(authId, socket.id);
+
+    if (becameOffline) {
+      await notifyFriendsPresenceChanged(io, authId);
+    }
+
     console.log(`Socket disconnected: ${socket.id}`);
   });
 });
