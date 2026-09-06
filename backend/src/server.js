@@ -50,29 +50,29 @@ app.use("/api/friends", friendRoutes);
 io.use(authSocket);
 
 // Handle authenticated Socket.IO client connections
-io.on("connection", async (socket) => {
+io.on("connection", (socket) => {
   const authId = socket.data.authId;
 
   socket.join(`user:${authId}`);
 
   const becameOnline = addUserSocket(authId, socket.id);
 
-  if (becameOnline) {
-    await notifyFriendsPresenceChanged(io, authId);
-  }
-
-  console.log(`Socket connected: ${socket.id}`);
-  console.log(`Authenticated user: ${socket.data.authId}`);
-
-  socket.on("disconnect", async () => {
+  socket.on("disconnect", () => {
     const becameOffline = removeUserSocket(authId, socket.id);
 
     if (becameOffline) {
-      await notifyFriendsPresenceChanged(io, authId);
+      notifyFriendsPresenceChanged(io, authId);
     }
 
     console.log(`Socket disconnected: ${socket.id}`);
   });
+
+  if (becameOnline) {
+    notifyFriendsPresenceChanged(io, authId);
+  }
+
+  console.log(`Socket connected: ${socket.id}`);
+  console.log(`Authenticated user: ${authId}`);
 });
 
 // Start the shared HTTP server
