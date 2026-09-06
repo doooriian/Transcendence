@@ -1,61 +1,77 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
+import socket from "../services/socket";
 
 type AuthContextType = {
-	isLoggedIn: boolean;
-	username: string | null;
-	login: (username: string, token: string) => void;
-	logout: () => void;
+  isLoggedIn: boolean;
+  username: string | null;
+  login: (username: string, token: string) => void;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [isLoggedIn, setIsLoggedIn] = useState(
-		localStorage.getItem("token") !== null
-	);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("token") !== null,
+  );
 
-	const [username, setUsername] = useState(
-		localStorage.getItem("username")
-	);
+  const [username, setUsername] = useState(localStorage.getItem("username"));
 
-	function login(username: string, token: string) {
-		localStorage.setItem("token", token);
-		localStorage.setItem("username", username);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
-		setIsLoggedIn(true);
-		setUsername(username);
-	}
+    if (!token) return;
 
-	function logout() {
-		localStorage.removeItem("token");
-		localStorage.removeItem("username");
+    socket.auth = { token };
 
-		setIsLoggedIn(false);
-		setUsername(null);
-	}
+    if (!socket.connected) socket.connect();
+  }, []);
 
-	return (
-		<AuthContext.Provider
-			value={{
-				isLoggedIn,
-				username,
-				login,
-				logout,
-			}}
-		>
-			{children}
-		</AuthContext.Provider>
-	);
+  function login(username: string, token: string) {
+    localStorage.setItem("token", token);
+    localStorage.setItem("username", username);
+
+    setIsLoggedIn(true);
+    setUsername(username);
+
+    socket.auth = { token };
+    socket.connect();
+  }
+
+  function logout() {
+    socket.disconnect();
+    socket.auth = {};
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+
+    setIsLoggedIn(false);
+    setUsername(null);
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        username,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-	const context = useContext(AuthContext);
+  const context = useContext(AuthContext);
 
-	if (!context) {
-		throw new Error("useAuth must be used inside AuthProvider");
-	}
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
 
-	return context;
+  return context;
 }
 
 export default AuthContext;
