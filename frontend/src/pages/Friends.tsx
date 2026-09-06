@@ -62,10 +62,12 @@ function Friends() {
       loadRequests();
     }
 
+    socket.on("connect", handleFriendsChanged);
     socket.on("presence:changed", loadFriends);
     socket.on("friends:changed", handleFriendsChanged);
 
     return () => {
+      socket.on("connect", handleFriendsChanged);
       socket.off("presence:changed", loadFriends);
       socket.off("friends:changed", handleFriendsChanged);
     };
