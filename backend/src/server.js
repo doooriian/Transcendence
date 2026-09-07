@@ -8,6 +8,8 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import friendRoutes from "./routes/friendRoutes.js";
 
+import authSocket from "./middleware/socketAuthMiddleware.js";
+
 const app = express();
 
 // Create the HTTP server used by both Express and Socket.IO
@@ -38,9 +40,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 
-// Handle Socket.IO client connections
+// Authenticate Socket.IO clients before accepting their connection
+io.use(authSocket);
+
+// Handle authenticated Socket.IO client connections
 io.on("connection", (socket) => {
   console.log(`Socket connected: ${socket.id}`);
+  console.log(`Authenticated user: ${socket.data.authId}`);
 
   // Handle client disconnection
   socket.on("disconnect", () => {
