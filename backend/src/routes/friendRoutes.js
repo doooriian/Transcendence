@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
+import { isUserOnline } from "../services/presenceService.js";
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.use(authToken);
  * Response:
  * {
  *   friends: [
- *     { username: "John" }
+ *     { username: "John", isOnline: true }
  *   ]
  * }
  */
@@ -30,6 +31,7 @@ router.get("/", async (req, res) => {
           select: {
             friend: {
               select: {
+                authId: true,
                 username: true,
               },
             },
@@ -43,7 +45,10 @@ router.get("/", async (req, res) => {
     }
 
     const friends = friendList.friendships.map((friendship) => {
-      return friendship.friend;
+      return {
+        username: friendship.friend.username,
+        isOnline: isUserOnline(friendship.friend.authId),
+      };
     });
 
     res.json({ friends });
@@ -171,6 +176,7 @@ router.post("/requests", async (req, res) => {
       },
       select: {
         id: true,
+        authId: true,
       },
     });
 
@@ -208,6 +214,12 @@ router.post("/requests", async (req, res) => {
         pairKey,
       },
     });
+
+    const io = req.app.get("io");
+
+    io.to(`user:${req.authId}`)
+      .to(`user:${receiver.authId}`)
+      .emit("friends:changed");
 
     res.status(201).json({ message: "Friend request sent" });
   } catch (err) {
@@ -263,6 +275,11 @@ router.post("/requests/:id/accept", async (req, res) => {
       select: {
         senderId: true,
         receiverId: true,
+        sender: {
+          select: {
+            authId: true,
+          },
+        },
       },
     });
 
@@ -299,6 +316,12 @@ router.post("/requests/:id/accept", async (req, res) => {
         },
       }),
     ]);
+
+    const io = req.app.get("io");
+
+    io.to(`user:${req.authId}`)
+      .to(`user:${friendRequest.sender.authId}`)
+      .emit("friends:changed");
 
     return res.status(200).json({
       message: "Friend request accepted",
@@ -358,6 +381,16 @@ router.delete("/requests/:id", async (req, res) => {
       select: {
         senderId: true,
         receiverId: true,
+        sender: {
+          select: {
+            authId: true,
+          },
+        },
+        receiver: {
+          select: {
+            authId: true,
+          },
+        },
       },
     });
 
@@ -381,6 +414,12 @@ router.delete("/requests/:id", async (req, res) => {
         id: requestId,
       },
     });
+
+    const io = req.app.get("io");
+
+    io.to(`user:${friendRequest.sender.authId}`)
+      .to(`user:${friendRequest.receiver.authId}`)
+      .emit("friends:changed");
 
     return res.status(200).json({
       message: "Friend request deleted",
@@ -424,6 +463,7 @@ router.delete("/users/:username", async (req, res) => {
       },
       select: {
         id: true,
+        authId: true,
       },
     });
 
@@ -453,6 +493,12 @@ router.delete("/users/:username", async (req, res) => {
         message: "Friendship not found",
       });
     }
+
+    const io = req.app.get("io");
+
+    io.to(`user:${req.authId}`)
+      .to(`user:${friend.authId}`)
+      .emit("friends:changed");
 
     return res.status(200).json({
       message: "Friend removed",

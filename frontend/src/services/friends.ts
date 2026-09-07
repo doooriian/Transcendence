@@ -1,5 +1,6 @@
 export type Friend = {
 	username: string;
+	isOnline: boolean;
 };
 
 export type FriendRequest = {
