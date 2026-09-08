@@ -1,77 +1,113 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+createContext,
+useContext,
+useEffect,
+useState,
+} from "react";
+
+import { useNavigate } from "react-router-dom";
 
 import socket from "../services/socket";
 
 type AuthContextType = {
-  isLoggedIn: boolean;
-  username: string | null;
-  login: (username: string, token: string) => void;
-  logout: () => void;
+isLoggedIn: boolean;
+username: string | null;
+login: (username: string, token: string) => void;
+logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("token") !== null,
-  );
+const navigate = useNavigate();
 
-  const [username, setUsername] = useState(localStorage.getItem("username"));
+const [isLoggedIn, setIsLoggedIn] = useState(
+	localStorage.getItem("token") !== null,
+);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+const [username, setUsername] = useState(
+	localStorage.getItem("username"),
+);
 
-    if (!token) return;
+function login(username: string, token: string) {
+	localStorage.setItem("token", token);
+	localStorage.setItem("username", username);
 
-    socket.auth = { token };
+	setIsLoggedIn(true);
+	setUsername(username);
 
-    if (!socket.connected) socket.connect();
-  }, []);
+	socket.auth = { token };
+	socket.connect();
+}
 
-  function login(username: string, token: string) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("username", username);
+function logout() {
+	socket.disconnect();
+	socket.auth = {};
 
-    setIsLoggedIn(true);
-    setUsername(username);
+	localStorage.removeItem("token");
+	localStorage.removeItem("username");
 
-    socket.auth = { token };
-    socket.connect();
-  }
+	setIsLoggedIn(false);
+	setUsername(null);
 
-  function logout() {
-    socket.disconnect();
-    socket.auth = {};
+	navigate("/");
+}
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
+// Écoute une réponse 401 venant de apiFetch
+useEffect(() => {
+	function handleUnauthorized() {
+		logout();
+	}
 
-    setIsLoggedIn(false);
-    setUsername(null);
-  }
+	window.addEventListener("unauthorized", handleUnauthorized);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isLoggedIn,
-        username,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+	return () => {
+		window.removeEventListener(
+			"unauthorized",
+			handleUnauthorized,
+		);
+	};
+}, []);
+
+// Connexion du socket si un token existe
+useEffect(() => {
+	const token = localStorage.getItem("token");
+
+	if (!token)
+		return;
+
+	socket.auth = { token };
+
+	if (!socket.connected)
+		socket.connect();
+}, []);
+
+return (
+	<AuthContext.Provider
+		value={{
+			isLoggedIn,
+			username,
+			login,
+			logout,
+		}}
+	>
+		{children}
+	</AuthContext.Provider>
+);
+
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+const context = useContext(AuthContext);
 
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
+if (!context) {
+	throw new Error(
+		"useAuth must be used inside AuthProvider",
+	);
+}
 
-  return context;
+return context;
+
 }
 
 export default AuthContext;

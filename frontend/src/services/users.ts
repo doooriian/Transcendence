@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 export type User = {
 	id: number;
 	username: string;
@@ -12,7 +14,7 @@ export type UserSearchResult = {
 export async function searchUsers(query: string) {
 	const token = localStorage.getItem("token");
 
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/users?username=${encodeURIComponent(query)}`,
 		{
 			headers: {
@@ -32,7 +34,7 @@ export async function searchUsers(query: string) {
 export async function getMyProfile() {
 	const token = localStorage.getItem("token");
 
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/auth/me`,
 		{
 			headers: {
@@ -52,7 +54,7 @@ export async function getMyProfile() {
 export async function getUser(username: string) {
 	const token = localStorage.getItem("token");
 
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/users/${username}`,
 		{
 			headers: {
