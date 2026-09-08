@@ -156,7 +156,7 @@ function Friends() {
                       <span className="font-semibold">{friend.username}</span>
 
                       <span className="ml-3 text-sm">
-                        {friend.isOnline ? "Online" : "Offline"}
+                        {friend.isOnline ? "🟢" : "🔴"}
                       </span>
                     </div>
 
