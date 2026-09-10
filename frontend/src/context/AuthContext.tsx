@@ -58,10 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	useEffect(() => {
-		function handleUnauthorized() {
-			if (!localStorage.getItem("token")) {
-				return;
-			}
+		function handleUnauthorized() {}
 			// Évite d'afficher plusieurs popups
 			setSessionExpired(true);
 

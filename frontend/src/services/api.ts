@@ -1,10 +1,3 @@
-function handleUnauthorized() {
-	localStorage.removeItem("token");
-	localStorage.removeItem("username");
-
-	window.dispatchEvent(new Event("unauthorized"));
-}
-
 export async function apiFetch(
 	url: string,
 	options: RequestInit = {},
@@ -13,7 +6,7 @@ export async function apiFetch(
 
 	const headers = {
 		...options.headers,
-		Authorization: `Bearer ${token}`,
+		...(token ? { Authorization: `Bearer ${token}` } : {})
 	};
 
 	const response = await fetch(url, {
@@ -22,7 +15,7 @@ export async function apiFetch(
 	});
 
 	if (response.status === 401) {
-		handleUnauthorized();
+		window.dispatchEvent(new Event("unauthorized"));
 	}
 
 	return response;
