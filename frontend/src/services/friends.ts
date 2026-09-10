@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 export type Friend = {
 	username: string;
 	isOnline: boolean;
@@ -9,10 +11,7 @@ export type FriendRequest = {
 };
 
 function getAuthHeaders() {
-	const token = localStorage.getItem("token");
-
 	return {
-		Authorization: `Bearer ${token}`,
 		"Content-Type": "application/json",
 	};
 }
@@ -20,7 +19,7 @@ function getAuthHeaders() {
 
 // Récupérer mes amis
 export async function getFriends() {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends`,
 		{
 			headers: getAuthHeaders(),
@@ -38,7 +37,7 @@ export async function getFriends() {
 
 // Récupérer mes demandes reçues et envoyées
 export async function getFriendRequests() {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/requests`,
 		{
 			headers: getAuthHeaders(),
@@ -57,7 +56,7 @@ export async function getFriendRequests() {
 
 // Envoyer une demande
 export async function sendFriendRequest(username: string) {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/requests`,
 		{
 			method: "POST",
@@ -79,7 +78,7 @@ export async function sendFriendRequest(username: string) {
 
 // Accepter une demande
 export async function acceptFriendRequest(id: number) {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/requests/${id}/accept`,
 		{
 			method: "POST",
@@ -98,7 +97,7 @@ export async function acceptFriendRequest(id: number) {
 
 // Refuser une demande OU annuler une demande envoyée
 export async function deleteFriendRequest(id: number) {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/requests/${id}`,
 		{
 			method: "DELETE",
@@ -117,7 +116,7 @@ export async function deleteFriendRequest(id: number) {
 
 // Supprimer un ami
 export async function removeFriend(username: string) {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/users/${username}`,
 		{
 			method: "DELETE",
