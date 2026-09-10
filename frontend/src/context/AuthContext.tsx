@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	useEffect(() => {
-		function handleUnauthorized() {}
+		function handleUnauthorized() {
 			// Évite d'afficher plusieurs popups
 			setSessionExpired(true);
 

@@ -12,15 +12,8 @@ export type UserSearchResult = {
 };
 
 export async function searchUsers(query: string) {
-	const token = localStorage.getItem("token");
-
 	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/users?username=${encodeURIComponent(query)}`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
 	);
 
 	const data = await response.json();
@@ -32,15 +25,8 @@ export async function searchUsers(query: string) {
 }
 
 export async function getMyProfile() {
-	const token = localStorage.getItem("token");
-
 	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/auth/me`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
 	);
 
 	const data = await response.json();
@@ -52,15 +38,8 @@ export async function getMyProfile() {
 }
 
 export async function getUser(username: string) {
-	const token = localStorage.getItem("token");
-
 	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/users/${username}`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
 	);
 
 	const data = await response.json();

@@ -14,7 +14,7 @@ export async function apiFetch(
 		headers,
 	});
 
-	if (response.status === 401) {
+	if (response.status === 401 && token) {
 		window.dispatchEvent(new Event("unauthorized"));
 	}
 

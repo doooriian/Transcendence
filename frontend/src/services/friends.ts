@@ -11,10 +11,7 @@ export type FriendRequest = {
 };
 
 function getAuthHeaders() {
-	const token = localStorage.getItem("token");
-
 	return {
-		Authorization: `Bearer ${token}`,
 		"Content-Type": "application/json",
 	};
 }
@@ -119,7 +116,7 @@ export async function deleteFriendRequest(id: number) {
 
 // Supprimer un ami
 export async function removeFriend(username: string) {
-	const response = await fetch(
+	const response = await apiFetch(
 		`${import.meta.env.VITE_API_URL}/api/friends/users/${username}`,
 		{
 			method: "DELETE",
