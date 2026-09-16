@@ -13,6 +13,11 @@ import authSocket from "./middleware/socketAuthMiddleware.js";
 import { addUserSocket, removeUserSocket } from "./services/presenceService.js";
 import { notifyFriendsPresenceChanged } from "./services/presenceNotificationService.js";
 
+import registerGameHandlers, {
+  cancelGameDisconnect,
+  scheduleGameDisconnect,
+} from "./sockets/gameSocket.js";
+
 const app = express();
 
 // Create the HTTP server used by both Express and Socket.IO
@@ -57,11 +62,14 @@ io.on("connection", (socket) => {
 
   const becameOnline = addUserSocket(authId, socket.id);
 
+  cancelGameDisconnect(authId);
+
   socket.on("disconnect", () => {
     const becameOffline = removeUserSocket(authId, socket.id);
 
     if (becameOffline) {
       notifyFriendsPresenceChanged(io, authId);
+      scheduleGameDisconnect(io, authId);
     }
 
     console.log(`Socket disconnected: ${socket.id}`);
@@ -70,6 +78,8 @@ io.on("connection", (socket) => {
   if (becameOnline) {
     notifyFriendsPresenceChanged(io, authId);
   }
+
+  registerGameHandlers(io, socket);
 
   console.log(`Socket connected: ${socket.id}`);
   console.log(`Authenticated user: ${authId}`);
