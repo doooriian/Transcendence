@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 
 type BackendHealth = {
@@ -201,7 +202,7 @@ function Home() {
 				</div>
 
 			</section>
-
+			<Footer/>
 		</main>
 	);
 }
