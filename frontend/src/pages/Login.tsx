@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginResponse } from "../services/auth";
-import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
+import { useLocation } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 function Login() {
 	const [username, setUsername] = useState("");
@@ -12,6 +14,9 @@ function Login() {
 	
 	const { login } = useAuth();
 	const navigate = useNavigate();
+
+	const location = useLocation();
+	const message = location.state?.message;
 
 	async function handleLogin() {
 		setError("");
@@ -31,9 +36,9 @@ function Login() {
 		<Header/>
 
 		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-
+			
 			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
-
+				
 				<div className="text-center mb-8">
 					<h1 className="text-4xl font-bold">
 						♟ ft_transcendence
@@ -43,7 +48,12 @@ function Login() {
 						Connectez-vous pour jouer aux échecs en ligne
 					</p>
 				</div>
-
+				{message && (
+					<div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
+						🔒 {message}
+					</div>
+				)}
+				
 				<form
 						onSubmit={(event) => {
 							event.preventDefault();

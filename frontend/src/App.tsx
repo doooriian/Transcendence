@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Chess from "./pages/Chess";
 import Friends from "./pages/Friends";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
 	return (
@@ -18,9 +19,12 @@ function App() {
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/register" element={<Register />} />
-					<Route path="/profile/:username" element={<Profile />} />
-					<Route path="/chess" element={<Chess />} />
-					<Route path="/friends" element={<Friends />} />
+
+					<Route element={<ProtectedRoute />}>
+						<Route path="/friends" element={<Friends />} />
+						<Route path="/chess" element={<Chess />} />
+						<Route path="/profile/:username" element={<Profile />} />
+					</Route>
 
 					<Route path="*" element={<NotFound />} />
 				</Routes>
