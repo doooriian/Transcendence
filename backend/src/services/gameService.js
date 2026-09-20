@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
+import ChessEngine from "../games/chess/chess.engine.js";
 
 const games = new Map();
+const chessEngines = new Map();
 const activeGameByUser = new Map();
 
 /**
@@ -18,23 +20,13 @@ function createGame(authId) {
     black: null,
   };
 
+  const chessEngine = new ChessEngine();
+
   games.set(game.id, game);
+  chessEngines.set(game.id, chessEngine);
   activeGameByUser.set(authId, game.id);
 
   return game;
-}
-
-/**
- * Returns the active game of a user, or null if the user has no active game.
- */
-function getActiveGameByUser(authId) {
-  const gameId = activeGameByUser.get(authId);
-
-  if (!gameId) {
-    return null;
-  }
-
-  return games.get(gameId) ?? null;
 }
 
 /**
@@ -53,7 +45,7 @@ function joinGame(gameId, authId) {
   }
 
   game.black = authId;
-  activeGameByUser.set(authId, game.id);
+  activeGameByUser.set(authId, gameId);
 
   return game;
 }
@@ -70,6 +62,7 @@ function leaveGame(gameId, authId) {
   }
 
   games.delete(gameId);
+  chessEngines.delete(gameId);
   activeGameByUser.delete(game.white);
 
   if (game.black) {
@@ -79,4 +72,85 @@ function leaveGame(gameId, authId) {
   return game;
 }
 
-export { createGame, getActiveGameByUser, joinGame, leaveGame };
+/**
+ * Returns the active game of a user, or null if the user has no active game.
+ */
+function getActiveGameByUser(authId) {
+  const gameId = activeGameByUser.get(authId);
+
+  if (!gameId) {
+    return null;
+  }
+
+  return games.get(gameId) ?? null;
+}
+
+function getChessEngine(gameId) {
+  return chessEngines.get(gameId) ?? null;
+}
+
+function getPlayerColor(game, authId) {
+  if (game.white === authId) {
+    return "white";
+  }
+
+  if (game.black === authId) {
+    return "black";
+  }
+
+  return null;
+}
+
+function getLegalMoves(gameId, authId, startingSquare) {
+  const game = games.get(gameId);
+
+  if (!game || !game.black) {
+    return null;
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+
+  if (!playerColor) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  if (playerColor !== chessEngine.getCurrentPlayerColor()) {
+    return null;
+  }
+
+  return chessEngine.getLegalMoves(startingSquare);
+}
+
+function makeGameMove(gameId, authId, move) {
+  const game = games.get(gameId);
+
+  if (!game || !game.black) {
+    return null;
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+
+  if (!playerColor) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  if (playerColor !== chessEngine.getCurrentPlayerColor()) {
+    return null;
+  }
+
+  return chessEngine.makeMove(move);
+}
+
+export { createGame, joinGame, leaveGame, getActiveGameByUser, getLegalMoves, makeGameMove };

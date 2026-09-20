@@ -1,12 +1,13 @@
 import {
   createGame,
-  getActiveGameByUser,
   joinGame,
   leaveGame,
+  getActiveGameByUser,
+  makeGameMove,
+  getLegalMoves,
 } from "../services/gameService.js";
 
 const DISCONNECT_GRACE_MS = 60_000;
-
 const disconnectTimers = new Map();
 
 /**
@@ -18,14 +19,101 @@ function handleGameCreate(socket) {
   const game = createGame(authId);
 
   if (!game) {
-    socket.emit("game:error", {
-      message: "You already have an active game",
-    });
+    socket.emit("game:error", { message: "You already have an active game" });
     return;
   }
 
   socket.join(`game:${game.id}`);
   socket.emit("game:created", game);
+}
+
+/**
+ * Sends the authenticated user's active game to the frontend.
+ * Emits null if the user has no active game.
+ */
+function handleGetActiveGame(socket) {
+  const authId = socket.data.authId;
+  const game = getActiveGameByUser(authId);
+
+  socket.emit("game:active", game);
+}
+
+/**
+ * Tries to join an existing game.
+ * Emits "game:error" to the joining socket on failure.
+ * On success, joins the game room and emits "game:ready" with the game to both players.
+ */
+function handleGameJoin(io, socket, gameId) {
+  const authId = socket.data.authId;
+  const game = joinGame(gameId, authId);
+
+  if (!game) {
+    socket.emit("game:error", { message: "Unable to join the game" });
+    return;
+  }
+
+  socket.join(`game:${game.id}`);
+  io.to(`game:${game.id}`).emit("game:ready", game);
+}
+
+function handleGetLegalMoves(socket, data) {
+  const authId = socket.data.authId;
+
+  const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
+
+  if (!legalMoves) {
+    socket.emit("game:error", { message: "Unable to get legal moves" });
+    return;
+  }
+
+  socket.emit("game:legal-moves", {
+    startingSquare: data.startingSquare,
+    legalMoves,
+  });
+}
+
+function handleGameMove(io, socket, data) {
+  const authId = socket.data.authId;
+
+  const result = makeGameMove(data.gameId, authId, data.move);
+
+  if (!result) {
+    socket.emit("game:error", { message: "Unable to make move" });
+    return;
+  }
+
+  if (!result.moveWasSuccessful) {
+    socket.emit("game:error", { message: result.errorMessage });
+    return;
+  }
+
+  io.to(`game:${data.gameId}`).emit("game:updated", result);
+}
+
+/**
+ * Tries to remove a player from an existing game.
+ * Emits "game:error" to the leaving socket if the user is not allowed to leave.
+ * On success, emits "game:ended" to the room and removes all sockets from it.
+ */
+function handleGameLeave(io, socket, gameId) {
+  const authId = socket.data.authId;
+  const game = leaveGame(gameId, authId);
+
+  if (!game) {
+    socket.emit("game:error", { message: "Unable to leave the game" });
+    return;
+  }
+
+  cancelGameDisconnect(game.white);
+
+  if (game.black) {
+    cancelGameDisconnect(game.black);
+  }
+
+  const room = `game:${gameId}`;
+
+  io.to(room).emit("game:ended");
+  io.in(room).socketsLeave(room);
 }
 
 /**
@@ -86,65 +174,6 @@ function scheduleGameDisconnect(io, authId) {
 }
 
 /**
- * Sends the authenticated user's active game to the frontend.
- * Emits null if the user has no active game.
- */
-function handleGetActiveGame(socket) {
-  const authId = socket.data.authId;
-  const game = getActiveGameByUser(authId);
-
-  socket.emit("game:active", game);
-}
-
-/**
- * Tries to join an existing game.
- * Emits "game:error" to the joining socket on failure.
- * On success, joins the game room and emits "game:ready" with the game to both players.
- */
-function handleGameJoin(io, socket, gameId) {
-  const authId = socket.data.authId;
-  const game = joinGame(gameId, authId);
-
-  if (!game) {
-    socket.emit("game:error", {
-      message: "Unable to join the game",
-    });
-    return;
-  }
-
-  socket.join(`game:${game.id}`);
-  io.to(`game:${game.id}`).emit("game:ready", game);
-}
-
-/**
- * Tries to remove a player from an existing game.
- * Emits "game:error" to the leaving socket if the user is not allowed to leave.
- * On success, emits "game:ended" to the room and removes all sockets from it.
- */
-function handleGameLeave(io, socket, gameId) {
-  const authId = socket.data.authId;
-  const game = leaveGame(gameId, authId);
-
-  if (!game) {
-    socket.emit("game:error", {
-      message: "Unable to leave the game",
-    });
-    return;
-  }
-
-  cancelGameDisconnect(game.white);
-
-  if (game.black) {
-    cancelGameDisconnect(game.black);
-  }
-
-  const room = `game:${gameId}`;
-
-  io.to(room).emit("game:ended");
-  io.in(room).socketsLeave(room);
-}
-
-/**
  * Registers all game-related Socket.IO listeners for one authenticated socket.
  * Automatically restores the socket to its active game room if necessary.
  */
@@ -161,6 +190,12 @@ function registerGameHandlers(io, socket) {
   socket.on("game:get-active", () => handleGetActiveGame(socket));
 
   socket.on("game:join", (gameId) => handleGameJoin(io, socket, gameId));
+
+  socket.on("game:get-legal-moves", (data) =>
+    handleGetLegalMoves(socket, data),
+  );
+
+  socket.on("game:move", (data) => handleGameMove(io, socket, data));
 
   socket.on("game:leave", (gameId) => handleGameLeave(io, socket, gameId));
 }
