@@ -101,6 +101,27 @@ function getPlayerColor(game, authId) {
   return null;
 }
 
+function getGameState(gameId, authId) {
+  const game = games.get(gameId);
+
+  if (!game || !getPlayerColor(game, authId)) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  return {
+    id: game.id,
+    white: game.white,
+    black: game.black,
+    chess: chessEngine.getGameState(),
+  };
+}
+
 function getLegalMoves(gameId, authId, startingSquare) {
   const game = games.get(gameId);
 
@@ -153,4 +174,12 @@ function makeGameMove(gameId, authId, move) {
   return chessEngine.makeMove(move);
 }
 
-export { createGame, joinGame, leaveGame, getActiveGameByUser, getLegalMoves, makeGameMove };
+export {
+  createGame,
+  joinGame,
+  leaveGame,
+  getActiveGameByUser,
+  getGameState,
+  getLegalMoves,
+  makeGameMove,
+};

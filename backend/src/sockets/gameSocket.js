@@ -3,8 +3,9 @@ import {
   joinGame,
   leaveGame,
   getActiveGameByUser,
-  makeGameMove,
+  getGameState,
   getLegalMoves,
+  makeGameMove,
 } from "../services/gameService.js";
 
 const DISCONNECT_GRACE_MS = 60_000;
@@ -23,8 +24,10 @@ function handleGameCreate(socket) {
     return;
   }
 
+  const gameState = getGameState(game.id, authId);
+
   socket.join(`game:${game.id}`);
-  socket.emit("game:created", game);
+  socket.emit("game:created", gameState);
 }
 
 /**
@@ -35,7 +38,14 @@ function handleGetActiveGame(socket) {
   const authId = socket.data.authId;
   const game = getActiveGameByUser(authId);
 
-  socket.emit("game:active", game);
+  if (!game) {
+    socket.emit("game:active", null);
+    return;
+  }
+
+  const gameState = getGameState(game.id, authId);
+
+  socket.emit("game:active", gameState);
 }
 
 /**
@@ -52,8 +62,10 @@ function handleGameJoin(io, socket, gameId) {
     return;
   }
 
+  const gameState = getGameState(game.id, authId);
+
   socket.join(`game:${game.id}`);
-  io.to(`game:${game.id}`).emit("game:ready", game);
+  io.to(`game:${game.id}`).emit("game:ready", gameState);
 }
 
 function handleGetLegalMoves(socket, data) {
@@ -87,7 +99,9 @@ function handleGameMove(io, socket, data) {
     return;
   }
 
-  io.to(`game:${data.gameId}`).emit("game:updated", result);
+  const gameState = getGameState(data.gameId, authId);
+
+  io.to(`game:${data.gameId}`).emit("game:updated", gameState);
 }
 
 /**
