@@ -1,11 +1,14 @@
 import { randomUUID } from "crypto";
+import ChessEngine from "../games/chess/chess.engine.js";
 
 const games = new Map();
+const chessEngines = new Map();
 const activeGameByUser = new Map();
 
 /**
  * Creates a new game with the authenticated user as white.
- * Returns the created game object, or null if the user already has an active game.
+ * Creates a dedicated chess engine and marks the game as active for the user.
+ * Returns the created game, or null if the user already has an active game.
  */
 function createGame(authId) {
   if (activeGameByUser.has(authId)) {
@@ -18,28 +21,18 @@ function createGame(authId) {
     black: null,
   };
 
+  const chessEngine = new ChessEngine();
+
   games.set(game.id, game);
+  chessEngines.set(game.id, chessEngine);
   activeGameByUser.set(authId, game.id);
 
   return game;
 }
 
 /**
- * Returns the active game of a user, or null if the user has no active game.
- */
-function getActiveGameByUser(authId) {
-  const gameId = activeGameByUser.get(authId);
-
-  if (!gameId) {
-    return null;
-  }
-
-  return games.get(gameId) ?? null;
-}
-
-/**
- * Adds the authenticated user as black if the game can be joined.
- * Returns the updated game object, or null if joining is not possible.
+ * Adds the authenticated user as black to an available game.
+ * Returns the updated game, or null if the user cannot join it.
  */
 function joinGame(gameId, authId) {
   if (activeGameByUser.has(authId)) {
@@ -53,23 +46,205 @@ function joinGame(gameId, authId) {
   }
 
   game.black = authId;
-  activeGameByUser.set(authId, game.id);
+  activeGameByUser.set(authId, gameId);
 
   return game;
 }
 
 /**
- * Deletes a game if the authenticated user belongs to it.
- * Returns the deleted game object, or null if leaving is not allowed.
+ * Returns the active game associated with a user.
+ * Returns null if the user has no active game.
+ */
+function getActiveGameByUser(authId) {
+  const gameId = activeGameByUser.get(authId);
+
+  if (!gameId) {
+    return null;
+  }
+
+  return games.get(gameId) ?? null;
+}
+
+/**
+ * Returns the complete public state of a game for one of its players.
+ * Includes both session information and the current chess engine state.
+ * Returns null if the game, player, or chess engine is invalid.
+ */
+function getGameState(gameId, authId) {
+  const game = games.get(gameId);
+
+  if (!game || !getPlayerColor(game, authId)) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  return {
+    id: game.id,
+    white: game.white,
+    black: game.black,
+    chess: chessEngine.getGameState(),
+  };
+}
+
+/**
+ * Returns the legal moves for a square if it is the authenticated player's turn.
+ * Returns null if the game is not active or the request is not allowed.
+ */
+function getLegalMoves(gameId, authId, startingSquare) {
+  const game = games.get(gameId);
+
+  if (!game || !game.black) {
+    return null;
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+
+  if (!playerColor) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  if (playerColor !== chessEngine.getCurrentPlayerColor()) {
+    return null;
+  }
+
+  return chessEngine.getLegalMoves(startingSquare);
+}
+
+/**
+ * Attempts to apply a chess move for the authenticated player.
+ * Validates the game, player, and turn before delegating the move to the chess engine.
+ * Returns the chess engine result, or null if the request is not allowed.
+ */
+function makeGameMove(gameId, authId, move) {
+  const game = games.get(gameId);
+
+  if (!game || !game.black) {
+    return null;
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+
+  if (!playerColor) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  if (playerColor !== chessEngine.getCurrentPlayerColor()) {
+    return null;
+  }
+
+  return chessEngine.makeMove(move);
+}
+
+/**
+ * Resigns an active game for the authenticated player.
+ * Returns the chess engine resignation result, or null if resignation is not allowed.
+ */
+function resignGame(gameId, authId) {
+  const game = games.get(gameId);
+
+  if (!game || !game.black) {
+    return null;
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+
+  if (!playerColor) {
+    return null;
+  }
+
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine) {
+    return null;
+  }
+
+  return chessEngine.resign(playerColor);
+}
+
+/**
+ * Cancels a game that has not started yet.
+ * Only the white player may leave while no black player has joined.
+ * Returns the deleted game, or null if leaving is not allowed.
  */
 function leaveGame(gameId, authId) {
   const game = games.get(gameId);
 
-  if (!game || (game.white !== authId && game.black !== authId)) {
+  if (!game || game.black !== null || game.white !== authId) {
+    return null;
+  }
+
+  return deleteGame(gameId);
+}
+
+/**
+ * Deletes a game after the chess engine has marked it as finished.
+ * Returns the deleted game, or null if the game is not finished.
+ */
+function finishGame(gameId) {
+  const chessEngine = getChessEngine(gameId);
+
+  if (!chessEngine || !chessEngine.isGameFinished()) {
+    return null;
+  }
+
+  return deleteGame(gameId);
+}
+
+/**
+ * Returns the chess engine associated with a game.
+ * Returns null if no engine exists for the given game.
+ */
+function getChessEngine(gameId) {
+  return chessEngines.get(gameId) ?? null;
+}
+
+/**
+ * Returns the chess color assigned to a player in a game.
+ * Returns null if the user does not belong to the game.
+ */
+function getPlayerColor(game, authId) {
+  if (game.white === authId) {
+    return "white";
+  }
+
+  if (game.black === authId) {
+    return "black";
+  }
+
+  return null;
+}
+
+/**
+ * Removes a game, its chess engine, and its active-player references.
+ * Returns the deleted game, or null if the game does not exist.
+ */
+function deleteGame(gameId) {
+  const game = games.get(gameId);
+
+  if (!game) {
     return null;
   }
 
   games.delete(gameId);
+  chessEngines.delete(gameId);
+
   activeGameByUser.delete(game.white);
 
   if (game.black) {
@@ -79,4 +254,14 @@ function leaveGame(gameId, authId) {
   return game;
 }
 
-export { createGame, getActiveGameByUser, joinGame, leaveGame };
+export {
+  createGame,
+  joinGame,
+  getActiveGameByUser,
+  getGameState,
+  getLegalMoves,
+  makeGameMove,
+  resignGame,
+  leaveGame,
+  finishGame,
+};
