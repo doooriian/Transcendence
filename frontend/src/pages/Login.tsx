@@ -72,9 +72,7 @@ function Login() {
 							type="text"
 							placeholder="Votre pseudo"
 							value={username}
-							onChange={(event) => {
-								setUsername(event.target.value);
-							}}
+							onChange={(event) => { setUsername(event.target.value); }}
 							className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
 						/>
 					</div>
@@ -101,8 +99,7 @@ function Login() {
 									>
 										{showPassword ? "Hide" : "Show"}
 									</button>
-
-								</div>
+							</div>
 						</div>
 
 
