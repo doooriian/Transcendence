@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import socket from "../services/socket";
+import { getMyProfile } from "../services/users";
 
 import bb from "../assets/pieces/bb.svg";
 import bw from "../assets/pieces/bw.svg";
@@ -15,7 +16,10 @@ import qw from "../assets/pieces/qw.svg";
 import rb from "../assets/pieces/rb.svg";
 import rw from "../assets/pieces/rw.svg";
 
-type ChessPiece = string;
+type ChessPiece = {
+	chessPieceType: string;
+	chessPieceColor: "white" | "black";
+} | null;
 
 type ChessMove = {
 	startingSquare: string;
@@ -53,15 +57,65 @@ const caseBoard = [
 	["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"],
 ];
 
+function getPieceImage(piece: ChessPiece) {
+	if (!piece) {
+		return null;
+	}
+
+	if (piece.chessPieceColor === "white") {
+		switch (piece.chessPieceType) {
+			case "pawn":
+				return pw;
+			case "rook":
+				return rw;
+			case "knight":
+				return nw;
+			case "bishop":
+				return bw;
+			case "queen":
+				return qw;
+			case "king":
+				return kw;
+		}
+	}
+
+	if (piece.chessPieceColor === "black") {
+		switch (piece.chessPieceType) {
+			case "pawn":
+				return pb;
+			case "rook":
+				return rb;
+			case "knight":
+				return nb;
+			case "bishop":
+				return bb;
+			case "queen":
+				return qb;
+			case "king":
+				return kb;
+		}
+	}
+
+	return null;
+}
+
 function Chess() {
 	const [game, setGame] = useState<ChessGame | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [joinGameId, setJoinGameId] = useState("");
+	const [myAuthId, setMyAuthId] = useState<string | null>(null);
+	const [myColor, setMyColor] = useState<string | null>(null);
 
 	const [draggedPiece, setDraggedPiece] = useState<{
 		row: number;
 		col: number;
-		piece: string;
+		piece: ChessPiece;
+	} | null>(null);
+
+	const [promotionSquare, setPromotionSquare] = useState<{
+		startingSquare: string;
+		targetSquare: string;
+		pieceColor: "white" | "black";
 	} | null>(null);
 
 	const [legalMoves, setLegalMoves] = useState<ChessMove[]>([]);
@@ -71,6 +125,34 @@ function Chess() {
 		y: 0,
 	});
 
+
+	useEffect(() => {
+		async function loadProfile() {
+			const result = await getMyProfile();
+
+			if (result.ok) {
+				setMyAuthId(result.data.authId);
+			}
+		}
+
+		loadProfile();
+	}, []);
+
+	useEffect(() => {
+		if (!game || !myAuthId) {
+			setMyColor(null);
+			return;
+		}
+
+		if (game.white === myAuthId) {
+			setMyColor("white");
+		} else if (game.black === myAuthId) {
+			setMyColor("black");
+		} else {
+			setMyColor(null);
+		}
+	}, [game, myAuthId]);
+
 	useEffect(() => {
 		function updateGame(gameState: ChessGame) {
 			console.log("GAME RECUE :", gameState);
@@ -79,6 +161,7 @@ function Chess() {
 			setGame(gameState);
 			setDraggedPiece(null);
 			setLegalMoves([]);
+			setError("");
 		}
 
 		function handleGameActive(gameState: ChessGame | null) {
@@ -138,6 +221,83 @@ function Chess() {
 		setJoinGameId("");
 	}
 
+	function cancelGame() {
+		if (!game)
+			return;
+
+		socket.emit("game:leave", game.id);
+
+		setGame(null);
+		setJoinGameId("");
+		setLegalMoves([]);
+	}
+
+	function resignGame() {
+		if (!game)
+			return;
+
+		socket.emit("game:resign", game.id);
+	}
+
+	function endGame() {
+		if (!game)
+			return;
+
+		setError("");
+		setJoinGameId("");
+		setLegalMoves([]);
+		setGame(null);
+	}
+
+	function getEndReasonText(reason: string | null) {
+		switch (reason) {
+			case "checkmate":
+				return "Échec et mat";
+			case "resignation":
+				return "Abandon";
+			case "stalemate":
+				return "Pat";
+			case "draw":
+				return "Match nul";
+			default:
+				return "Partie terminée";
+		}
+	}
+
+	function getGameResult(result: string | null) {
+		if (result === "draw") {
+			return "Draw";
+		}
+
+		if (result === "whitePlayerWon") {
+			return myColor === "white"
+				? "Victoire"
+				: "Défaite";
+		}
+
+		if (result === "blackPlayerWon") {
+			return myColor === "black"
+				? "Victoire"
+				: "Défaite";
+		}
+
+		return "Partie terminée";
+	}
+
+	function getBackendCoordinates(row: number, col: number) {
+		if (myColor === "black") {
+			return {
+				row: 7 - row,
+				col: 7 - col,
+			};
+		}
+
+		return {
+			row,
+			col,
+		};
+	}
+	
 	const handleMouseDown = (
 		event: React.MouseEvent,
 		row: number,
@@ -147,15 +307,18 @@ function Chess() {
 			return;
 		}
 
-		const piece = game.chess.chessBoard[row][col];
+		const { row: backendRow, col: backendCol } =
+			getBackendCoordinates(row, col);
 
-		if (piece === "") {
+		const piece = game.chess.chessBoard[backendRow][backendCol];
+
+		if (piece === null) {
 			return;
 		}
 
 		event.preventDefault();
 
-		const startingSquare = caseBoard[row][col];
+		const startingSquare = caseBoard[backendRow][backendCol];
 
 		socket.emit("game:get-legal-moves", {
 			gameId: game.id,
@@ -213,11 +376,29 @@ function Chess() {
 		const targetCol = Math.floor(x / squareWidth);
 		const targetRow = Math.floor(y / squareHeight);
 
+		// Case de départ : coordonnées visuelles -> backend
+		const {
+			row: startBackendRow,
+			col: startBackendCol,
+		} = getBackendCoordinates(
+			draggedPiece.row,
+			draggedPiece.col
+		);
+
 		const startingSquare =
-			caseBoard[draggedPiece.row][draggedPiece.col];
+			caseBoard[startBackendRow][startBackendCol];
+
+		// Case d'arrivée : coordonnées visuelles -> backend
+		const {
+			row: targetBackendRow,
+			col: targetBackendCol,
+		} = getBackendCoordinates(
+			targetRow,
+			targetCol
+		);
 
 		const targetSquare =
-			caseBoard[targetRow][targetCol];
+			caseBoard[targetBackendRow][targetBackendCol];
 
 		const moveIsLegal = legalMoves.some(
 			(move) => move.targetSquare === targetSquare
@@ -226,6 +407,28 @@ function Chess() {
 		if (!moveIsLegal) {
 			setDraggedPiece(null);
 			setLegalMoves([]);
+			return;
+		}
+
+		const piece = draggedPiece.piece;
+
+		const isPromotion =
+			piece?.chessPieceType === "pawn" &&
+			(
+				(piece.chessPieceColor === "white" && targetSquare[1] === "8") ||
+				(piece.chessPieceColor === "black" && targetSquare[1] === "1")
+			);
+
+		if (isPromotion) {
+			setPromotionSquare({
+				startingSquare,
+				targetSquare,
+				pieceColor: piece.chessPieceColor,
+			});
+
+			setDraggedPiece(null);
+			setLegalMoves([]);
+
 			return;
 		}
 
@@ -240,6 +443,36 @@ function Chess() {
 		setDraggedPiece(null);
 		setLegalMoves([]);
 	};
+
+	type PromotionPiece = "queen" | "rook" | "bishop" | "knight";
+	function promote(pieceType: PromotionPiece) {
+		if (!promotionSquare || !game) {
+			return;
+		}
+
+		socket.emit("game:move", {
+			gameId: game.id,
+			move: {
+				startingSquare: promotionSquare.startingSquare,
+				targetSquare: promotionSquare.targetSquare,
+				promotionChessPieceType: pieceType,
+			},
+		});
+
+		setPromotionSquare(null);
+	}
+
+	const displayedBoard =
+		myColor === "black"
+			? [...game?.chess.chessBoard ?? []]
+					.reverse()
+					.map((row) => [...row].reverse())
+			: game?.chess.chessBoard ?? [];
+
+	const displayedCaseBoard =
+		myColor === "black"
+			? [...caseBoard].reverse().map((row) => [...row].reverse())
+			: caseBoard;
 
 	return (
 		<main className="min-h-screen bg-slate-950 text-white">
@@ -293,7 +526,7 @@ function Chess() {
 								</p>
 							)}
 
-							{game && (
+							{game && !game?.chess.isGameFinished && (
 								<div className="mt-6">
 									<p>
 										Partie : {game.id}
@@ -308,9 +541,18 @@ function Chess() {
 									</p>
 
 									{game.black === null && (
-										<p className="mt-4 text-yellow-400">
-											En attente d'un adversaire...
-										</p>
+										<div className="flex flex-col items-center">
+											<p className="mt-4 text-yellow-400">
+												En attente d'un adversaire...
+											</p>
+
+											<button
+												onClick={cancelGame}
+												className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 transition"
+											>
+												Cancel
+											</button>
+										</div>
 									)}
 
 									{game.black !== null && (
@@ -318,6 +560,33 @@ function Chess() {
 											La partie est prête !
 										</p>
 									)}
+								</div>
+							)}
+
+							{game && game?.chess.isGameFinished && (
+								<div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-5 py-6 text-center shadow-xl">
+									<p
+										className={`text-xl font-semibold ${
+											game.chess.chessGameResult === "draw"
+												? "text-yellow-400"
+												: getGameResult(game.chess.chessGameResult) === "Victoire"
+													? "text-green-400"
+													: "text-red-400"
+										}`}
+									>
+										{getGameResult(game.chess.chessGameResult)}
+									</p>
+
+									<p className="text-sm text-slate-400">
+										{getEndReasonText(game.chess.chessGameEndReason)}
+									</p>
+
+									<button
+										onClick={endGame}
+										className="mt-3 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-500"
+									>
+										Retour
+									</button>
 								</div>
 							)}
 						</div>
@@ -335,14 +604,16 @@ function Chess() {
 								onMouseMove={handleMouseMove}
 								onMouseUp={handleMouseUp}
 							>
-								{game.chess.chessBoard.map(
+								{displayedBoard.map(
 									(row, rowIndex) =>
 										row.map((piece, columnIndex) => {
+											const pieceImage = getPieceImage(piece);
+
 											const isDark =
 												(rowIndex + columnIndex) % 2 === 1;
 
 											const square =
-												caseBoard[rowIndex][columnIndex];
+												displayedCaseBoard[rowIndex][columnIndex];
 
 											const isDragging =
 												draggedPiece?.row === rowIndex &&
@@ -372,19 +643,23 @@ function Chess() {
 														isDark
 															? "bg-blue-700"
 															: "bg-slate-200"
-													} ${
-														isLegalMove
-															? "ring-4 ring-inset ring-green-400"
-															: ""
 													}`}
 												>
-													{piece && (
+													{pieceImage && (
 														<img
-															src={piece}
+															src={pieceImage}
 															alt=""
 															draggable={false}
 															className="pointer-events-none h-[85%] w-[85%] object-contain"
 														/>
+													)}
+
+													{isLegalMove && !pieceImage && (
+														<div className="pointer-events-none absolute h-4 w-4 rounded-full bg-gray-500/90" />
+													)}
+
+													{isLegalMove && pieceImage && (
+														<div className="pointer-events-none absolute inset-1 rounded-full border-4 border-red-500/80" />
 													)}
 												</div>
 											);
@@ -394,7 +669,7 @@ function Chess() {
 								{/* Pièce qui suit la souris */}
 								{draggedPiece && (
 									<img
-										src={draggedPiece.piece}
+										src={getPieceImage(draggedPiece.piece)}
 										alt=""
 										draggable={false}
 										className="pointer-events-none fixed z-50 h-20 w-20 object-contain"
@@ -405,11 +680,59 @@ function Chess() {
 									/>
 								)}
 							</div>
+							
 						) : (
 							<div className="flex aspect-square items-center justify-center rounded-lg border border-slate-800 bg-slate-900">
 								<p className="text-slate-400">
 									Crée ou rejoins une partie
 								</p>
+							</div>
+						)}
+					
+						{promotionSquare && (
+							<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+								<div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+									<h2 className="mb-5 text-center text-xl font-bold">
+										Choisissez une pièce
+									</h2>
+
+									<div className="flex gap-3">
+										{[
+											{
+												type: "queen" as PromotionPiece,
+												image: promotionSquare.pieceColor === "white" ? qw : qb,
+												alt: "Dame",
+											},
+											{
+												type: "rook" as PromotionPiece,
+												image: promotionSquare.pieceColor === "white" ? rw : rb,
+												alt: "Tour",
+											},
+											{
+												type: "bishop" as PromotionPiece,
+												image: promotionSquare.pieceColor === "white" ? bw : bb,
+												alt: "Fou",
+											},
+											{
+												type: "knight" as PromotionPiece,
+												image: promotionSquare.pieceColor === "white" ? nw : nb,
+												alt: "Cavalier",
+											},
+										].map((piece) => (
+											<button
+												key={piece.type}
+												onClick={() => promote(piece.type)}
+												className="flex h-24 w-20 items-center justify-center rounded-xl bg-slate-800 transition hover:bg-slate-700"
+											>
+												<img
+													src={piece.image}
+													alt={piece.alt}
+													className="h-16 w-16 object-contain"
+												/>
+											</button>
+										))}
+									</div>
+								</div>
 							</div>
 						)}
 					</div>
@@ -435,11 +758,7 @@ function Chess() {
 					<div className="mt-6 flex justify-center gap-4">
 						<button
 							className="rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 font-semibold transition hover:bg-slate-700"
-							onClick={() => {
-								if (game) {
-									socket.emit("game:resign", game.id);
-								}
-							}}
+							onClick={resignGame}
 						>
 							Resign
 						</button>
