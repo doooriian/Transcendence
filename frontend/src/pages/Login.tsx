@@ -4,14 +4,13 @@ import { loginResponse } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 function Login() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	
+
 	const { login } = useAuth();
 	const navigate = useNavigate();
 
@@ -36,9 +35,9 @@ function Login() {
 		<Header/>
 
 		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-			
+
 			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
-				
+
 				<div className="text-center mb-8">
 					<h1 className="text-4xl font-bold">
 						♟ ft_transcendence
@@ -53,7 +52,7 @@ function Login() {
 						🔒 {message}
 					</div>
 				)}
-				
+
 				<form
 						onSubmit={(event) => {
 							event.preventDefault();
@@ -127,7 +126,7 @@ function Login() {
 								onClick={() => navigate("/register")}
 								className="w-full rounded-lg bg-slate-700 py-3 font-semibold hover:bg-slate-600 transition"
 							>
-								Register	
+								Register
 							</button>
 
 						</div>
