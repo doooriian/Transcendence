@@ -18,39 +18,39 @@ function Friends() {
 
   const [error, setError] = useState("");
 
-  async function loadFriends() {
-    try {
-      const result = await getFriends();
+  function loadFriends() {
+    return getFriends()
+      .then((result) => {
+        if (!result.ok) {
+          setError("Impossible de récupérer les amis.");
+          return;
+        }
 
-      if (!result.ok) {
-        setError("Impossible de récupérer les amis.");
-        return;
-      }
-
-      setFriends(result.friends);
-      setError("");
-    } catch (error) {
-      console.error(error);
-      setError("Impossible de contacter le serveur.");
-    }
+        setFriends(result.friends);
+        setError("");
+      })
+      .catch((error) => {
+        console.error(error);
+        setError("Impossible de contacter le serveur.");
+      });
   }
 
-  async function loadRequests() {
-    try {
-      const result = await getFriendRequests();
+  function loadRequests() {
+    return getFriendRequests()
+      .then((result) => {
+        if (!result.ok) {
+          setError("Impossible de récupérer les demandes.");
+          return;
+        }
 
-      if (!result.ok) {
-        setError("Impossible de récupérer les demandes.");
-        return;
-      }
-
-      setReceived(result.received);
-      setSent(result.sent);
-      setError("");
-    } catch (error) {
-      console.error(error);
-      setError("Impossible de contacter le serveur.");
-    }
+        setReceived(result.received);
+        setSent(result.sent);
+        setError("");
+      })
+      .catch((error) => {
+        console.error(error);
+        setError("Impossible de contacter le serveur.");
+      });
   }
 
   useEffect(() => {
