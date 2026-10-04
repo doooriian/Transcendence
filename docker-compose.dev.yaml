@@ -7,6 +7,7 @@ services:
       - /app/node_modules
 
   backend:
+    user: node
     volumes:
       # Mount local backend source code for Node watch mode.
       - ./backend:/app
