@@ -24,7 +24,7 @@ function Register() {
 			return;
 		}
 
-		login(username, result.data.token);
+		login(result.data.username, result.data.token);
 		navigate("/");
 	}
 
@@ -61,6 +61,10 @@ function Register() {
 
 							<input
 								type="text"
+								required
+								minLength={3}
+								maxLength={20}
+								pattern="[A-Za-z0-9_]"
 								placeholder="Votre pseudo"
 								value={username}
 								onChange={(event) => setUsername(event.target.value)}
@@ -76,6 +80,8 @@ function Register() {
 
 							<input
 								type="email"
+								required
+								maxLength={254}
 								placeholder="Votre email"
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
@@ -92,6 +98,9 @@ function Register() {
 
 								<input
 									type={showPassword ? "text" : "password"}
+									required
+									minLength={8}
+									maxLength={128}
 									placeholder="Votre mot de passe"
 									value={password}
 									onChange={(event) => setPassword(event.target.value)}

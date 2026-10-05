@@ -44,7 +44,7 @@ router.post("/register", async (req, res) => {
       expiresIn: "24h",
     });
 
-    res.status(201).json({ token });
+    res.status(201).json({ token, username: user.username });
   } catch (err) {
     // Prisma P2002: unique constraint violation (Email or username already exists).
     if (err.code === "P2002") {

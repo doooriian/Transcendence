@@ -69,6 +69,8 @@ function Login() {
 
 						<input
 							type="email"
+							required
+							maxLength={254}
 							placeholder="Votre email"
 							value={email}
 							onChange={(event) => { setEmail(event.target.value); }}
@@ -85,6 +87,9 @@ function Login() {
 							<div className="relative">
 									<input
 										type={showPassword ? "text" : "password"}
+										required
+										minLength={8}
+										maxLength={128}
 										placeholder="Votre mot de passe"
 										value={password}
 										onChange={(event) => setPassword(event.target.value)}
@@ -123,6 +128,7 @@ function Login() {
 							</p>
 
 							<button
+							type="button"
 								onClick={() => navigate("/register")}
 								className="w-full rounded-lg bg-slate-700 py-3 font-semibold hover:bg-slate-600 transition"
 							>
