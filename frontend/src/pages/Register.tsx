@@ -64,7 +64,7 @@ function Register() {
 								required
 								minLength={3}
 								maxLength={20}
-								pattern="[A-Za-z0-9_]"
+								pattern="[A-Za-z0-9_]+"
 								placeholder="Votre pseudo"
 								value={username}
 								onChange={(event) => setUsername(event.target.value)}
