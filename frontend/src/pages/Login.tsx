@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 import Header from "../components/Header";
 
 function Login() {
-	const [username, setUsername] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
@@ -19,14 +19,14 @@ function Login() {
 
 	async function handleLogin() {
 		setError("");
-		const result = await loginResponse(username, password);
+		const result = await loginResponse(email, password);
 
 		if (!result.ok) {
 			setError(result.data.message);
 			return;
 		}
 
-		login(username, result.data.token);
+		login(result.data.username, result.data.token);
 		navigate("/");
 	}
 
@@ -64,14 +64,14 @@ function Login() {
 
 					<div>
 						<label className="block text-sm text-slate-300 mb-2">
-							Username
+							Email
 						</label>
 
 						<input
-							type="text"
-							placeholder="Votre pseudo"
-							value={username}
-							onChange={(event) => { setUsername(event.target.value); }}
+							type="email"
+							placeholder="Votre email"
+							value={email}
+							onChange={(event) => { setEmail(event.target.value); }}
 							className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
 						/>
 					</div>
@@ -103,7 +103,7 @@ function Login() {
 
 
 						<button
-							onClick={handleLogin}
+							type="submit"
 							className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition"
 						>
 							Login

@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Register() {
 	const [username, setUsername] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +17,7 @@ function Register() {
 	async function handleRegister() {
 		setError("");
 
-		const result = await register(username, password);
+		const result = await register(username, email, password);
 
 		if (!result.ok) {
 			setError(result.data.message);
@@ -63,6 +64,21 @@ function Register() {
 								placeholder="Votre pseudo"
 								value={username}
 								onChange={(event) => setUsername(event.target.value)}
+								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
+							/>
+						</div>
+
+
+						<div>
+							<label className="block text-sm text-slate-300 mb-2">
+								Email
+							</label>
+
+							<input
+								type="email"
+								placeholder="Votre email"
+								value={email}
+								onChange={(event) => setEmail(event.target.value)}
 								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
 							/>
 						</div>
