@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Register() {
 	const [username, setUsername] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
@@ -16,14 +17,14 @@ function Register() {
 	async function handleRegister() {
 		setError("");
 
-		const result = await register(username, password);
+		const result = await register(username, email, password);
 
 		if (!result.ok) {
 			setError(result.data.message);
 			return;
 		}
 
-		login(username, result.data.token);
+		login(result.data.username, result.data.token);
 		navigate("/");
 	}
 
@@ -60,9 +61,30 @@ function Register() {
 
 							<input
 								type="text"
+								required
+								minLength={3}
+								maxLength={20}
+								pattern="[A-Za-z0-9_]+"
 								placeholder="Votre pseudo"
 								value={username}
 								onChange={(event) => setUsername(event.target.value)}
+								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
+							/>
+						</div>
+
+
+						<div>
+							<label className="block text-sm text-slate-300 mb-2">
+								Email
+							</label>
+
+							<input
+								type="email"
+								required
+								maxLength={254}
+								placeholder="Votre email"
+								value={email}
+								onChange={(event) => setEmail(event.target.value)}
 								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
 							/>
 						</div>
@@ -76,6 +98,9 @@ function Register() {
 
 								<input
 									type={showPassword ? "text" : "password"}
+									required
+									minLength={8}
+									maxLength={128}
 									placeholder="Votre mot de passe"
 									value={password}
 									onChange={(event) => setPassword(event.target.value)}
