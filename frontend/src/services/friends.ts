@@ -19,8 +19,7 @@ function getAuthHeaders() {
 
 // Récupérer mes amis
 export async function getFriends() {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends`,
+	const response = await apiFetch("/api/friends",
 		{
 			headers: getAuthHeaders(),
 		}
@@ -37,8 +36,7 @@ export async function getFriends() {
 
 // Récupérer mes demandes reçues et envoyées
 export async function getFriendRequests() {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends/requests`,
+	const response = await apiFetch("/api/friends/requests",
 		{
 			headers: getAuthHeaders(),
 		}
@@ -56,8 +54,7 @@ export async function getFriendRequests() {
 
 // Envoyer une demande
 export async function sendFriendRequest(username: string) {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends/requests`,
+	const response = await apiFetch("/api/friends/requests",
 		{
 			method: "POST",
 			headers: getAuthHeaders(),
@@ -78,8 +75,7 @@ export async function sendFriendRequest(username: string) {
 
 // Accepter une demande
 export async function acceptFriendRequest(id: number) {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends/requests/${id}/accept`,
+	const response = await apiFetch(`/api/friends/requests/${id}/accept`,
 		{
 			method: "POST",
 			headers: getAuthHeaders(),
@@ -97,8 +93,7 @@ export async function acceptFriendRequest(id: number) {
 
 // Refuser une demande OU annuler une demande envoyée
 export async function deleteFriendRequest(id: number) {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends/requests/${id}`,
+	const response = await apiFetch(`/api/friends/requests/${id}`,
 		{
 			method: "DELETE",
 			headers: getAuthHeaders(),
@@ -116,8 +111,7 @@ export async function deleteFriendRequest(id: number) {
 
 // Supprimer un ami
 export async function removeFriend(username: string) {
-	const response = await apiFetch(
-		`${import.meta.env.VITE_API_URL}/api/friends/users/${username}`,
+	const response = await apiFetch(`/api/friends/users/${username}`,
 		{
 			method: "DELETE",
 			headers: getAuthHeaders(),

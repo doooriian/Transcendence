@@ -15,9 +15,7 @@ function Home() {
 	useEffect(() => {
 		async function checkBackendHealth() {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_API_URL}/health`
-				);
+				const response = await fetch("/health");
 
 				if (!response.ok) {
 					throw new Error("Backend response was not ok");

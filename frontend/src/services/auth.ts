@@ -3,8 +3,7 @@ export async function register(
   email: string,
   password: string,
 ) {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/auth/register`,
+  const response = await fetch("/api/auth/register",
     {
       method: "POST",
       headers: {
@@ -27,8 +26,7 @@ export async function register(
 }
 
 export async function loginResponse(email: string, password: string) {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/auth/login`,
+  const response = await fetch("/api/auth/login",
     {
       method: "POST",
       headers: {
