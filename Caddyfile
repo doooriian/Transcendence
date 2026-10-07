@@ -1,0 +1,23 @@
+{
+	default_sni {$APP_HOST:127.0.0.1}
+}
+
+localhost, {$APP_HOST:127.0.0.1} {
+	tls internal
+
+	handle /health {
+		reverse_proxy backend:3000
+	}
+
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+
+	handle /socket.io/* {
+		reverse_proxy backend:3000
+	}
+
+	handle {
+		reverse_proxy frontend:5173
+	}
+}

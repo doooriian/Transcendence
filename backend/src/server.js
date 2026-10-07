@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
@@ -24,23 +23,12 @@ const app = express();
 const httpServer = createServer(app);
 
 // Attach Socket.IO to the existing HTTP server
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-  },
-});
+const io = new Server(httpServer);
 
 // Make the Socket.IO server accessible from Express routes
 app.set("io", io);
 
 const PORT = 3000;
-
-// Allow HTTP requests from the frontend application
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-  }),
-);
 
 // Parse incoming JSON request bodies
 app.use(express.json());
