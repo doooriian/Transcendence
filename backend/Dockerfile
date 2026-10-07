@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies from package-lock.json.
 RUN npm ci
 
+# Allow Prisma to update its files when the backend runs as the node user.
+RUN chown -R node:node /app/node_modules
+
 # Copy the backend source code into the image.
 COPY . .
 
