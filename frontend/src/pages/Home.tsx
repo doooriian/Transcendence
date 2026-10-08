@@ -17,9 +17,7 @@ function Home() {
 	useEffect(() => {
 		async function checkBackendHealth() {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_API_URL}/health`
-				);
+				const response = await fetch("/health");
 
 				if (!response.ok) {
 					throw new Error("Backend response was not ok");
@@ -69,7 +67,7 @@ function Home() {
 						</h1>
 
 						<p className="mx-auto mt-6 max-w-2xl text-2xl font-bold">
-							Challenge your friends 
+							Challenge your friends
 							and master the board
 						</p>
 
