@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -12,14 +11,11 @@ type BackendHealth = {
 function Home() {
 	const [backendStatus, setBackendStatus] = useState("loading");
 	const { isLoggedIn, username } = useAuth();
-	const { theme } = useTheme();
 
 	useEffect(() => {
 		async function checkBackendHealth() {
 			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_API_URL}/health`
-				);
+				const response = await fetch("/health");
 
 				if (!response.ok) {
 					throw new Error("Backend response was not ok");
@@ -44,7 +40,7 @@ function Home() {
 	}, []);
 
 	return (
-		<main className="min-h-screen">
+		<main className="min-h-screen bg-slate-950 text-white">
 
 			<Header />
 
@@ -56,21 +52,21 @@ function Home() {
 
 					<div className="mb-12">
 
-						<p className={`font-semibold tracking-widest uppercase text-accent-${theme}`}>
+						<p className="text-blue-400 font-semibold tracking-widest uppercase">
 							Online Chess
 						</p>
 
 						<h1 className="mt-4 text-6xl md:text-7xl font-bold">
-							<span className="">♟ Play Chess.</span>
+							♟ Play Chess.
 							<br />
-							<span className={`text-accent-${theme}`}>
+							<span className="text-blue-500">
 								Challenge Everyone.
 							</span>
 						</h1>
 
-						<p className="mx-auto mt-6 max-w-2xl text-2xl font-bold">
-							Challenge your friends 
-							and master the board
+						<p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
+							Affrontez vos amis et prouvez que vous êtes
+							le meilleur joueur sur ft_transcendence.
 						</p>
 
 						{/* User state */}
@@ -78,11 +74,12 @@ function Home() {
 						{isLoggedIn ? (
 							<div className="mt-10">
 
-								<p className="text-xl">
+								<p className="text-xl text-slate-300">
 									Welcome back,{" "}
-									<span className={`text-accent-${theme} font-bold`}>
+									<span className="font-bold text-white">
 										{username}
 									</span>
+									!
 								</p>
 
 								<div className="mt-6 flex justify-center gap-4">
@@ -130,7 +127,7 @@ function Home() {
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-6`}>
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
 
 							<div className="text-3xl">
 								♟
@@ -140,42 +137,42 @@ function Home() {
 								Play
 							</h2>
 
-							<p className="mt-2">
-								Play chess against
-								other players
+							<p className="mt-2 text-slate-400">
+								Jouez des parties d'échecs contre
+								d'autres joueurs.
 							</p>
 
 						</div>
 
-						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-6`}>
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
 
 							<div className="text-3xl">
-								🎖
+								🏆
 							</div>
 
 							<h2 className="mt-4 text-xl font-bold">
 								Compete
 							</h2>
 
-							<p className="mt-2">
-								Climb the rankings and improve
-								your Elo
+							<p className="mt-2 text-slate-400">
+								Montez dans le classement et améliorez
+								votre Elo.
 							</p>
 
 						</div>
 
-						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-6`}>
+						<div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
 
 							<div className="text-3xl">
-								⏱
+								⚡
 							</div>
 
 							<h2 className="mt-4 text-xl font-bold">
 								Real-time
 							</h2>
 
-							<p className="mt-2">
-								Face your opponents in real time
+							<p className="mt-2 text-slate-400">
+								Affrontez vos adversaires en temps réel.
 							</p>
 
 						</div>

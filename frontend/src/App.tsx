@@ -9,30 +9,27 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Chess from "./pages/Chess";
 import Friends from "./pages/Friends";
-import { ThemeProvider } from "./context/ThemeContext"
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
 	return (
-		<ThemeProvider>
-			<BrowserRouter>
-				<AuthProvider>
-					<Routes>
-						<Route path="/" element={<Home />} />
-						<Route path="/login" element={<Login />} />
-						<Route path="/register" element={<Register />} />
+		<BrowserRouter>
+			<AuthProvider>
+				<Routes>
+					<Route path="/" element={<Home />} />
+					<Route path="/login" element={<Login />} />
+					<Route path="/register" element={<Register />} />
 
-						<Route element={<ProtectedRoute />}>
-							<Route path="/friends" element={<Friends />} />
-							<Route path="/chess" element={<Chess />} />
-							<Route path="/profile/:username" element={<Profile />} />
-						</Route>
+					<Route element={<ProtectedRoute />}>
+						<Route path="/friends" element={<Friends />} />
+						<Route path="/chess" element={<Chess />} />
+						<Route path="/profile/:username" element={<Profile />} />
+					</Route>
 
-						<Route path="*" element={<NotFound />} />
-					</Routes>
-				</AuthProvider>
-			</BrowserRouter>
-		</ThemeProvider>
+					<Route path="*" element={<NotFound />} />
+				</Routes>
+			</AuthProvider>
+		</BrowserRouter>
 	);
 }
 
