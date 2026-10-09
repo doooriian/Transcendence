@@ -80,7 +80,7 @@ function handleGetLegalMoves(socket, data) {
   const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
 
   if (!legalMoves) {
-    socket.emit("game:error", { message: ""});
+    socket.emit("game:error", { message: "Unable to get legal move"});
     return;
   }
 
