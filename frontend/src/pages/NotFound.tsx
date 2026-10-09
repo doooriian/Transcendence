@@ -5,7 +5,7 @@ function NotFound() {
 	return (
         <>
         <Header/>
-		<main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+		<main className="min-h-screen flex items-center justify-center">
 
 			<section className="text-center">
 

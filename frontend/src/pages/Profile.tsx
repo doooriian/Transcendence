@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import { useParams } from "react-router-dom";
 import { getMyProfile, getUser, type User } from "../services/users";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 
 import {
@@ -17,6 +19,7 @@ import {
 function Profile() {
 	const { username } = useParams();
 	const { username: myUsername } = useAuth();
+	const { theme } = useTheme();
 
 	const [user, setUser] = useState<User | null>(null);
 
@@ -27,7 +30,6 @@ function Profile() {
 	const [error, setError] = useState("");
 	const [loadingFriendAction, setLoadingFriendAction] = useState(false);
 
-	// Charger le profil
 	useEffect(() => {
 		async function loadUser() {
 			if (!username)
@@ -50,7 +52,6 @@ function Profile() {
 	}, [username, myUsername]);
 
 
-	// Charger les informations d'amitié
 	useEffect(() => {
 		async function loadFriendData() {
 			if (!username || username === myUsername)
@@ -98,7 +99,6 @@ function Profile() {
 			return;
 		}
 
-		// On recharge les demandes envoyées
 		const requestsResult = await getFriendRequests();
 
 		if (requestsResult.ok) {
@@ -122,7 +122,6 @@ function Profile() {
 			return;
 		}
 
-		// Recharger les amis et les demandes
 		const friendsResult = await getFriends();
 		const requestsResult = await getFriendRequests();
 
@@ -158,51 +157,46 @@ function Profile() {
 	}
 
 
-	if (!user) {
-		return (
-			<>
-				<Header />
+if (!user) {
+    return (
+        <div className="min-h-screen">
+            <Header />
 
-				<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-					<p className="text-xl text-slate-400">
-						Profile not found
-					</p>
-				</main>
-			</>
-		);
-	}
+            <main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
+                <p className="text-xl">
+                    Profile not found
+                </p>
+            </main>
 
+            <Footer />
+        </div>
+    );
+}
 
-	// Est-ce que le profil affiché est le mien ?
 	const isMyProfile = username === myUsername;
 
-	// Est-ce que je suis déjà ami avec cette personne ?
 	const isFriend = friends.some(
 		(friend) => friend.username === user.username
 	);
-
-	// Est-ce que j'ai déjà envoyé une demande ?
 	const sentRequest = sentRequests.find(
 		(request) => request.username === user.username
 	);
-
-	// Est-ce que cette personne m'a envoyé une demande ?
 	const receivedRequest = receivedRequests.find(
 		(request) => request.username === user.username
 	);
 
 
 	return (
-		<>
+		<div className="min-h-screen flex flex-col">
 			<Header />
 
-			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white px-4">
+			<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
 
 				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
 
 					<div className="text-center mb-8">
 
-						<h1 className="text-4xl font-bold">
+						<h1 className={`text-4xl font-bold `}>
 							♟ Profile
 						</h1>
 
@@ -215,7 +209,7 @@ function Profile() {
 
 					<div className="space-y-4">
 
-						<div className="rounded-lg bg-slate-800 p-4">
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
 							<p className="text-sm text-slate-400">
 								ID
 							</p>
@@ -226,7 +220,7 @@ function Profile() {
 						</div>
 
 
-						<div className="rounded-lg bg-slate-800 p-4">
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
 							<p className="text-sm text-slate-400">
 								Username
 							</p>
@@ -237,7 +231,7 @@ function Profile() {
 						</div>
 
 
-						<div className="rounded-lg bg-slate-800 p-4">
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
 							<p className="text-sm text-slate-400">
 								Created at
 							</p>
@@ -248,7 +242,7 @@ function Profile() {
 						</div>
 
 
-						<div className="rounded-lg bg-slate-800 p-4">
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
 							<p className="text-sm text-slate-400">
 								Last update
 							</p>
@@ -257,9 +251,6 @@ function Profile() {
 								{user.updatedAt}
 							</p>
 						</div>
-
-
-						{/* Friend system */}
 
 						{!isMyProfile && (
 							<div className="pt-4">
@@ -323,19 +314,17 @@ function Profile() {
 							</div>
 						)}
 
-
 						{error && (
 							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
 								{error}
 							</p>
 						)}
-
 					</div>
-
 				</section>
 
 			</main>
-		</>
+			<Footer />
+			</div>
 	);
 }
 

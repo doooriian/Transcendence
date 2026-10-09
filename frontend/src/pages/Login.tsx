@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { loginResponse } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
 import { useLocation } from "react-router-dom";
+import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 function Login() {
@@ -12,6 +14,7 @@ function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const { login } = useAuth();
+	const { theme } = useTheme();
 	const navigate = useNavigate();
 
 	const location = useLocation();
@@ -31,20 +34,20 @@ function Login() {
 	}
 
 	return (
-		<>
+		<div className="min-h-screen flex flex-col">
 		<Header/>
 
-		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+		<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-10 pb-16">
 
-			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+			<section className={`w-full max-w-md rounded-2xl container-theme-${theme} border border-slate-800 p-8 shadow-xl`}>
 
 				<div className="text-center mb-8">
 					<h1 className="text-4xl font-bold">
-						♟ ft_transcendence
+						♟ ft_chess
 					</h1>
 
-					<p className="mt-3 text-slate-400">
-						Connectez-vous pour jouer aux échecs en ligne
+					<p className="mt-3">
+						Log in to play chess online
 					</p>
 				</div>
 				{message && (
@@ -71,7 +74,7 @@ function Login() {
 							type="email"
 							required
 							maxLength={254}
-							placeholder="Votre email"
+							placeholder="Your email"
 							value={email}
 							onChange={(event) => { setEmail(event.target.value); }}
 							className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
@@ -90,7 +93,7 @@ function Login() {
 										required
 										minLength={8}
 										maxLength={128}
-										placeholder="Votre mot de passe"
+										placeholder="Your password"
 										value={password}
 										onChange={(event) => setPassword(event.target.value)}
 										className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 pr-12 outline-none focus:border-blue-500"
@@ -123,7 +126,7 @@ function Login() {
 
 					<div className="border-t border-slate-800 pt-5 text-center">
 
-							<p className="text-slate-400 mb-3">
+							<p className="mb-3">
 								No account ?
 							</p>
 
@@ -136,13 +139,13 @@ function Login() {
 							</button>
 
 						</div>
-
 					</div>
 				</form>
 			</section>
 
 		</main>
-		</>
+		<Footer />
+		</div>
 	);
 }
 

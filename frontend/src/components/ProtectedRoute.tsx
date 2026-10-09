@@ -11,7 +11,7 @@ function ProtectedRoute() {
 				to="/login"
 				replace
 				state={{
-					message: "Vous devez être connecté pour accéder à cette page.",
+					message: "You must be logged in to access this page",
 					from: location.pathname,
 				}}
 			/>

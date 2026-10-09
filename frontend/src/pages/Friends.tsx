@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
+import Footer from "../components/Footer";
 import Header from "../components/Header";
 import {
   getFriends,
@@ -15,42 +17,43 @@ function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [received, setReceived] = useState<FriendRequest[]>([]);
   const [sent, setSent] = useState<FriendRequest[]>([]);
+  const { theme } = useTheme();
 
   const [error, setError] = useState("");
 
-  function loadFriends() {
-    return getFriends()
-      .then((result) => {
-        if (!result.ok) {
-          setError("Impossible de récupérer les amis.");
-          return;
-        }
+  async function loadFriends() {
+    try {
+      const result = await getFriends();
 
-        setFriends(result.friends);
-        setError("");
-      })
-      .catch((error) => {
-        console.error(error);
-        setError("Impossible de contacter le serveur.");
-      });
+      if (!result.ok) {
+        setError("Unable to retrieve friends");
+        return;
+      }
+
+      setFriends(result.friends);
+      setError("");
+    } catch (error) {
+      console.error(error);
+      setError("Unable to reach server");
+    }
   }
 
-  function loadRequests() {
-    return getFriendRequests()
-      .then((result) => {
-        if (!result.ok) {
-          setError("Impossible de récupérer les demandes.");
-          return;
-        }
+  async function loadRequests() {
+    try {
+      const result = await getFriendRequests();
 
-        setReceived(result.received);
-        setSent(result.sent);
-        setError("");
-      })
-      .catch((error) => {
-        console.error(error);
-        setError("Impossible de contacter le serveur.");
-      });
+      if (!result.ok) {
+        setError("Unable to retrieve requests");
+        return;
+      }
+
+      setReceived(result.received);
+      setSent(result.sent);
+      setError("");
+    } catch (error) {
+      console.error(error);
+      setError("Unable to reach server");
+    }
   }
 
   useEffect(() => {
@@ -119,15 +122,15 @@ function Friends() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="min-h-screen bg-slate-950 text-white px-4 py-10">
+      <main className="min-h-[calc(100vh-73px)] px-4 py-10 pb-16">
         <div className="mx-auto max-w-4xl">
           <h1 className="text-4xl font-bold text-center">♟ Friends</h1>
 
-          <p className="mt-3 text-center text-slate-400">
-            Gérez vos amis et vos demandes.
+          <p className="mt-3 text-center">
+            Manage your friends and requests
           </p>
 
           {error && (
@@ -138,11 +141,11 @@ function Friends() {
 
           {/* Friends */}
 
-          <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-bold">Your friends</h2>
+          <section className={`mt-10 rounded-2xl border border-slate-800 container-theme-${theme} p-6`}>
+            <h2 className={`text-2xl font-bold`}>Your friends</h2>
 
             {friends.length === 0 ? (
-              <p className="mt-4 text-slate-400">
+              <p className="mt-4">
                 You don't have any friends yet.
               </p>
             ) : (
@@ -174,11 +177,11 @@ function Friends() {
 
           {/* Received requests */}
 
-          <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-bold">Friend requests</h2>
+          <section className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-6`}>
+            <h2 className={`text-2xl font-bold`}>Friend requests</h2>
 
             {received.length === 0 ? (
-              <p className="mt-4 text-slate-400">No pending requests.</p>
+              <p className="mt-4">No pending requests.</p>
             ) : (
               <div className="mt-4 space-y-3">
                 {received.map((request) => (
@@ -211,11 +214,11 @@ function Friends() {
 
           {/* Sent requests */}
 
-          <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-bold">Sent requests</h2>
+          <section className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-6`}>
+            <h2 className={`text-2xl font-bold`}>Sent requests</h2>
 
             {sent.length === 0 ? (
-              <p className="mt-4 text-slate-400">No pending sent requests.</p>
+              <p className="mt-4">No pending sent requests.</p>
             ) : (
               <div className="mt-4 space-y-3">
                 {sent.map((request) => (
@@ -238,7 +241,8 @@ function Friends() {
           </section>
         </div>
       </main>
-    </>
+      <Footer />
+     </div>
   );
 }
 

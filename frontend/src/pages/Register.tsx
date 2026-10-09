@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/auth";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 
 function Register() {
@@ -12,6 +14,7 @@ function Register() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const { login } = useAuth();
+	const { theme } = useTheme();
 	const navigate = useNavigate();
 
 	async function handleRegister() {
@@ -29,20 +32,20 @@ function Register() {
 	}
 
 	return (
-		<>
+			<div className="min-h-screen flex flex-col">
 			<Header />
 
-			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+			<main className="min-h-[calc(100vh-73px)] flex items-center justify-center">
 
-				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+				<section className={`w-full max-w-md rounded-2xl container-theme-${theme} border border-slate-800 p-8 shadow-xl`}>
 
 					<div className="text-center mb-8">
 						<h1 className="text-4xl font-bold">
-							♟ ft_transcendence
+							♟ ft_chess
 						</h1>
 
-						<p className="mt-3 text-slate-400">
-							Créez votre compte et rejoignez la partie
+						<p className="mt-3">
+							Create your account and join the game
 						</p>
 					</div>
 
@@ -65,7 +68,7 @@ function Register() {
 								minLength={3}
 								maxLength={20}
 								pattern="[A-Za-z0-9_]+"
-								placeholder="Votre pseudo"
+								placeholder="Your username"
 								value={username}
 								onChange={(event) => setUsername(event.target.value)}
 								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
@@ -82,7 +85,7 @@ function Register() {
 								type="email"
 								required
 								maxLength={254}
-								placeholder="Votre email"
+								placeholder="Your email"
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
 								className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 outline-none focus:border-blue-500"
@@ -101,7 +104,7 @@ function Register() {
 									required
 									minLength={8}
 									maxLength={128}
-									placeholder="Votre mot de passe"
+									placeholder="Your password"
 									value={password}
 									onChange={(event) => setPassword(event.target.value)}
 									className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 pr-12 outline-none focus:border-blue-500"
@@ -133,7 +136,7 @@ function Register() {
 
 						<div className="border-t border-slate-800 pt-5 text-center">
 
-							<p className="text-slate-400 mb-3">
+							<p className="mb-3">
 								Already have an account?
 							</p>
 
@@ -152,7 +155,8 @@ function Register() {
 				</section>
 
 			</main>
-		</>
+			<Footer />
+			</div>
 	);
 }
 

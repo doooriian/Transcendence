@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
+import Footer from "../components/Footer";
 import Header from "../components/Header";
 import socket from "../services/socket";
 import { getRandomInt } from "../utils/random";
@@ -465,15 +466,15 @@ function Chess() {
 	function getEndReasonText(reason: string | null) {
 		switch (reason) {
 			case "checkmate":
-				return "Échec et mat";
+				return "Mat";
 			case "resignation":
-				return "Abandon";
+				return "Give up";
 			case "stalemate":
 				return "Pat";
 			case "draw":
-				return "Match nul";
+				return "Null";
 			default:
-				return "Partie terminée";
+				return "Game over";
 		}
 	}
 
@@ -711,6 +712,7 @@ function Chess() {
 			: null;
 
 	return (
+		<div className="min-h-screen flex flex-col">
 		<main>
 			<Header />
 
@@ -820,7 +822,7 @@ function Chess() {
 							<div
 								className={`hidden w-56 shrink-0 rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg lg:block`}
 							>
-								<p className="text-sm /70">Game ID</p>
+								<p className="text-sm /70">Game ID :</p>
 								<p className="font-mono text-sm mb-2">{searchingGame.id}</p>
 
 								<div className="space-y-1">
@@ -953,7 +955,7 @@ function Chess() {
 							</div>
 							<div>
 								<p className="text-lg font-bold">
-									Toi
+									You
 								</p>
 
 								<p className="text-sm /70">
@@ -981,6 +983,8 @@ function Chess() {
 				</div>
 			</section>
 		</main>
+		<Footer />
+		</div>
 	);
 }
 
