@@ -116,6 +116,7 @@ router.get("/me", authToken, async (req, res) => {
       select: {
         id: true,
         authId: true,
+        email: true,
         username: true,
         createdAt: true,
         updatedAt: true,
