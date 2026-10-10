@@ -1,218 +1,230 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { searchUsers, type UserSearchResult } from "../services/users";
 
 function Header() {
-  const [searchName, setSearchName] = useState("");
-  const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
+	const [searchName, setSearchName] = useState("");
+	const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
 
-  const searchRef = useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+	const searchRef = useRef<HTMLDivElement>(null);
+	const [selectedIndex, setSelectedIndex] = useState(-1);
 
-  const { isLoggedIn, username, logout } = useAuth();
-  const navigate = useNavigate();
+	const { isLoggedIn, username, logout } = useAuth();
+	const { theme } = useTheme();
+	const navigate = useNavigate();
 
-  function handleLogout() {
-    logout();
-    navigate("/");
-  }
+	function handleLogout() {
+		logout();
+		navigate("/");
+	}
 
-  useEffect(() => {
-    if (searchName.trim().length < 2) {
-      return;
-    }
+	useEffect(() => {
+		if (searchName.trim().length < 2) {
+			return;
+		}
 
-    const timeoutId = setTimeout(async () => {
-      try {
-        const result = await searchUsers(searchName.trim());
+		const timeoutId = setTimeout(async () => {
+			try {
+				const result = await searchUsers(searchName.trim());
 
-        if (result.ok) {
-          setSuggestions(result.users);
-          setSelectedIndex(-1);
-        } else {
-          setSuggestions([]);
-          setSelectedIndex(-1);
-        }
-      } catch (error) {
-        console.error("User search failed:", error);
-        setSuggestions([]);
-        setSelectedIndex(-1);
-      }
-    }, 300);
+				if (result.ok) {
+					setSuggestions(result.users);
+					setSelectedIndex(-1);
+				} else {
+					setSuggestions([]);
+					setSelectedIndex(-1);
+				}
+			} catch (error) {
+				console.error("User search failed:", error);
+				setSuggestions([]);
+				setSelectedIndex(-1);
+			}
+		}, 300);
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [searchName]);
+		return () => {
+			clearTimeout(timeoutId);
+		};
+	}, [searchName]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setSuggestions([]);
-      }
-    }
+	useEffect(() => {
+		function handleClickOutside(event: MouseEvent) {
+			if (
+				searchRef.current &&
+				!searchRef.current.contains(event.target as Node)
+			) {
+				setSuggestions([]);
+			}
+		}
 
-    document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener("mousedown", handleClickOutside);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
 
-  function handleSelectUser(username: string) {
-    setSearchName("");
-    setSuggestions([]);
-    navigate(`/profile/${username}`);
-  }
+	function handleSelectUser(username: string) {
+		setSearchName("");
+		setSuggestions([]);
+		navigate(`/profile/${username}`);
+	}
 
-  return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-        <Link
-          to="/"
-          className="text-2xl font-bold text-white hover:text-blue-400 transition"
-        >
-          ♟ ft_transcendence
-        </Link>
+	return (
+		<header className={`container-theme-${theme} border-b border-slate-800 text-white`}>
+			<div className="mx-auto flex max-w-6xl items-center justify-between p-4">
 
-        <nav className="flex items-center gap-6">
-          {isLoggedIn ? (
-            <>
-              {/* Search */}
+				<Link
+					to="/"
+					className="text-2xl font-bold text-white hover:text-blue-400 transition"
+				>
+					♟ ft_chess
+				</Link>
 
-              <div ref={searchRef} className="relative">
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault();
+				<nav className="flex items-center gap-6">
 
-                    if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-                      handleSelectUser(suggestions[selectedIndex].username);
-                      return;
-                    }
+					{isLoggedIn ? (
+						<>
+							<div
+								ref={searchRef}
+								className="relative"
+							>
 
-                    if (!searchName.trim()) return;
+								<form
+									onSubmit={(event) => {
+										event.preventDefault();
 
-                    navigate(`/profile/${searchName.trim()}`);
-                    setSearchName("");
-                    setSuggestions([]);
-                  }}
-                >
-                  <input
-                    type="text"
-                    placeholder="Rechercher un joueur..."
-                    value={searchName}
-                    onChange={(event) => {
-                      const value = event.target.value;
+										if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+											handleSelectUser(suggestions[selectedIndex].username);
+											return;
+										}
 
-                      setSearchName(value);
+										if (!searchName.trim())
+											return;
 
-                      if (value.trim().length < 2) {
-                        setSuggestions([]);
-                        setSelectedIndex(-1);
-                      }
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "ArrowDown") {
-                        event.preventDefault();
+										navigate(`/profile/${searchName.trim()}`);
+										setSearchName("");
+										setSuggestions([]);
+									}}
+								>
+									<input
+										type="text"
+										placeholder="Find a player..."
+										value={searchName}
+										onChange={(event) => {
+											const value = event.target.value;
 
-                        if (suggestions.length === 0) return;
+											setSearchName(value);
 
-                        setSelectedIndex((current) =>
-                          current < suggestions.length - 1 ? current + 1 : 0,
-                        );
-                      }
+											if (value.trim().length < 2) {
+												setSuggestions([]);
+												setSelectedIndex(-1);
+											}
+										}}
+										onKeyDown={(event) => {
+											if (event.key === "ArrowDown") {
+												event.preventDefault();
 
-                      if (event.key === "ArrowUp") {
-                        event.preventDefault();
+												if (suggestions.length === 0)
+													return;
 
-                        if (suggestions.length === 0) return;
+												setSelectedIndex((current) =>
+													current < suggestions.length - 1
+														? current + 1
+														: 0
+												);
+											}
 
-                        setSelectedIndex((current) =>
-                          current > 0 ? current - 1 : suggestions.length - 1,
-                        );
-                      }
+											if (event.key === "ArrowUp") {
+												event.preventDefault();
 
-                      if (event.key === "Escape") {
-                        setSuggestions([]);
-                        setSelectedIndex(-1);
-                      }
-                    }}
-                    className="w-64 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 outline-none focus:border-blue-500"
-                  />
-                </form>
+												if (suggestions.length === 0)
+													return;
 
-                {/* Suggestions */}
+												setSelectedIndex((current) =>
+													current > 0
+														? current - 1
+														: suggestions.length - 1
+												);
+											}
 
-                {suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-                    {suggestions.map((user, index) => (
-                      <button
-                        key={user.username}
-                        type="button"
-                        onClick={() => handleSelectUser(user.username)}
-                        className={`block w-full px-4 py-3 text-left transition ${
-                          index === selectedIndex
-                            ? "bg-blue-600 text-white"
-                            : "text-slate-300 hover:bg-slate-800 hover:text-blue-400"
-                        }`}
-                      >
-                        {user.username}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+											if (event.key === "Escape") {
+												setSuggestions([]);
+												setSelectedIndex(-1);
+											}
+										}}
+										className="w-64 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 outline-none focus:border-blue-500"
+									/>
+								</form>
 
-              {/* My profile */}
+								{suggestions.length > 0 && (
+									<div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
 
-              <Link
-                to="/friends"
-                className="text-slate-300 hover:text-blue-400 transition"
-              >
-                Friends
-              </Link>
+										{suggestions.map((user, index) => (
+											<button
+												key={user.username}
+												type="button"
+												onClick={() => handleSelectUser(user.username)}
+												className={`block w-full px-4 py-3 text-left transition ${
+													index === selectedIndex
+														? "bg-blue-600 text-white"
+														: "text-slate-300 hover:bg-slate-800 hover:text-blue-400"
+												}`}
+											>
+												{user.username}
+											</button>
+										))}
 
-              <Link
-                to={`/profile/${username}`}
-                className="text-slate-300 hover:text-blue-400 transition"
-              >
-                {username}
-              </Link>
+									</div>
+								)}
 
-              {/* Logout */}
+							</div>
 
-              <button
-                onClick={handleLogout}
-                className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 transition"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="text-slate-300 hover:text-blue-400 transition"
-              >
-                Login
-              </Link>
+							<Link
+								to="/friends"
+								className="text-slate-300 hover:text-blue-400 transition"
+							>
+								Friends
+							</Link>
 
-              <Link
-                to="/register"
-                className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition"
-              >
-                Register
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
-  );
+							<Link
+								to={`/profile/${username}`}
+								className="text-slate-300 hover:text-blue-400 transition"
+							>
+								{username}
+							</Link>
+
+							<button
+								onClick={handleLogout}
+								className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 transition"
+							>
+								Logout
+							</button>
+						</>
+					) : (
+						<>
+							<Link
+								to="/login"
+								className="hover:text-blue-400 transition"
+							>
+								Login
+							</Link>
+
+							<Link
+								to="/register"
+								className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition"
+							>
+								Register
+							</Link>
+						</>
+					)}
+
+				</nav>
+
+			</div>
+		</header>
+	);
 }
 
 export default Header;

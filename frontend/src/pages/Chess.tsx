@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
+import Footer from "../components/Footer";
 import Header from "../components/Header";
 import socket from "../services/socket";
 import { getRandomInt } from "../utils/random";
@@ -62,7 +63,7 @@ let rw: string;
 
 const rand1 = getRandomInt(1, 3);
 const rand2 = getRandomInt(1, 3);
-switch (rand1) 
+switch (rand1)
 {
 
     case 1:
@@ -83,7 +84,7 @@ switch (rand1)
 	  darkCaseClass = "bg-gradient-to-br from-rose-400 via-pink-350 to-black";
 }
 
-switch (rand2) 
+switch (rand2)
 {
 	case 1:
 	  bb = bbb;
@@ -279,8 +280,6 @@ function CapturedTray({
 	pieces,
 	label,
 }: { pieces: ChessPieceData[]; label: string }) {
-	const { theme } = useTheme();
-
 	if (pieces.length === 0) {
 		return (
 			<div className="hidden w-56 shrink-0 lg:block" aria-hidden="true">
@@ -465,15 +464,15 @@ function Chess() {
 	function getEndReasonText(reason: string | null) {
 		switch (reason) {
 			case "checkmate":
-				return "Échec et mat";
+				return "Mat";
 			case "resignation":
-				return "Abandon";
+				return "Give up";
 			case "stalemate":
 				return "Pat";
 			case "draw":
-				return "Match nul";
+				return "Null";
 			default:
-				return "Partie terminée";
+				return "Game over";
 		}
 	}
 
@@ -510,7 +509,7 @@ function Chess() {
 			col,
 		};
 	}
-	
+
 	const handleMouseDown = (
 		event: React.MouseEvent,
 		row: number,
@@ -711,6 +710,7 @@ function Chess() {
 			: null;
 
 	return (
+		<div className="min-h-screen flex flex-col">
 		<main>
 			<Header />
 
@@ -785,7 +785,7 @@ function Chess() {
 
 								</div>
 
-								
+
 							)}
 
 							{game && game?.chess.isGameFinished && (
@@ -820,7 +820,7 @@ function Chess() {
 							<div
 								className={`hidden w-56 shrink-0 rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg lg:block`}
 							>
-								<p className="text-sm /70">Game ID</p>
+								<p className="text-sm /70">Game ID :</p>
 								<p className="font-mono text-sm mb-2">{searchingGame.id}</p>
 
 								<div className="space-y-1">
@@ -834,7 +834,10 @@ function Chess() {
 								</div>
 							</div>
 						) : (
-							<CapturedTray pieces={capturedByMe}/>
+							<CapturedTray
+								pieces={capturedByMe}
+								label="Captured by you"
+							/>
 						)}
 
 						<div className="mx-auto aspect-square w-[min(660px,100%,calc(100vh-475px))]">
@@ -942,7 +945,10 @@ function Chess() {
 						{searchingGame ? (
 							<div className="hidden w-56 shrink-0 lg:block" aria-hidden="true" />
 						) : (
-							<CapturedTray pieces={capturedByOpponent}/>
+							<CapturedTray
+								pieces={capturedByOpponent}
+								label="Captured by opponent"
+							/>
 						)}
 					</div>
 
@@ -953,7 +959,7 @@ function Chess() {
 							</div>
 							<div>
 								<p className="text-lg font-bold">
-									Toi
+									You
 								</p>
 
 								<p className="text-sm /70">
@@ -981,6 +987,8 @@ function Chess() {
 				</div>
 			</section>
 		</main>
+		<Footer />
+		</div>
 	);
 }
 
