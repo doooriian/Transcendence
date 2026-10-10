@@ -22,8 +22,6 @@ function Header() {
 
 	useEffect(() => {
 		if (searchName.trim().length < 2) {
-			setSuggestions([]);
-			setSelectedIndex(-1);
 			return;
 		}
 
@@ -115,7 +113,14 @@ function Header() {
 										placeholder="Find a player..."
 										value={searchName}
 										onChange={(event) => {
-											setSearchName(event.target.value);
+											const value = event.target.value;
+
+											setSearchName(value);
+
+											if (value.trim().length < 2) {
+												setSuggestions([]);
+												setSelectedIndex(-1);
+											}
 										}}
 										onKeyDown={(event) => {
 											if (event.key === "ArrowDown") {
@@ -175,7 +180,7 @@ function Header() {
 								)}
 
 							</div>
-							
+
 							<Link
 								to="/friends"
 								className="text-slate-300 hover:text-blue-400 transition"
