@@ -18,9 +18,9 @@ const router = express.Router();
  */
 router.post("/register", async (req, res) => {
   const validation = validateRegisterInput(
-    req.body.username,
-    req.body.email,
-    req.body.password,
+    req.body?.username,
+    req.body?.email,
+    req.body?.password,
   );
 
   if (validation.error) {
@@ -65,7 +65,7 @@ router.post("/register", async (req, res) => {
  * when the credentials are valid.
  */
 router.post("/login", async (req, res) => {
-  const validation = validateLoginInput(req.body.email, req.body.password);
+  const validation = validateLoginInput(req.body?.email, req.body?.password);
 
   if (validation.error) {
     return res.status(400).json({ message: validation.error });
