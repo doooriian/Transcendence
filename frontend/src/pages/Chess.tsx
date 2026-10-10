@@ -316,7 +316,17 @@ function Chess() {
 	const [error, setError] = useState<string | null>(null);
 	const [joinGameId, setJoinGameId] = useState("");
 	const [myAuthId, setMyAuthId] = useState<string | null>(null);
-	const [myColor, setMyColor] = useState<string | null>(null);
+
+	let myColor: "white" | "black" | null = null;
+
+	if (game && myAuthId) {
+		if (game.white === myAuthId) {
+			myColor = "white";
+		}
+		else if (game.black === myAuthId) {
+			myColor = "black";
+		}
+	}
 
 	const [draggedPiece, setDraggedPiece] = useState<{
 		row: number;
@@ -349,21 +359,6 @@ function Chess() {
 
 		loadProfile();
 	}, []);
-
-	useEffect(() => {
-		if (!game || !myAuthId) {
-			setMyColor(null);
-			return;
-		}
-
-		if (game.white === myAuthId) {
-			setMyColor("white");
-		} else if (game.black === myAuthId) {
-			setMyColor("black");
-		} else {
-			setMyColor(null);
-		}
-	}, [game, myAuthId]);
 
 	useEffect(() => {
 		function updateGame(gameState: ChessGame) {
