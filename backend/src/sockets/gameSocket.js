@@ -77,17 +77,26 @@ function handleGetActiveGame(socket) {
 function handleGetLegalMoves(socket, data) {
   const authId = socket.data.authId;
 
-  const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
-
-  if (!legalMoves) {
-    socket.emit("game:error", { message: "Unable to get legal moves" });
+  if (!data || typeof data !== "object" || typeof data.gameId !== "string") {
+    socket.emit("game:error", { message: "Invalid legal moves request" });
     return;
   }
 
-  socket.emit("game:legal-moves", {
-    startingSquare: data.startingSquare,
-    legalMoves,
-  });
+  try {
+    const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
+
+    if (!legalMoves) {
+      socket.emit("game:error", { message: "Unable to get legal moves" });
+      return;
+    }
+
+    socket.emit("game:legal-moves", {
+      startingSquare: data.startingSquare,
+      legalMoves,
+    });
+  } catch {
+    socket.emit("game:error", { message: "Invalid legal moves request" });
+  }
 }
 
 /**
@@ -97,6 +106,18 @@ function handleGetLegalMoves(socket, data) {
  */
 function handleGameMove(io, socket, data) {
   const authId = socket.data.authId;
+
+  if (
+    !data ||
+    typeof data !== "object" ||
+    typeof data.gameId !== "string" ||
+    !data.move ||
+    typeof data.move !== "object" ||
+    Array.isArray(data.move)
+  ) {
+    socket.emit("game:error", { message: "Invalid move data" });
+    return;
+  }
 
   const result = makeGameMove(data.gameId, authId, data.move);
 
