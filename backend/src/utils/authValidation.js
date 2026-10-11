@@ -10,6 +10,35 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 // Basic email format: local part, @, domain and extension
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function validateUsername(username) {
+  if (typeof username !== "string") {
+    return {
+      error: "Username must be a string",
+    };
+  }
+
+  const normalizedUsername = username.trim();
+
+  if (
+    normalizedUsername.length < USERNAME_MIN_LENGTH ||
+    normalizedUsername.length > USERNAME_MAX_LENGTH
+  ) {
+    return {
+      error: `Username must be between ${USERNAME_MIN_LENGTH} and ${USERNAME_MAX_LENGTH} characters`,
+    };
+  }
+
+  if (!USERNAME_REGEX.test(normalizedUsername)) {
+    return {
+      error: "Username can only contain letters, numbers and underscores",
+    };
+  }
+
+  return {
+    username: normalizedUsername,
+  };
+}
+
 /**
  * Validates and normalizes an email address.
  *
@@ -72,27 +101,10 @@ function validatePassword(password) {
  * Checks the username, email and password before creating a user.
  */
 function validateRegisterInput(username, email, password) {
-  if (typeof username !== "string") {
-    return {
-      error: "Username must be a string",
-    };
-  }
+  const usernameValidation = validateUsername(username);
 
-  const normalizedUsername = username.trim();
-
-  if (
-    normalizedUsername.length < USERNAME_MIN_LENGTH ||
-    normalizedUsername.length > USERNAME_MAX_LENGTH
-  ) {
-    return {
-      error: `Username must be between ${USERNAME_MIN_LENGTH} and ${USERNAME_MAX_LENGTH} characters`,
-    };
-  }
-
-  if (!USERNAME_REGEX.test(normalizedUsername)) {
-    return {
-      error: "Username can only contain letters, numbers and underscores",
-    };
+  if (usernameValidation.error) {
+    return usernameValidation;
   }
 
   const emailValidation = validateEmail(email);
@@ -108,7 +120,7 @@ function validateRegisterInput(username, email, password) {
   }
 
   return {
-    username: normalizedUsername,
+    username: usernameValidation.username,
     email: emailValidation.email,
     password: passwordValidation.password,
   };
@@ -138,4 +150,4 @@ function validateLoginInput(email, password) {
   };
 }
 
-export { validateRegisterInput, validateLoginInput };
+export { validateUsername, validateEmail, validateRegisterInput, validateLoginInput };
