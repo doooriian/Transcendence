@@ -10,6 +10,12 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 // Basic email format: local part, @, domain and extension
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Validates and normalizes a username.
+ *
+ * Trims surrounding whitespace and ensures the username
+ * respects the allowed length and character format.
+ */
 function validateUsername(username) {
   if (typeof username !== "string") {
     return {
