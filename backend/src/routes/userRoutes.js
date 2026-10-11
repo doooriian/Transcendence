@@ -1,7 +1,11 @@
 import express from "express";
 import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
-import { validateUsername, validateEmail } from "../utils/authValidation.js";
+import {
+  validateUsername,
+  validateEmail,
+  validateAvatar,
+} from "../utils/authValidation.js";
 
 const SEARCH_MIN_LENGTH = 2;
 const SEARCH_RESULT_LIMIT = 3;
@@ -72,6 +76,7 @@ router.get("/:username", async (req, res) => {
       select: {
         id: true,
         username: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -117,6 +122,16 @@ router.patch("/me", async (req, res) => {
     data.email = emailValidation.email;
   }
 
+  if (req.body?.avatar !== undefined) {
+    const avatarValidation = validateAvatar(req.body.avatar);
+
+    if (avatarValidation.error) {
+      return res.status(400).json({ message: avatarValidation.error });
+    }
+
+    data.avatar = avatarValidation.avatar;
+  }
+
   if (Object.keys(data).length === 0) {
     return res.status(400).json({ message: "No profile fields provided" });
   }
@@ -130,6 +145,7 @@ router.patch("/me", async (req, res) => {
       select: {
         username: true,
         email: true,
+        avatar: true,
       },
     });
 
