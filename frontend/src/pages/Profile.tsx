@@ -75,7 +75,7 @@ function Profile() {
 		}
 
 		loadFriendData();
-	
+
 		const intervalId = setInterval(loadFriendData, 1000);
 
 		return () => {
@@ -195,6 +195,20 @@ if (!user) {
 				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
 
 					<div className="text-center mb-8">
+
+						<div className="flex justify-center mb-4">
+							{user.avatar ? (
+								<img
+									src={user.avatar}
+									alt={`${user.username}'s avatar`}
+									className="w-24 h-24 rounded-full object-cover"
+								/>
+							) : (
+								<div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center text-4xl">
+									♟
+								</div>
+							)}
+						</div>
 
 						<h1 className={`text-4xl font-bold `}>
 							♟ Profile
