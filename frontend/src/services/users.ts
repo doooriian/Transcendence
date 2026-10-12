@@ -3,6 +3,7 @@ import { apiFetch } from "./api";
 export type User = {
 	id: number;
 	username: string;
+	avatar: string | null;
 	createdAt: string;
 	updatedAt: string;
 };
