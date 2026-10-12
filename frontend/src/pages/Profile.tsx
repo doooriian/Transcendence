@@ -233,6 +233,17 @@ if (!user) {
 
 						<div className={`rounded-lg container-theme-${theme} p-4`}>
 							<p className="text-sm text-slate-400">
+								Mail
+							</p>
+
+							<p className="text-xl font-semibold">
+								{user.email}
+							</p>
+						</div>
+
+
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
+							<p className="text-sm text-slate-400">
 								Created at
 							</p>
 
