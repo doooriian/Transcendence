@@ -5,6 +5,7 @@ import {
   getGameState,
   getLegalMoves,
   makeGameMove,
+  makeBotMove,
   resignGame,
   leaveGame,
   finishGame,
@@ -17,12 +18,12 @@ const disconnectTimers = new Map();
  * Creates a game for the authenticated user.
  * Joins all sockets of the user to the game room and emits the initial game state.
  */
-function handleGameCreate(io, socket) {
+function handleGameCreate(io, socket, options) {
   const authId = socket.data.authId;
-  const game = createGame(authId);
+  const game = createGame(authId, options);
 
   if (!game) {
-    socket.emit("game:error", { message: "You already have an active game" });
+    socket.emit("game:error", { message: "Unable to create game: check the mode, difficulty and your active game" });
     return;
   }
 
@@ -77,6 +78,11 @@ function handleGetActiveGame(socket) {
 function handleGetLegalMoves(socket, data) {
   const authId = socket.data.authId;
 
+  if (!data || typeof data.startingSquare !== "string" || !/^[a-h][1-8]$/.test(data.startingSquare)) {
+    socket.emit("game:error", { message: "Invalid starting square" });
+    return;
+  }
+
   const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
 
   if (!legalMoves) {
@@ -98,6 +104,11 @@ function handleGetLegalMoves(socket, data) {
 function handleGameMove(io, socket, data) {
   const authId = socket.data.authId;
 
+  if (!data || typeof data !== "object") {
+    socket.emit("game:error", { message: "Invalid move request" });
+    return;
+  }
+
   const result = makeGameMove(data.gameId, authId, data.move);
 
   if (!result) {
@@ -110,10 +121,16 @@ function handleGameMove(io, socket, data) {
     return;
   }
 
-  const gameState = getGameState(data.gameId, authId);
+  publishGameState(io, data.gameId, authId);
+  void handleBotTurn(io, socket, data.gameId);
+}
+
+function publishGameState(io, gameId, authId) {
+  const gameState = getGameState(gameId, authId);
+  if (!gameState) return;
 
   if (gameState.chess.isGameFinished) {
-    const endedGame = finishGame(data.gameId);
+    const endedGame = finishGame(gameId);
 
     if (!endedGame) {
       return;
@@ -125,7 +142,7 @@ function handleGameMove(io, socket, data) {
       cancelGameDisconnect(endedGame.black);
     }
 
-    const room = `game:${data.gameId}`;
+    const room = `game:${gameId}`;
 
     io.to(room).emit("game:ended", gameState);
     io.in(room).socketsLeave(room);
@@ -133,7 +150,25 @@ function handleGameMove(io, socket, data) {
     return;
   }
 
-  io.to(`game:${data.gameId}`).emit("game:updated", gameState);
+  io.to(`game:${gameId}`).emit("game:updated", gameState);
+}
+
+async function handleBotTurn(io, socket, gameId) {
+  const authId = socket.data.authId;
+  try {
+    const result = await makeBotMove(gameId, authId);
+    if (result) publishGameState(io, gameId, authId);
+  } catch (error) {
+    // A cancelled game must not receive an error from its old search.
+    const state = getGameState(gameId, authId);
+    if (state && !state.chess.isGameFinished) {
+      io.to(`game:${gameId}`).emit("game:bot-error", {
+        gameId,
+        message: "The bot could not play. Please retry its turn.",
+      });
+      console.error("Bot search failed:", error.message);
+    }
+  }
 }
 
 /**
@@ -279,7 +314,7 @@ function registerGameHandlers(io, socket) {
     socket.join(`game:${activeGame.id}`);
   }
 
-  socket.on("game:create", () => handleGameCreate(io, socket));
+  socket.on("game:create", (options) => handleGameCreate(io, socket, options));
 
   socket.on("game:join", (gameId) => handleGameJoin(io, socket, gameId));
 
@@ -290,6 +325,7 @@ function registerGameHandlers(io, socket) {
   );
 
   socket.on("game:move", (data) => handleGameMove(io, socket, data));
+  socket.on("game:retry-bot", (gameId) => { void handleBotTurn(io, socket, gameId); });
 
   socket.on("game:resign", (gameId) => handleGameResign(io, socket, gameId));
 

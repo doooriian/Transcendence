@@ -1,4 +1,9 @@
-FROM node:24-alpine
+FROM node:24-bookworm-slim
+
+# Run the native UCI engine alongside Node; no external chess API is needed.
+RUN apt-get update && apt-get install -y --no-install-recommends stockfish \
+    && rm -rf /var/lib/apt/lists/*
+ENV STOCKFISH_PATH=/usr/games/stockfish
 
 # Set the working directory inside the container.
 WORKDIR /app

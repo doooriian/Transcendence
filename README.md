@@ -1,5 +1,28 @@
 # ft_transcendence
 
+## Chess bot (Stockfish)
+
+On the chess page, choose Easy, Medium or Hard and click **Play against bot**.
+The human plays white; Stockfish plays black. Difficulty is fixed when the game
+is created. These levels use Stockfish Skill Level 0, 8 and 20 respectively,
+with bounded thinking times; they do not represent calibrated Elo ratings.
+
+Stockfish runs locally in the backend container. The backend image now uses
+Debian and installs the distribution's Stockfish package. Rebuild with `make`
+or `make dev` after pulling this change. No database reset is needed.
+For a backend running outside Docker, install Stockfish and set `STOCKFISH_PATH`
+to its executable path if it is not available as `stockfish` on PATH.
+
+The backend asks Stockfish to choose a move through UCI, then validates that
+move with the existing chess.js engine. Searches have a timeout and are cancelled
+when the game ends. If the engine is unavailable or busy, use **Retry bot turn**
+or resign. Existing multiplayer games continue to use the same events.
+Games remain in memory and do not survive a backend restart.
+
+Run backend checks with `cd backend && npm test`.
+Stockfish source and license: https://stockfishchess.org/ and
+https://github.com/official-stockfish/Stockfish (GPLv3).
+
 A full-stack multiplayer gaming platform developed as part of the **42 curriculum**.
 
 The project brings together a modern React frontend, an Express API,
