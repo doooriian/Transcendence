@@ -11,8 +11,10 @@ RUN git clone --depth 1 --branch sf_15.1 \
 
 WORKDIR /stockfish/src
 
+# Disable LTO to avoid conflicts with Alpine's fortified headers.
 # Build for x86-64 and remove debugging symbols.
-RUN make -j2 build ARCH=x86-64 \
+RUN sed -i 's/-flto[^[:space:]]*//g' Makefile \
+    && make -j2 build ARCH=x86-64 \
     && strip stockfish
 
 # Stage 2: build the final backend image.
