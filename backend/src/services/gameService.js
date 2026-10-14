@@ -13,11 +13,28 @@ const botSearches = new Map();
  * Returns the created game, or null if the user already has an active game.
  */
 function createGame(authId, options = {}) {
-  if (!options || typeof options !== "object") return null;
-  const mode = options.mode ?? "human";
-  const difficulty = options.difficulty ?? "medium";
-  if (!["human", "bot"].includes(mode)) return null;
-  if (mode === "bot" && !Object.hasOwn(BOT_DIFFICULTIES, difficulty)) return null;
+  if (!options || typeof options !== "object") {
+    return null;
+  }
+
+  let mode = "human";
+  if (options.mode !== null && options.mode !== undefined) {
+    mode = options.mode;
+  }
+
+  let difficulty = "medium";
+  if (options.difficulty !== null && options.difficulty !== undefined) {
+    difficulty = options.difficulty;
+  }
+
+  if (mode !== "human" && mode !== "bot") {
+    return null;
+  }
+
+  if (mode === "bot" && !Object.hasOwn(BOT_DIFFICULTIES, difficulty)) {
+    return null;
+  }
+
   if (activeGameByUser.has(authId)) {
     return null;
   }
@@ -26,9 +43,13 @@ function createGame(authId, options = {}) {
     id: randomUUID(),
     white: authId,
     black: null,
-    bot: mode === "bot" ? { difficulty } : null,
+    bot: null,
   };
-  if (game.bot) game.black = `bot:${game.id}`;
+
+  if (mode === "bot") {
+    game.bot = { difficulty: difficulty };
+    game.black = `bot:${game.id}`;
+  }
 
   const chessEngine = new ChessEngine();
 
@@ -71,7 +92,12 @@ function getActiveGameByUser(authId) {
     return null;
   }
 
-  return games.get(gameId) ?? null;
+  const game = games.get(gameId);
+  if (game === null || game === undefined) {
+    return null;
+  }
+
+  return game;
 }
 
 /**
@@ -137,7 +163,9 @@ function getLegalMoves(gameId, authId, startingSquare) {
  * Returns the chess engine result, or null if the request is not allowed.
  */
 function makeGameMove(gameId, authId, move) {
-  if (!move || typeof move !== "object") return null;
+  if (!move || typeof move !== "object") {
+    return null;
+  }
   const game = games.get(gameId);
 
   if (!game || !game.black) {
@@ -167,21 +195,57 @@ function makeGameMove(gameId, authId, move) {
 async function makeBotMove(gameId, authId, selectMove = chooseBotMove) {
   const game = games.get(gameId);
   const engine = getChessEngine(gameId);
-  if (!game?.bot || game.white !== authId || !engine || engine.isGameFinished()
-    || engine.getCurrentPlayerColor() !== "black" || botSearches.has(gameId)) return null;
+  if (!game || !game.bot) {
+    return null;
+  }
+
+  if (game.white !== authId) {
+    return null;
+  }
+
+  if (!engine || engine.isGameFinished()) {
+    return null;
+  }
+
+  if (engine.getCurrentPlayerColor() !== "black") {
+    return null;
+  }
+
+  if (botSearches.has(gameId)) {
+    return null;
+  }
 
   const fen = engine.getCurrentPositionFen();
   const controller = new AbortController();
   botSearches.set(gameId, controller);
   try {
     const move = await selectMove(fen, game.bot.difficulty, { signal: controller.signal });
-    if (controller.signal.aborted || games.get(gameId) !== game
-      || engine.isGameFinished() || engine.getCurrentPositionFen() !== fen) return null;
+    if (controller.signal.aborted) {
+      return null;
+    }
+
+    if (games.get(gameId) !== game) {
+      return null;
+    }
+
+    if (engine.isGameFinished()) {
+      return null;
+    }
+
+    if (engine.getCurrentPositionFen() !== fen) {
+      return null;
+    }
+
     const result = engine.makeMove(move);
-    if (!result.moveWasSuccessful) throw new Error("Stockfish returned an illegal move");
+    if (!result.moveWasSuccessful) {
+      throw new Error("Stockfish returned an illegal move");
+    }
+
     return result;
   } finally {
-    if (botSearches.get(gameId) === controller) botSearches.delete(gameId);
+    if (botSearches.get(gameId) === controller) {
+      botSearches.delete(gameId);
+    }
   }
 }
 
@@ -245,7 +309,12 @@ function finishGame(gameId) {
  * Returns null if no engine exists for the given game.
  */
 function getChessEngine(gameId) {
-  return chessEngines.get(gameId) ?? null;
+  const chessEngine = chessEngines.get(gameId);
+  if (chessEngine === null || chessEngine === undefined) {
+    return null;
+  }
+
+  return chessEngine;
 }
 
 /**
@@ -277,7 +346,10 @@ function deleteGame(gameId) {
 
   games.delete(gameId);
   chessEngines.delete(gameId);
-  botSearches.get(gameId)?.abort();
+  const controller = botSearches.get(gameId);
+  if (controller !== null && controller !== undefined) {
+    controller.abort();
+  }
   botSearches.delete(gameId);
 
   activeGameByUser.delete(game.white);
