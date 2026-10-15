@@ -451,59 +451,61 @@ function Profile() {
 							)}
 						</div>
 
+						
+						{isMyProfile && (
+							<div className={`rounded-lg container-theme-${theme} p-4`}>
+								<p className="text-sm text-slate-400">Mail</p>
 
-						<div className={`rounded-lg container-theme-${theme} p-4`}>
-							<p className="text-sm text-slate-400">Mail</p>
+								{editingEmail ? (
+									<div className="mt-2 space-y-3">
+										<input
+											type="email"
+											value={newEmail}
+											onChange={(event) => setNewEmail(event.target.value)}
+											className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
+											placeholder="New email"
+										/>
 
-							{editingEmail ? (
-								<div className="mt-2 space-y-3">
-									<input
-										type="email"
-										value={newEmail}
-										onChange={(event) => setNewEmail(event.target.value)}
-										className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
-										placeholder="New email"
-									/>
+										<div className="flex gap-2">
+											<button
+												onClick={handleSaveEmail}
+												disabled={savingProfile || !newEmail.trim()}
+												className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
+											>
+												Save
+											</button>
 
-									<div className="flex gap-2">
-										<button
-											onClick={handleSaveEmail}
-											disabled={savingProfile || !newEmail.trim()}
-											className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
-										>
-											Save
-										</button>
-
-										<button
-											onClick={() => setEditingEmail(false)}
-											className="rounded-lg bg-slate-700 px-3 py-2"
-										>
-											Cancel
-										</button>
+											<button
+												onClick={() => setEditingEmail(false)}
+												className="rounded-lg bg-slate-700 px-3 py-2"
+											>
+												Cancel
+											</button>
+										</div>
 									</div>
-								</div>
-							) : (
-								<div className="flex items-center justify-between gap-3">
-									<p className="break-all text-white">
-										{user.email}
-									</p>
+								) : (
+									<div className="flex items-center justify-between gap-3">
+										<p className="break-all text-white">
+											{user.email}
+										</p>
 
-									{isMyProfile && (
-										<button
-											onClick={() => {
-												setNewEmail(user.email || "");
-												setEditingEmail(true);
-												setProfileMessage("");
-											}}
-											title="edit"
-											className="text-blue-400 hover:text-blue-300"
-										>
-											✏️
-										</button>
-									)}
-								</div>
-							)}
-						</div>
+										{isMyProfile && (
+											<button
+												onClick={() => {
+													setNewEmail(user.email || "");
+													setEditingEmail(true);
+													setProfileMessage("");
+												}}
+												title="edit"
+												className="text-blue-400 hover:text-blue-300"
+											>
+												✏️
+											</button>
+										)}
+									</div>
+								)}
+							</div>
+						)}
 
 
 						<div className={`rounded-lg container-theme-${theme} p-4`}>

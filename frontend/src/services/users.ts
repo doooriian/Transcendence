@@ -65,7 +65,7 @@ export async function updateMyProfile( updates: Partial<Pick<User, "username" | 
 
 	return {
 		ok: response.ok,
-		data: data.user ?? data,
+		data: data.user,
 	};
 
 }
