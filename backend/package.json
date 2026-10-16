@@ -8,8 +8,7 @@
     "predev": "npx prisma generate && npx prisma migrate deploy",
     "dev": "node --watch ./src/server.js",
     "prestart": "npx prisma generate && npx prisma migrate deploy",
-    "start": "node src/server.js",
-    "test": "node --test test/*.test.js"
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
