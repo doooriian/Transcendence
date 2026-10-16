@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { useParams } from "react-router-dom";
-import { getMyProfile, getUser, type User } from "../services/users";
+import { useParams, useNavigate } from "react-router-dom";
+import { getMyProfile, getUser, updateMyProfile, type User } from "../services/users";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
@@ -18,10 +18,20 @@ import {
 
 function Profile() {
 	const { username } = useParams();
-	const { username: myUsername } = useAuth();
+	const { username: myUsername, updateUsername} = useAuth();
+	const navigate = useNavigate();
 	const { theme } = useTheme();
 
 	const [user, setUser] = useState<User | null>(null);
+
+	const [editingUsername, setEditingUsername] = useState(false);
+	const [editingEmail, setEditingEmail] = useState(false);
+
+	const [newUsername, setNewUsername] = useState("");
+	const [newEmail, setNewEmail] = useState("");
+
+	const [savingProfile, setSavingProfile] = useState(false);
+	const [profileMessage, setProfileMessage] = useState("");
 
 	const [friends, setFriends] = useState<Friend[]>([]);
 	const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
@@ -75,7 +85,7 @@ function Profile() {
 		}
 
 		loadFriendData();
-	
+
 		const intervalId = setInterval(loadFriendData, 1000);
 
 		return () => {
@@ -157,21 +167,154 @@ function Profile() {
 	}
 
 
-if (!user) {
-    return (
-        <div className="min-h-screen">
-            <Header />
+	async function handleSaveUsername() {
+		setSavingProfile(true);
+		setProfileMessage("");
 
-            <main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
-                <p className="text-xl">
-                    Profile not found
-                </p>
-            </main>
+		try {
+			const result = await updateMyProfile({
+				username: newUsername.trim(),
+			});
 
-            <Footer />
-        </div>
-    );
-}
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update username"
+				);
+				return;
+			}
+
+			const finalUsername = result.data.username;
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+
+			updateUsername(finalUsername);
+			navigate(`/profile/${encodeURIComponent(finalUsername)}`, {
+				replace: true,
+			});
+
+			setEditingUsername(false);
+		} catch {
+			setProfileMessage("An error occurred");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
+
+	async function handleSaveEmail() {
+		setSavingProfile(true);
+		setProfileMessage("");
+
+		try {
+			const result = await updateMyProfile({
+				email: newEmail.trim(),
+			});
+
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update email"
+				);
+				return;
+			}
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+			setEditingEmail(false);
+		} catch {
+			setProfileMessage("An error occurred");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
+	async function handleSaveAvatar(file: File) {
+		setSavingProfile(true);
+		setProfileMessage("");
+
+		try {
+			if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+				setProfileMessage("Choose a PNG, JPEG or WebP image");
+				return;
+			}
+
+			if (file.size > 180 * 1024) {
+				setProfileMessage("The image must be smaller than 180 KB");
+				return;
+			}
+
+			const avatar = await new Promise<string>((resolve, reject) => {
+				const reader = new FileReader();
+
+				reader.onload = () => {
+					if (typeof reader.result === "string") {
+						resolve(reader.result);
+					} else {
+						reject(new Error("Unable to read image"));
+					}
+				};
+
+				reader.onerror = () => reject(new Error("Unable to read image"));
+				reader.readAsDataURL(file);
+			});
+
+			const result = await updateMyProfile({ avatar });
+
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update avatar"
+				);
+				return;
+			}
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+		} catch {
+			setProfileMessage("An error occurred while updating the avatar");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
+	if (!user) {
+		return (
+			<div className="min-h-screen">
+				<Header />
+
+				<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
+					<p className="text-xl">
+						Profile not found
+					</p>
+				</main>
+
+				<Footer />
+			</div>
+		);
+	}
 
 	const isMyProfile = username === myUsername;
 
@@ -195,6 +338,50 @@ if (!user) {
 				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
 
 					<div className="text-center mb-8">
+
+						<div className="flex justify-center mb-4">
+							<div className="relative">
+								{user.avatar ? (
+									<img
+										src={user.avatar}
+										alt={`${user.username}'s avatar`}
+										className="w-24 h-24 rounded-full object-cover"
+									/>
+								) : (
+									<div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center text-4xl">
+										♟
+									</div>
+								)}
+
+								{isMyProfile && (
+									<>
+										<input
+											type="file"
+											accept="image/png,image/jpeg,image/webp"
+											id="avatar-upload"
+											className="hidden"
+											onChange={(event) => {
+												const file = event.target.files?.[0];
+
+												if (file) {
+													void handleSaveAvatar(file);
+												}
+
+												event.target.value = "";
+											}}
+										/>
+
+										<label
+											htmlFor="avatar-upload"
+											title="Modifier l'avatar"
+											className="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-slate-900 bg-indigo-600 text-lg shadow-lg transition hover:bg-indigo-500"
+										>
+											✏️
+										</label>
+									</>
+								)}
+							</div>
+						</div>
 
 						<h1 className={`text-4xl font-bold `}>
 							♟ Profile
@@ -221,14 +408,110 @@ if (!user) {
 
 
 						<div className={`rounded-lg container-theme-${theme} p-4`}>
-							<p className="text-sm text-slate-400">
-								Username
-							</p>
+							<p className="text-sm text-slate-400">Username</p>
 
-							<p className="text-xl font-semibold">
-								{user.username}
-							</p>
+							{editingUsername ? (
+								<div className="mt-2 space-y-3">
+									<input
+										value={newUsername}
+										onChange={(event) => setNewUsername(event.target.value)}
+										className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
+										placeholder="New username"
+									/>
+
+									<div className="flex gap-2">
+										<button
+											onClick={handleSaveUsername}
+											disabled={savingProfile || !newUsername.trim()}
+											className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
+										>
+											Save
+										</button>
+
+										<button
+											onClick={() => setEditingUsername(false)}
+											className="rounded-lg bg-slate-700 px-3 py-2"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							) : (
+								<div className="flex items-center justify-between gap-3">
+									<p className="text-xl font-semibold">{user.username}</p>
+
+									{isMyProfile && (
+										<button
+											onClick={() => {
+												setNewUsername(user.username);
+												setEditingUsername(true);
+												setProfileMessage("");
+											}}
+											title="edit"
+											className="text-blue-400 hover:text-blue-300"
+										>
+											✏️
+										</button>
+									)}
+								</div>
+							)}
 						</div>
+
+						
+						{isMyProfile && (
+							<div className={`rounded-lg container-theme-${theme} p-4`}>
+								<p className="text-sm text-slate-400">Mail</p>
+
+								{editingEmail ? (
+									<div className="mt-2 space-y-3">
+										<input
+											type="email"
+											value={newEmail}
+											onChange={(event) => setNewEmail(event.target.value)}
+											className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
+											placeholder="New email"
+										/>
+
+										<div className="flex gap-2">
+											<button
+												onClick={handleSaveEmail}
+												disabled={savingProfile || !newEmail.trim()}
+												className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
+											>
+												Save
+											</button>
+
+											<button
+												onClick={() => setEditingEmail(false)}
+												className="rounded-lg bg-slate-700 px-3 py-2"
+											>
+												Cancel
+											</button>
+										</div>
+									</div>
+								) : (
+									<div className="flex items-center justify-between gap-3">
+										<p className="break-all text-white">
+											{user.email}
+										</p>
+
+										{isMyProfile && (
+											<button
+												onClick={() => {
+													setNewEmail(user.email || "");
+													setEditingEmail(true);
+													setProfileMessage("");
+												}}
+												title="edit"
+												className="text-blue-400 hover:text-blue-300"
+											>
+												✏️
+											</button>
+										)}
+									</div>
+								)}
+							</div>
+						)}
 
 
 						<div className={`rounded-lg container-theme-${theme} p-4`}>
@@ -237,7 +520,7 @@ if (!user) {
 							</p>
 
 							<p className="text-sm">
-								{user.createdAt}
+								{new Date(user.createdAt).toLocaleString("fr-FR")}
 							</p>
 						</div>
 
@@ -248,9 +531,15 @@ if (!user) {
 							</p>
 
 							<p className="text-sm">
-								{user.updatedAt}
+								{new Date(user.updatedAt).toLocaleString("fr-FR")}
 							</p>
 						</div>
+						
+						{profileMessage && (
+							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
+								{profileMessage}
+							</p>
+						)}
 
 						{!isMyProfile && (
 							<div className="pt-4">

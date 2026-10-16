@@ -31,7 +31,7 @@ app.set("io", io);
 const PORT = 3000;
 
 // Parse incoming JSON request bodies
-app.use(express.json());
+app.use(express.json({ limit: "512kb" }));
 
 // API routes
 app.use("/health", healthRoutes);

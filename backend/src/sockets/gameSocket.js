@@ -78,22 +78,34 @@ function handleGetActiveGame(socket) {
 function handleGetLegalMoves(socket, data) {
   const authId = socket.data.authId;
 
-  if (!data || typeof data.startingSquare !== "string" || !/^[a-h][1-8]$/.test(data.startingSquare)) {
+  if (!data || typeof data !== "object" || typeof data.gameId !== "string") {
+    socket.emit("game:error", { message: "Invalid legal moves request" });
+    return;
+  }
+
+  if (
+    typeof data.startingSquare !== "string" ||
+    !/^[a-h][1-8]$/.test(data.startingSquare)
+  ) {
     socket.emit("game:error", { message: "Invalid starting square" });
     return;
   }
 
-  const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
+  try {
+    const legalMoves = getLegalMoves(data.gameId, authId, data.startingSquare);
 
-  if (!legalMoves) {
-    socket.emit("game:error", { message: "Unable to get legal moves" });
-    return;
+    if (!legalMoves) {
+      socket.emit("game:error", { message: "Unable to get legal moves" });
+      return;
+    }
+
+    socket.emit("game:legal-moves", {
+      startingSquare: data.startingSquare,
+      legalMoves,
+    });
+  } catch {
+    socket.emit("game:error", { message: "Invalid legal moves request" });
   }
-
-  socket.emit("game:legal-moves", {
-    startingSquare: data.startingSquare,
-    legalMoves,
-  });
 }
 
 /**
@@ -104,8 +116,15 @@ function handleGetLegalMoves(socket, data) {
 function handleGameMove(io, socket, data) {
   const authId = socket.data.authId;
 
-  if (!data || typeof data !== "object") {
-    socket.emit("game:error", { message: "Invalid move request" });
+  if (
+    !data ||
+    typeof data !== "object" ||
+    typeof data.gameId !== "string" ||
+    !data.move ||
+    typeof data.move !== "object" ||
+    Array.isArray(data.move)
+  ) {
+    socket.emit("game:error", { message: "Invalid move data" });
     return;
   }
 

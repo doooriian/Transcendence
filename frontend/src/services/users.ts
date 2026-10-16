@@ -1,11 +1,19 @@
 import { apiFetch } from "./api";
 
 export type User = {
-	id: number;
-	username: string;
-	createdAt: string;
-	updatedAt: string;
+    id: number;
+    username: string;
+    email?: string;
+    avatar?: string | null;
+    createdAt: string;
+    updatedAt: string;
 };
+
+function getAuthHeaders() {
+	return {
+		"Content-Type": "application/json",
+	};
+}	
 
 export type UserSearchResult = {
 	username: string;
@@ -44,4 +52,20 @@ export async function getUser(username: string) {
 		ok: response.ok,
 		data: data.user,
 	};
+}
+
+export async function updateMyProfile( updates: Partial<Pick<User, "username" | "email" | "avatar">> ) {
+	const response = await apiFetch("/api/users/me", {
+		method: "PATCH",
+		headers: getAuthHeaders(),
+		body: JSON.stringify(updates),
+	});
+
+	const data = await response.json();
+
+	return {
+		ok: response.ok,
+		data: data.user ?? data,
+	};
+
 }
