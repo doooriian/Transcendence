@@ -14,6 +14,7 @@ type AuthContextType = {
 	username: string | null;
 	login: (username: string, token: string) => void;
 	logout: () => void;
+	updateUsername: (username: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,6 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 		socket.auth = { token };
 		socket.connect();
+	}
+
+	function updateUsername(newUsername: string) {
+		localStorage.setItem("username", newUsername);
+		setUsername(newUsername);
 	}
 
 	function logout() {
@@ -108,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				username,
 				login,
 				logout,
+				updateUsername,
 			}}
 		>
 			{children}

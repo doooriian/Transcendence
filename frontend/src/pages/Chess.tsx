@@ -334,6 +334,12 @@ function Chess() {
 		piece: ChessPiece;
 	} | null>(null);
 
+	
+	const [selectedSquare, setSelectedSquare] = useState<{
+		row: number;
+		col: number;
+	} | null>(null);
+
 	const [promotionSquare, setPromotionSquare] = useState<{
 		startingSquare: string;
 		targetSquare: string;
@@ -367,6 +373,7 @@ function Chess() {
 
 			setGame(gameState);
 			setDraggedPiece(null);
+			setSelectedSquare(null);
 			setLegalMoves([]);
 			setError("");
 		}
@@ -503,6 +510,87 @@ function Chess() {
 			row,
 			col,
 		};
+	}
+
+	
+	function handleSquareClick(row: number, col: number) {
+		if (!game || game.chess.isGameFinished) {
+			return;
+		}
+
+		const {
+			row: backendRow,
+			col: backendCol,
+		} = getBackendCoordinates(row, col);
+
+		const piece = game.chess.chessBoard[backendRow][backendCol];
+		const square = displayedCaseBoard[row][col];
+
+		if (selectedSquare) {
+			const {
+				row: startBackendRow,
+				col: startBackendCol,
+			} = getBackendCoordinates(
+				selectedSquare.row,
+				selectedSquare.col
+			);
+
+			const startingSquare =
+				caseBoard[startBackendRow][startBackendCol];
+
+			const moveIsLegal = legalMoves.some(
+				(move) => move.targetSquare === square
+			);
+
+			if (moveIsLegal) {
+				const selectedPiece =
+					game.chess.chessBoard[startBackendRow][startBackendCol];
+
+				const isPromotion =
+					selectedPiece?.chessPieceType === "pawn" &&
+					(
+						(selectedPiece.chessPieceColor === "white" &&
+							square[1] === "8") ||
+						(selectedPiece.chessPieceColor === "black" &&
+							square[1] === "1")
+					);
+
+				if (isPromotion && selectedPiece) {
+					setPromotionSquare({
+						startingSquare,
+						targetSquare: square,
+						pieceColor: selectedPiece.chessPieceColor,
+					});
+				} else {
+					socket.emit("game:move", {
+						gameId: game.id,
+						move: {
+							startingSquare,
+							targetSquare: square,
+						},
+					});
+				}
+
+				setSelectedSquare(null);
+				setLegalMoves([]);
+				setDraggedPiece(null);
+				return;
+			}
+		}
+
+		if (piece && piece.chessPieceColor === game.chess.currentPlayerColor) {
+			setSelectedSquare({ row, col });
+
+			socket.emit("game:get-legal-moves", {
+				gameId: game.id,
+				startingSquare: square,
+			});
+
+			return;
+		}
+
+		setSelectedSquare(null);
+		setLegalMoves([]);
 	}
 
 	const handleMouseDown = (
@@ -849,7 +937,15 @@ function Chess() {
 											const square = displayedCaseBoard[rowIndex][columnIndex];
 											const isDragging =
 												draggedPiece?.row === rowIndex &&
-												draggedPiece?.col === columnIndex;
+												draggedPiece?.col === columnIndex;																						
+											const isSelected =
+												selectedSquare?.row === rowIndex &&
+												selectedSquare?.col === columnIndex;											
+											const isKingInCheck =
+												game !== null &&
+												game.chess.isCurrentPlayerInCheck &&
+												piece?.chessPieceType === "king" &&
+												piece.chessPieceColor === game.chess.currentPlayerColor;
 											const isLegalMove = legalMoves.some(
 												(move) => move.targetSquare === square
 											);
@@ -857,10 +953,12 @@ function Chess() {
 											return (
 												<div
 													key={`${rowIndex}-${columnIndex}`}
+													onClick={() => handleSquareClick(rowIndex, columnIndex)}
 													onMouseDown={(event) =>
 														handleMouseDown(event, rowIndex, columnIndex)
 													}
-													className={`relative flex aspect-square select-none items-center justify-center cursor-grab transition-all ${isDragging ? "opacity-30 scale-105" : ""} ${isDark ? darkCaseClass : whiteCaseClass}`}
+													className={`relative flex aspect-square select-none items-center justify-center cursor-grab transition-all
+														${isDragging ? "opacity-30 scale-105" : ""} ${isDark ? darkCaseClass : whiteCaseClass} ${isSelected ? "ring-4 ring-inset ring-violet-400" : ""} ${isKingInCheck ? "ring-4 ring-inset ring-red-500" : ""}`}
 												>
 													{pieceImage && (
 														<img
