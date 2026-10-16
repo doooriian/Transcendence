@@ -166,6 +166,7 @@ function Profile() {
 		setLoadingFriendAction(false);
 	}
 
+
 	async function handleSaveUsername() {
 		setSavingProfile(true);
 		setProfileMessage("");
@@ -182,21 +183,24 @@ function Profile() {
 				return;
 			}
 
-			const updatedUser = result.data.user;
-			const finalUsername = updatedUser?.username ?? newUsername.trim();
+			const finalUsername = result.data.username;
 
-			if (updatedUser) {
-				setUser(updatedUser);
-			} else {
-				setUser((current) =>
-					current
-						? { ...current, username: finalUsername }
-						: current
-				);
-			}
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
 
 			updateUsername(finalUsername);
-			navigate(`/profile/${encodeURIComponent(finalUsername)}`, { replace: true, });
+			navigate(`/profile/${encodeURIComponent(finalUsername)}`, {
+				replace: true,
+			});
+
 			setEditingUsername(false);
 		} catch {
 			setProfileMessage("An error occurred");
@@ -204,6 +208,7 @@ function Profile() {
 			setSavingProfile(false);
 		}
 	}
+
 
 	async function handleSaveEmail() {
 		setSavingProfile(true);
@@ -221,18 +226,16 @@ function Profile() {
 				return;
 			}
 
-			const updatedUser = result.data.user;
-
-			if (updatedUser) {
-				setUser(updatedUser);
-			} else {
-				setUser((current) =>
-					current
-						? { ...current, email: newEmail.trim() }
-						: current
-				);
-			}
-
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
 			setEditingEmail(false);
 		} catch {
 			setProfileMessage("An error occurred");
@@ -280,13 +283,16 @@ function Profile() {
 				return;
 			}
 
-			if (result.data.user) {
-				setUser(result.data.user);
-			} else {
-				setUser((current) =>
-					current ? { ...current, avatar } : current
-				);
-			}
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
 		} catch {
 			setProfileMessage("An error occurred while updating the avatar");
 		} finally {
