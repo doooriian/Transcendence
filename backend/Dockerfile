@@ -1,6 +1,7 @@
 FROM node:24-bookworm-slim
 
 # Install Stockfish and Prisma's OpenSSL dependency.
+RUN apt-get update \
     && apt-get install -y --no-install-recommends stockfish openssl \
     && rm -rf /var/lib/apt/lists/*
 
