@@ -1,16 +1,40 @@
 import { randomUUID } from "crypto";
 import ChessEngine from "../games/chess/chess.engine.js";
+import { BOT_DIFFICULTIES, chooseBotMove } from "../games/chess/stockfish.bot.js";
 
 const games = new Map();
 const chessEngines = new Map();
 const activeGameByUser = new Map();
+const botSearches = new Map();
 
 /**
  * Creates a new game with the authenticated user as white.
  * Creates a dedicated chess engine and marks the game as active for the user.
  * Returns the created game, or null if the user already has an active game.
  */
-function createGame(authId) {
+function createGame(authId, options = {}) {
+  if (!options || typeof options !== "object") {
+    return null;
+  }
+
+  let mode = "human";
+  if (options.mode !== null && options.mode !== undefined) {
+    mode = options.mode;
+  }
+
+  let difficulty = "medium";
+  if (options.difficulty !== null && options.difficulty !== undefined) {
+    difficulty = options.difficulty;
+  }
+
+  if (mode !== "human" && mode !== "bot") {
+    return null;
+  }
+
+  if (mode === "bot" && !Object.hasOwn(BOT_DIFFICULTIES, difficulty)) {
+    return null;
+  }
+
   if (activeGameByUser.has(authId)) {
     return null;
   }
@@ -19,7 +43,13 @@ function createGame(authId) {
     id: randomUUID(),
     white: authId,
     black: null,
+    bot: null,
   };
+
+  if (mode === "bot") {
+    game.bot = { difficulty: difficulty };
+    game.black = `bot:${game.id}`;
+  }
 
   const chessEngine = new ChessEngine();
 
@@ -62,7 +92,12 @@ function getActiveGameByUser(authId) {
     return null;
   }
 
-  return games.get(gameId) ?? null;
+  const game = games.get(gameId);
+  if (game === null || game === undefined) {
+    return null;
+  }
+
+  return game;
 }
 
 /**
@@ -87,6 +122,7 @@ function getGameState(gameId, authId) {
     id: game.id,
     white: game.white,
     black: game.black,
+    bot: game.bot,
     chess: chessEngine.getGameState(),
   };
 }
@@ -127,6 +163,9 @@ function getLegalMoves(gameId, authId, startingSquare) {
  * Returns the chess engine result, or null if the request is not allowed.
  */
 function makeGameMove(gameId, authId, move) {
+  if (!move || typeof move !== "object") {
+    return null;
+  }
   const game = games.get(gameId);
 
   if (!game || !game.black) {
@@ -150,6 +189,64 @@ function makeGameMove(gameId, authId, move) {
   }
 
   return chessEngine.makeMove(move);
+}
+
+/** Bot selection is asynchronous; only apply it to the unchanged, active game. */
+async function makeBotMove(gameId, authId, selectMove = chooseBotMove) {
+  const game = games.get(gameId);
+  const engine = getChessEngine(gameId);
+  if (!game || !game.bot) {
+    return null;
+  }
+
+  if (game.white !== authId) {
+    return null;
+  }
+
+  if (!engine || engine.isGameFinished()) {
+    return null;
+  }
+
+  if (engine.getCurrentPlayerColor() !== "black") {
+    return null;
+  }
+
+  if (botSearches.has(gameId)) {
+    return null;
+  }
+
+  const fen = engine.getCurrentPositionFen();
+  const controller = new AbortController();
+  botSearches.set(gameId, controller);
+  try {
+    const move = await selectMove(fen, game.bot.difficulty, { signal: controller.signal });
+    if (controller.signal.aborted) {
+      return null;
+    }
+
+    if (games.get(gameId) !== game) {
+      return null;
+    }
+
+    if (engine.isGameFinished()) {
+      return null;
+    }
+
+    if (engine.getCurrentPositionFen() !== fen) {
+      return null;
+    }
+
+    const result = engine.makeMove(move);
+    if (!result.moveWasSuccessful) {
+      throw new Error("Stockfish returned an illegal move");
+    }
+
+    return result;
+  } finally {
+    if (botSearches.get(gameId) === controller) {
+      botSearches.delete(gameId);
+    }
+  }
 }
 
 /**
@@ -212,7 +309,12 @@ function finishGame(gameId) {
  * Returns null if no engine exists for the given game.
  */
 function getChessEngine(gameId) {
-  return chessEngines.get(gameId) ?? null;
+  const chessEngine = chessEngines.get(gameId);
+  if (chessEngine === null || chessEngine === undefined) {
+    return null;
+  }
+
+  return chessEngine;
 }
 
 /**
@@ -224,7 +326,7 @@ function getPlayerColor(game, authId) {
     return "white";
   }
 
-  if (game.black === authId) {
+  if (!game.bot && game.black === authId) {
     return "black";
   }
 
@@ -244,10 +346,15 @@ function deleteGame(gameId) {
 
   games.delete(gameId);
   chessEngines.delete(gameId);
+  const controller = botSearches.get(gameId);
+  if (controller !== null && controller !== undefined) {
+    controller.abort();
+  }
+  botSearches.delete(gameId);
 
   activeGameByUser.delete(game.white);
 
-  if (game.black) {
+  if (game.black && !game.bot) {
     activeGameByUser.delete(game.black);
   }
 
@@ -261,6 +368,7 @@ export {
   getGameState,
   getLegalMoves,
   makeGameMove,
+  makeBotMove,
   resignGame,
   leaveGame,
   finishGame,

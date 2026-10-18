@@ -150,6 +150,7 @@ type ChessGame = {
 	id: string;
 	white: string;
 	black: string | null;
+	bot: { difficulty: "easy" | "medium" | "hard" } | null;
 	chess: {
 		chessBoard: ChessPiece[][];
 		currentPlayerColor: "white" | "black";
@@ -315,6 +316,8 @@ function Chess() {
 	const [game, setGame] = useState<ChessGame | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [joinGameId, setJoinGameId] = useState("");
+	const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+	const [botError, setBotError] = useState(false);
 	const [myAuthId, setMyAuthId] = useState<string | null>(null);
 
 	let myColor: "white" | "black" | null = null;
@@ -368,6 +371,10 @@ function Chess() {
 
 	useEffect(() => {
 		function updateGame(gameState: ChessGame) {
+			if (!gameState) {
+				setGame(null);
+				return;
+			}
 			console.log("GAME RECUE :", gameState);
 			console.log("BOARD RECUE :", gameState.chess?.chessBoard);
 
@@ -376,10 +383,13 @@ function Chess() {
 			setSelectedSquare(null);
 			setLegalMoves([]);
 			setError("");
+			setBotError(false);
 		}
 
 		function handleGameActive(gameState: ChessGame | null) {
 			setGame(gameState);
+			// Allow recovery if a bot failure happened while this client was offline.
+			setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
 		}
 
 		function handleLegalMoves(data: {
@@ -394,6 +404,11 @@ function Chess() {
 			setError(data.message);
 			setDraggedPiece(null);
 		}
+		function handleBotError(data: { message: string }) {
+			setError(data.message);
+			setBotError(true);
+		}
+		function refreshGame() { socket.emit("game:get-active"); }
 
 		socket.on("game:created", updateGame);
 		socket.on("game:ready", updateGame);
@@ -403,6 +418,8 @@ function Chess() {
 		socket.on("game:active", handleGameActive);
 		socket.on("game:legal-moves", handleLegalMoves);
 		socket.on("game:error", handleGameError);
+		socket.on("game:bot-error", handleBotError);
+		socket.on("connect", refreshGame);
 
 		socket.emit("game:get-active");
 
@@ -415,12 +432,20 @@ function Chess() {
 			socket.off("game:active", handleGameActive);
 			socket.off("game:legal-moves", handleLegalMoves);
 			socket.off("game:error", handleGameError);
+			socket.off("game:bot-error", handleBotError);
+			socket.off("connect", refreshGame);
 		};
 	}, []);
 
 	function createGame() {
 		setError(null);
 		socket.emit("game:create");
+	}
+
+	function createBotGame() {
+		setError(null);
+		setBotError(false);
+		socket.emit("game:create", { mode: "bot", difficulty: botDifficulty });
 	}
 
 	function joinGame() {
@@ -606,6 +631,8 @@ function Chess() {
 			getBackendCoordinates(row, col);
 
 		const piece = game.chess.chessBoard[backendRow][backendCol];
+		if (game.chess.isGameFinished || !game.black
+			|| game.chess.currentPlayerColor !== myColor || piece?.chessPieceColor !== myColor) return;
 
 		if (piece === null) {
 			return;
@@ -807,11 +834,11 @@ function Chess() {
 							</div>
 							<div>
 								<p className="text-lg font-bold">
-									Opponent
+									{game?.bot ? `Stockfish · ${game.bot.difficulty}` : "Opponent"}
 								</p>
 
 								<p className="text-sm /70">
-									1200 Elo
+									{game?.bot ? "Computer opponent" : "1200 Elo"}
 								</p>
 							</div>
 						</div>
@@ -824,6 +851,24 @@ function Chess() {
 										className="mt-6 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-8 py-3 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all transform hover:scale-105"
 									>
 										Create a game
+									</button>
+									<div className="relative mt-3 w-full">
+										<select aria-label="Bot difficulty" value={botDifficulty}
+											onChange={(event) => setBotDifficulty(event.target.value as "easy" | "medium" | "hard")}
+											className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg py-3 pl-4 pr-11 text-sm font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
+											style={{ colorScheme: "dark" }}>
+											<option className="bg-slate-900 text-white" value="easy">Easy</option>
+											<option className="bg-slate-900 text-white" value="medium">Medium</option>
+											<option className="bg-slate-900 text-white" value="hard">Hard</option>
+										</select>
+										<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+											className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
+											<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+									</div>
+									<button onClick={createBotGame}
+										className="mt-3 rounded-xl bg-violet-600 px-6 py-3 font-semibold hover:bg-violet-500">
+										Play against bot
 									</button>
 
 									<input
@@ -847,6 +892,14 @@ function Chess() {
 								<p className="mt-4 text-red-400">
 									{error}
 								</p>
+							)}
+							{game?.bot && !game.chess.isGameFinished && game.chess.currentPlayerColor === "black" && (
+								<div className="mt-3 text-center" aria-live="polite">
+									{botError ? <button className="rounded-xl bg-violet-600 px-4 py-2"
+										onClick={() => { setBotError(false); setError(null); socket.emit("game:retry-bot", game.id); }}>
+										Retry bot turn
+									</button> : "Stockfish is thinking…"}
+								</div>
 							)}
 							{game && !game?.chess.isGameFinished && game.black === null && (
 								<div className={`mt-6 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-4 shadow-lg`}>
