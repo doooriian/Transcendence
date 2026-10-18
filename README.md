@@ -221,6 +221,18 @@ Once the task is ready, a Pull Request is opened into `dev`.
 Stable versions of `dev` are then merged into `main`.
 
 
+## 🤖 Chess bot (Stockfish)
+
+Choose a difficulty on the chess page and click **Play against bot**.
+You play white; Stockfish plays black. Moves are validated by chess.js.
+
+Stockfish is built into the Alpine backend image. Run `make` or `make dev`
+to rebuild and start the project. Games are stored in memory and are lost
+when the backend restarts.
+
+Stockfish: https://github.com/official-stockfish/Stockfish (GPLv3).
+
+
 ## 🎮 What's Next
 
 The current foundation provides authentication, profiles, frontend navigation, database persistence and the development environment required for the rest of the project.
