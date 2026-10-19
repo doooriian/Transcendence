@@ -1,3 +1,6 @@
+import prisma from "../prismaClient.js";
+import { isUserOnline } from "../services/presenceService.js";
+
 const MESSAGE_MAX_LENGTH = 500;
 
 /**
@@ -36,7 +39,7 @@ function validateChatMessage(data) {
  * Handles an incoming chat message and reports validation errors
  * to the requesting socket.
  */
-function handleChatSend(socket, data) {
+async function handleChatSend(socket, data) {
   const messageData = validateChatMessage(data);
 
   if (messageData.error) {
@@ -44,7 +47,37 @@ function handleChatSend(socket, data) {
     return;
   }
 
-  console.log("Valid chat message:", messageData);
+  try {
+    const recipient = await prisma.user.findUnique({
+      where: {
+        username: messageData.to,
+      },
+      select: {
+        authId: true,
+        username: true,
+      },
+    });
+
+    if (!recipient) {
+      socket.emit("chat:error", { message: "User not found" });
+      return;
+    }
+
+    if (recipient.authId === socket.data.authId) {
+      socket.emit("chat:error", { message: "You cannot message yourself" });
+      return;
+    }
+
+    if (!isUserOnline(recipient.authId)) {
+      socket.emit("chat:error", { message: "User is offline" });
+      return;
+    }
+
+    console.log("Valid chat message:", messageData);
+  } catch (err) {
+    console.error(err.message);
+    socket.emit("chat:error", { message: "Unable to send message" });
+  }
 }
 
 /**
