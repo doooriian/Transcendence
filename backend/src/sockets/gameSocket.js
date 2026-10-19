@@ -6,6 +6,8 @@ import {
   getLegalMoves,
   makeGameMove,
   makeBotMove,
+  offerDraw,
+  respondToDraw,
   resignGame,
   leaveGame,
   finishGame,
@@ -170,6 +172,39 @@ function publishGameState(io, gameId, authId) {
   }
 
   io.to(`game:${gameId}`).emit("game:updated", gameState);
+}
+
+function handleDrawOffer(io, socket, data) {
+  if (!data || typeof data !== "object" || typeof data.gameId !== "string") {
+    socket.emit("game:error", { message: "Invalid draw offer request." });
+    return;
+  }
+
+  const authId = socket.data.authId;
+  const result = offerDraw(data.gameId, authId);
+  if (result.errorMessage) {
+    socket.emit("game:error", { message: result.errorMessage });
+    return;
+  }
+
+  io.to(`game:${data.gameId}`).emit("game:draw-updated", getGameState(data.gameId, authId));
+}
+
+function handleDrawResponse(io, socket, data) {
+  if (!data || typeof data !== "object" || typeof data.gameId !== "string"
+    || typeof data.offerId !== "string" || typeof data.accept !== "boolean") {
+    socket.emit("game:error", { message: "Invalid draw response." });
+    return;
+  }
+
+  const authId = socket.data.authId;
+  const result = respondToDraw(data.gameId, authId, data.offerId, data.accept);
+  if (result.errorMessage) {
+    socket.emit("game:error", { message: result.errorMessage });
+    return;
+  }
+
+  publishGameState(io, data.gameId, authId);
 }
 
 async function handleBotTurn(io, socket, gameId) {
@@ -344,6 +379,8 @@ function registerGameHandlers(io, socket) {
   );
 
   socket.on("game:move", (data) => handleGameMove(io, socket, data));
+  socket.on("game:offer-draw", (data) => handleDrawOffer(io, socket, data));
+  socket.on("game:respond-draw", (data) => handleDrawResponse(io, socket, data));
   socket.on("game:retry-bot", (gameId) => { void handleBotTurn(io, socket, gameId); });
 
   socket.on("game:resign", (gameId) => handleGameResign(io, socket, gameId));
