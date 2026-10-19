@@ -951,35 +951,41 @@ function Chess() {
 						</div>
 					</div>
 
-					<div className="mx-auto grid w-full grid-cols-[auto_1fr_auto] items-start gap-4">
-						{searchingGame ? (
-							<div
-								className={`hidden w-56 shrink-0 rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg lg:block`}
-							>
-								<p className="text-sm /70">Game ID :</p>
-								<p className="font-mono text-sm mb-2">{searchingGame.id}</p>
+					<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-3 sm:gap-4 lg:grid-cols-[minmax(0,auto)_minmax(0,660px)_minmax(0,auto)] lg:justify-center">
+						<div className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1 lg:w-auto">
+							{searchingGame ? (
+								<div
+									className={`hidden w-56 shrink-0 rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg lg:block`}
+								>
+									<p className="text-sm text-white/70">Game ID :</p>
+									<p className="mb-2 font-mono text-sm">
+										{searchingGame.id}
+									</p>
 
-								<div className="space-y-1">
-									<p className="text-sm">
-										<span className="/70">White :</span> {searchingGame.white}
-									</p>
-									<p className="text-sm">
-										<span className="/70">Black :</span>{" "}
-										{searchingGame.black ?? "Waiting..."}
-									</p>
+									<div className="space-y-1">
+										<p className="text-sm">
+											<span className="text-white/70">White :</span>{" "}
+											{searchingGame.white}
+										</p>
+
+										<p className="text-sm">
+											<span className="text-white/70">Black :</span>{" "}
+											{searchingGame.black ?? "Waiting..."}
+										</p>
+									</div>
 								</div>
-							</div>
-						) : (
-							<CapturedTray
-								pieces={capturedByMe}
-								label="Captured by you"
-							/>
-						)}
+							) : (
+								<CapturedTray
+									pieces={capturedByMe}
+									label="Captured by you"
+								/>
+							)}
+						</div>
 
-						<div className="mx-auto aspect-square w-[min(660px,100%,calc(100vh-475px))]">
+						<div className="order-1 mx-auto aspect-square w-full min-w-0 max-w-[660px] lg:order-2">
 							{game ? (
 								<div
-									className={`grid aspect-square w-full grid-cols-8 grid-rows-8 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}
+									className={`grid aspect-square w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-lg shadow-2xl ring-2 ring-purple-500/20 sm:rounded-2xl sm:ring-4 ${borderThemeClass}`}
 									onMouseMove={handleMouseMove}
 									onMouseUp={handleMouseUp}
 								>
@@ -1039,10 +1045,10 @@ function Chess() {
 											src={getPieceImage(draggedPiece.piece)}
 											alt=""
 											draggable={false}
-											className="pointer-events-none fixed z-50 h-24 w-24 object-contain drop-shadow-2xl"
+											className="pointer-events-none fixed z-50 h-16 w-16 object-contain drop-shadow-2xl sm:h-24 sm:w-24"
 											style={{
-												left: mousePosition.x - 48,
-												top: mousePosition.y - 48,
+												left: mousePosition.x - 32,
+												top: mousePosition.y - 32,
 											}}
 										/>
 									)}
@@ -1088,14 +1094,19 @@ function Chess() {
 							)}
 						</div>
 
-						{searchingGame ? (
-							<div className="hidden w-56 shrink-0 lg:block" aria-hidden="true" />
-						) : (
-							<CapturedTray
-								pieces={capturedByOpponent}
-								label="Captured by opponent"
-							/>
-						)}
+						<div className="order-3 mx-auto w-full min-w-0 max-w-[660px] lg:order-3 lg:w-auto">
+							{searchingGame ? (
+								<div
+									className="hidden w-56 shrink-0 lg:block"
+									aria-hidden="true"
+								/>
+							) : (
+								<CapturedTray
+									pieces={capturedByOpponent}
+									label="Captured by opponent"
+								/>
+							)}
+						</div>
 					</div>
 
 					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
