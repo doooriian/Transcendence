@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
 	return (
 		<footer className="border-t border-slate-800 bg-slate-950">
@@ -11,19 +13,26 @@ function Footer() {
 				</div>
 
 				<div className="flex gap-6 text-sm">
-					<a
-						href="#"
+					<Link
+						to="/"
 						className="text-slate-400 transition hover:text-white"
 					>
 						Home
-					</a>
+					</Link>
 
-					<a
-						href="#"
+					<Link
+						to="/privacy-policy"
 						className="text-slate-400 transition hover:text-white"
 					>
-						About
-					</a>
+						Privacy Policy
+					</Link>
+
+					<Link
+						to="/terms-of-service"
+						className="text-slate-400 transition hover:text-white"
+					>
+						Terms of Service
+					</Link>
 
 					<a
 						href="https://github.com/doooriian/Transcendence"
