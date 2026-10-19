@@ -875,6 +875,13 @@ function Chess() {
 		}
 	}
 
+	let drawButtonColors;
+	if (drawOffersMade >= 3) {
+		drawButtonColors = "from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500";
+	} else {
+		drawButtonColors = "from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500";
+	}
+
 	return (
 		<div className="min-h-screen flex flex-col">
 		{game && receivedDrawOffer && (
@@ -1187,7 +1194,7 @@ function Chess() {
 							<button type="button" onClick={offerDraw}
 								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
 								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-								className="rounded-xl bg-gradient-to-r from-rose-500 to-red-600 px-8 py-3 font-semibold transition-all hover:from-rose-400 hover:to-red-500 shadow-lg disabled:cursor-not-allowed disabled:opacity-40">
+								className={`rounded-xl bg-gradient-to-r px-8 py-3 font-semibold transition-all shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${drawButtonColors}`}>
 								Offer draw ({drawOffersMade}/3)
 							</button>
 						</div>
