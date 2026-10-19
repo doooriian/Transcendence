@@ -15,6 +15,9 @@ function Footer() {
 				<div className="flex gap-6 text-sm">
 					<Link
 						to="/"
+						onClick={() => {
+							window.scrollTo({ top: 0, behavior: "smooth" });
+						}}
 						className="text-slate-400 transition hover:text-white"
 					>
 						Home
