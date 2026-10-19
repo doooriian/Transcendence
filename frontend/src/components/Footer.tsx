@@ -22,6 +22,9 @@ function Footer() {
 
 					<Link
 						to="/privacy-policy"
+						onClick={() => {
+							window.scrollTo({ top: 0, behavior: "smooth" });
+						}}
 						className="text-slate-400 transition hover:text-white"
 					>
 						Privacy Policy
@@ -29,6 +32,9 @@ function Footer() {
 
 					<Link
 						to="/terms-of-service"
+						onClick={() => {
+							window.scrollTo({ top: 0, behavior: "smooth" });
+						}}
 						className="text-slate-400 transition hover:text-white"
 					>
 						Terms of Service
