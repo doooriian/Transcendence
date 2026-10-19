@@ -18,6 +18,7 @@ const CHESS_GAME_END_REASON = {
   INSUFFICIENT_MATERIAL: "insufficientMaterial",
   FIFTY_MOVE_RULE: "fiftyMoveRule",
   RESIGNATION: "resignation",
+  AGREEMENT: "agreement",
   DRAW: "draw",
 };
 
@@ -346,6 +347,20 @@ class ChessEngine {
       chessGameState:
         this.getGameState(),
     };
+  }
+
+
+  // End the game after both players agree to a draw.
+  agreeDraw() {
+    if (this.isGameFinished()) {
+      return { drawWasSuccessful: false };
+    }
+
+    this.#chessGameFinished = true;
+    this.#chessGameResult = CHESS_GAME_RESULT.DRAW;
+    this.#chessGameEndReason = CHESS_GAME_END_REASON.AGREEMENT;
+
+    return { drawWasSuccessful: true };
   }
 
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import DrawOfferDialog from "../components/DrawOfferDialog";
 import socket from "../services/socket";
 import { getRandomInt } from "../utils/random";
 import { getMyProfile } from "../services/users";
@@ -151,6 +152,12 @@ type ChessGame = {
 	white: string;
 	black: string | null;
 	bot: { difficulty: "easy" | "medium" | "hard" } | null;
+	draw: {
+		offer: { id: string; offeredBy: string; responseAvailableAt: number } | null;
+		offersMade: { white: number; black: number };
+		maxOffers: number;
+		responseDelayMs: number;
+	};
 	chess: {
 		chessBoard: ChessPiece[][];
 		currentPlayerColor: "white" | "black";
@@ -318,6 +325,7 @@ function Chess() {
 	const [joinGameId, setJoinGameId] = useState("");
 	const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
 	const [botError, setBotError] = useState(false);
+	const [drawResponsePending, setDrawResponsePending] = useState(false);
 	const [myAuthId, setMyAuthId] = useState<string | null>(null);
 
 	let myColor: "white" | "black" | null = null;
@@ -371,6 +379,8 @@ function Chess() {
 
 	useEffect(() => {
 		function updateGame(gameState: ChessGame) {
+			setDrawResponsePending(false);
+			setPromotionSquare(null);
 			if (!gameState) {
 				setGame(null);
 				return;
@@ -388,6 +398,10 @@ function Chess() {
 
 		function handleGameActive(gameState: ChessGame | null) {
 			setGame(gameState);
+			setDraggedPiece(null);
+			setSelectedSquare(null);
+			setLegalMoves([]);
+			setDrawResponsePending(false);
 			// Allow recovery if a bot failure happened while this client was offline.
 			setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
 		}
@@ -403,6 +417,16 @@ function Chess() {
 			console.error(data.message);
 			setError(data.message);
 			setDraggedPiece(null);
+			setDrawResponsePending(false);
+		}
+		function handleDrawUpdated(gameState: ChessGame) {
+			setGame(gameState);
+			setDraggedPiece(null);
+			setSelectedSquare(null);
+			setLegalMoves([]);
+			setPromotionSquare(null);
+			setDrawResponsePending(false);
+			setError(null);
 		}
 		function handleBotError(data: { message: string }) {
 			setError(data.message);
@@ -419,6 +443,7 @@ function Chess() {
 		socket.on("game:legal-moves", handleLegalMoves);
 		socket.on("game:error", handleGameError);
 		socket.on("game:bot-error", handleBotError);
+		socket.on("game:draw-updated", handleDrawUpdated);
 		socket.on("connect", refreshGame);
 
 		socket.emit("game:get-active");
@@ -433,6 +458,7 @@ function Chess() {
 			socket.off("game:legal-moves", handleLegalMoves);
 			socket.off("game:error", handleGameError);
 			socket.off("game:bot-error", handleBotError);
+			socket.off("game:draw-updated", handleDrawUpdated);
 			socket.off("connect", refreshGame);
 		};
 	}, []);
@@ -478,6 +504,23 @@ function Chess() {
 		socket.emit("game:resign", game.id);
 	}
 
+	function offerDraw() {
+		if (!game) return;
+		setError(null);
+		socket.emit("game:offer-draw", { gameId: game.id });
+	}
+
+	function respondToDraw(accept: boolean) {
+		if (!game || !game.draw.offer || drawResponsePending) return;
+		setError(null);
+		setDrawResponsePending(true);
+		socket.emit("game:respond-draw", {
+			gameId: game.id,
+			offerId: game.draw.offer.id,
+			accept: accept,
+		});
+	}
+
 	function endGame() {
 		if (!game)
 			return;
@@ -498,6 +541,8 @@ function Chess() {
 				return "Pat";
 			case "draw":
 				return "Null";
+			case "agreement":
+				return "Draw by agreement";
 			default:
 				return "Game over";
 		}
@@ -539,7 +584,7 @@ function Chess() {
 
 	
 	function handleSquareClick(row: number, col: number) {
-		if (!game || game.chess.isGameFinished) {
+		if (!game || game.chess.isGameFinished || game.draw.offer !== null) {
 			return;
 		}
 
@@ -632,6 +677,7 @@ function Chess() {
 
 		const piece = game.chess.chessBoard[backendRow][backendCol];
 		if (game.chess.isGameFinished || !game.black
+			|| game.draw.offer !== null
 			|| game.chess.currentPlayerColor !== myColor || piece?.chessPieceColor !== myColor) return;
 
 		if (piece === null) {
@@ -671,7 +717,7 @@ function Chess() {
 	};
 
 	const handleMouseUp = (event: React.MouseEvent) => {
-		if (!draggedPiece || !game) {
+		if (!draggedPiece || !game || game.draw.offer !== null) {
 			return;
 		}
 
@@ -819,8 +865,30 @@ function Chess() {
 			? game
 			: null;
 
+	let receivedDrawOffer: ChessGame["draw"]["offer"] = null;
+	let drawOffersMade = 0;
+	if (game && myColor) {
+		drawOffersMade = game.draw.offersMade[myColor];
+		if (!game.chess.isGameFinished && game.draw.offer !== null
+			&& game.draw.offer.offeredBy !== myAuthId) {
+			receivedDrawOffer = game.draw.offer;
+		}
+	}
+
+	let drawButtonColors;
+	if (drawOffersMade >= 3) {
+		drawButtonColors = "from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500";
+	} else {
+		drawButtonColors = "from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500";
+	}
+
 	return (
 		<div className="min-h-screen flex flex-col">
+		{game && receivedDrawOffer && (
+			<DrawOfferDialog key={receivedDrawOffer.id}
+				delayMs={game.draw.responseDelayMs} pending={drawResponsePending}
+				error={error} onRespond={respondToDraw} />
+		)}
 		<main>
 			<Header />
 
@@ -1114,7 +1182,8 @@ function Chess() {
 							</div>
 						</div>
 
-						<div className="mt-8 flex justify-self-start gap-4">
+						<div className="mt-8 flex flex-col items-start justify-self-start gap-3">
+						<div className="flex gap-4">
 							<button
 								className={`rounded-xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-8 py-3 font-semibold transition-all hover:opacity-90 hover:scale-105 shadow-lg`}
 								onClick={resignGame}
@@ -1122,9 +1191,16 @@ function Chess() {
 								Give up
 							</button>
 
-							<button className="rounded-xl bg-gradient-to-r from-rose-500 to-red-600 px-8 py-3 font-semibold transition-all hover:from-rose-400 hover:to-red-500 hover:scale-105 shadow-lg">
-								Null
+							<button type="button" onClick={offerDraw}
+								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
+								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
+								className={`rounded-xl bg-gradient-to-r px-8 py-3 font-semibold transition-all shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${drawButtonColors}`}>
+								Offer draw ({drawOffersMade}/3)
 							</button>
+						</div>
+						{game && !game.chess.isGameFinished && game.draw.offer?.offeredBy === myAuthId && (
+							<p className="max-w-xs text-sm text-amber-300" role="status">Draw offer sent. Waiting for your opponent’s response…</p>
+						)}
 						</div>
 								<div className={`rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-3 font-mono text-xl shadow-lg`}>
 							00:00
