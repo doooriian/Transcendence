@@ -402,7 +402,6 @@ function Chess() {
 			setSelectedSquare(null);
 			setLegalMoves([]);
 			setDrawResponsePending(false);
-			// Allow recovery if a bot failure happened while this client was offline.
 			setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
 		}
 

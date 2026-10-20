@@ -17,7 +17,6 @@ const CAPTURED_PIECE_ORDER: ChessPieceType[] = [
   "pawn",
 ];
 
-/** Déduit les pièces prises en comparant le plateau au nombre de départ. */
 export function getCapturedPieces(
   chessBoard: ChessPiece[][],
   color: "white" | "black",

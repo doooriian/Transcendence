@@ -60,7 +60,6 @@ const pieceSets: PieceImages[] = [
   },
 ];
 
-/** Choisit une apparence de plateau et un jeu de pièces pour cette partie. */
 export function createChessAppearance(): ChessAppearance {
   const boardTheme = getRandomInt(1, 3);
   const pieceTheme = getRandomInt(1, 3);

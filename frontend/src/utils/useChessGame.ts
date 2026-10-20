@@ -72,7 +72,6 @@ export function useChessGame() {
       setGame(gameState);
       resetBoardInteraction();
       setDrawResponsePending(false);
-      // Recover the retry button if a bot turn failed while this client was offline.
       setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
     }
 

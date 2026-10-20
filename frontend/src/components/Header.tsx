@@ -85,7 +85,6 @@ function Header() {
 					♟ ft_chess
 				</Link>
 
-				{/* Bouton visible uniquement sur téléphone */}
 				<button
 					type="button"
 					onClick={() => setMenuOpen((open) => !open)}
