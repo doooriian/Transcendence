@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import socket from "../services/socket";
 import { getMyProfile } from "../services/users";
 import { caseBoard } from "./board";
@@ -283,8 +283,8 @@ export function useChessGame() {
     setLegalMoves([]);
   }
 
-  function handleMouseDown(
-    event: ReactMouseEvent<HTMLDivElement>,
+  function handlePointerDown(
+    event: ReactPointerEvent<HTMLDivElement>,
     row: number,
     col: number,
   ) {
@@ -317,12 +317,12 @@ export function useChessGame() {
     setMousePosition({ x: event.clientX, y: event.clientY });
   }
 
-  function handleMouseMove(event: ReactMouseEvent<HTMLDivElement>) {
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (!draggedPiece) return;
     setMousePosition({ x: event.clientX, y: event.clientY });
   }
 
-  function handleMouseUp(event: ReactMouseEvent<HTMLDivElement>) {
+  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
     if (!draggedPiece || !game || game.draw.offer !== null) return;
 
     const boardElement = event.currentTarget;
@@ -473,9 +473,9 @@ export function useChessGame() {
     getEndReasonText,
     getGameResult,
     handleSquareClick,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     promote,
   };
 }

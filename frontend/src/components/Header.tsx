@@ -75,11 +75,11 @@ function Header() {
 	
 	return (
 		<header className={`container-theme-${theme} border-b border-slate-800 text-white`}>
-			<div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 p-4">
+			<div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:p-4">
 
 				<Link
 					to="/"
-					className="text-xl sm:text-2xl font-bold text-white hover:text-blue-400 transition"
+					className="min-w-0 text-lg font-bold text-white transition hover:text-blue-400 sm:text-2xl"
 					onClick={() => setMenuOpen(false)}
 				>
 					♟ ft_chess
@@ -89,7 +89,7 @@ function Header() {
 				<button
 					type="button"
 					onClick={() => setMenuOpen((open) => !open)}
-					className="rounded-lg border border-slate-700 px-3 py-2 text-xl hover:bg-slate-800 md:hidden"
+					className="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xl hover:bg-slate-800 md:hidden"
 					aria-label={menuOpen ? "Close menu" : "Open menu"}
 					aria-expanded={menuOpen}
 				>
@@ -99,7 +99,7 @@ function Header() {
 				<nav
 					className={`${
 						menuOpen ? "flex" : "hidden"
-					} w-full flex-col items-stretch gap-4 md:flex md:w-auto md:flex-row md:items-center md:gap-6`}
+					} w-full min-w-0 flex-col items-stretch gap-3 md:flex md:w-auto md:flex-row md:items-center md:gap-6`}
 				>
 					{isLoggedIn ? (
 						<>

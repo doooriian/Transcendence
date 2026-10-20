@@ -22,21 +22,21 @@ export default function ChessGameControls({
   onOfferDraw,
 }: ChessGameControlsProps) {
   return (
-    <div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
-      <div className={`flex items-center gap-3 rounded-2xl border border-white/20 container-theme-${theme} px-5 py-3 shadow-lg backdrop-blur-lg`}>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 text-xl font-bold">
+    <div className="mx-auto mt-4 flex w-full max-w-[660px] min-w-0 flex-col items-stretch gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className={`flex min-w-0 items-center gap-3 rounded-2xl border border-white/20 container-theme-${theme} px-3 py-2 shadow-lg backdrop-blur-lg sm:px-5 sm:py-3`}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 text-xl font-bold sm:h-12 sm:w-12">
           T
         </div>
         <div>
-          <p className="text-lg font-bold">You</p>
+          <p className="text-base font-bold sm:text-lg">You</p>
           <p className="text-sm text-white/70">1200 Elo</p>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col items-start justify-self-start gap-3">
-        <div className="flex gap-4">
+      <div className="flex min-w-0 flex-col items-stretch gap-2 sm:items-start sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
           <button
-            className={`rounded-xl border border-white/20 container-theme-${theme} px-8 py-3 font-semibold shadow-lg backdrop-blur-lg transition-all hover:scale-105 hover:opacity-90`}
+            className={`min-w-0 rounded-xl border border-white/20 container-theme-${theme} px-2 py-3 text-sm font-semibold shadow-lg backdrop-blur-lg transition-all hover:opacity-90 sm:px-5 sm:text-base sm:hover:scale-105`}
             onClick={onResign}
           >
             Give up
@@ -47,7 +47,7 @@ export default function ChessGameControls({
             onClick={onOfferDraw}
             disabled={!myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
             title={game.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-            className={`rounded-xl bg-gradient-to-r px-8 py-3 font-semibold shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${drawButtonColors}`}
+            className={`min-w-0 rounded-xl bg-gradient-to-r px-2 py-3 text-sm font-semibold shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:text-base ${drawButtonColors}`}
           >
             Offer draw ({drawOffersMade}/3)
           </button>
@@ -60,7 +60,7 @@ export default function ChessGameControls({
         )}
       </div>
 
-      <div className={`rounded-2xl border border-white/20 container-theme-${theme} px-6 py-3 font-mono text-xl shadow-lg backdrop-blur-lg`}>
+      <div className={`self-start rounded-xl border border-white/20 container-theme-${theme} px-4 py-2 font-mono text-lg shadow-lg backdrop-blur-lg sm:self-auto sm:rounded-2xl sm:px-6 sm:py-3 sm:text-xl`}>
         00:00
       </div>
     </div>

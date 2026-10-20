@@ -7,7 +7,7 @@ import type {
   DraggedPiece,
   PieceImages,
 } from "../utils/types";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 type ChessBoardProps = {
   game: ChessGame;
@@ -22,13 +22,13 @@ type ChessBoardProps = {
   selectedSquare: BoardPosition | null;
   mousePosition: { x: number; y: number };
   onSquareClick: (row: number, col: number) => void;
-  onMouseDown: (
-    event: ReactMouseEvent<HTMLDivElement>,
+  onPointerDown: (
+    event: ReactPointerEvent<HTMLDivElement>,
     row: number,
     col: number,
   ) => void;
-  onMouseMove: (event: ReactMouseEvent<HTMLDivElement>) => void;
-  onMouseUp: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void;
 };
 
 export default function ChessBoard({
@@ -44,15 +44,15 @@ export default function ChessBoard({
   selectedSquare,
   mousePosition,
   onSquareClick,
-  onMouseDown,
-  onMouseMove,
-  onMouseUp,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
 }: ChessBoardProps) {
   return (
     <div
-      className={`grid aspect-square w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-lg shadow-2xl ring-2 ring-purple-500/20 sm:rounded-2xl sm:ring-4 ${borderThemeClass}`}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
+      className={`grid aspect-square w-full touch-none grid-cols-8 grid-rows-8 overflow-hidden rounded-lg shadow-2xl ring-2 ring-purple-500/20 sm:rounded-2xl sm:ring-4 ${borderThemeClass}`}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
     >
       {board.map((row, rowIndex) =>
         row.map((piece, columnIndex) => {
@@ -73,10 +73,10 @@ export default function ChessBoard({
             <div
               key={`${rowIndex}-${columnIndex}`}
               onClick={() => onSquareClick(rowIndex, columnIndex)}
-              onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) =>
-                onMouseDown(event, rowIndex, columnIndex)
+              onPointerDown={(event: ReactPointerEvent<HTMLDivElement>) =>
+                onPointerDown(event, rowIndex, columnIndex)
               }
-              className={`relative flex aspect-square select-none cursor-grab items-center justify-center transition-all ${
+              className={`relative flex aspect-square touch-none select-none cursor-grab items-center justify-center transition-all ${
                 isDragging ? "scale-105 opacity-30" : ""
               } ${isDark ? darkCaseClass : whiteCaseClass} ${
                 isSelected ? "ring-4 ring-inset ring-violet-400" : ""

@@ -8,32 +8,26 @@ type CapturedTrayProps = {
 };
 
 export default function CapturedTray({ pieces, label, pieceImages }: CapturedTrayProps) {
-  if (pieces.length === 0) {
-    return (
-      <div className="hidden w-56 shrink-0 lg:block" aria-hidden="true">
-        <p className="py-2 text-center text-xs text-white/50">{label}</p>
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="hidden w-56 shrink-0 flex-col items-center rounded-2xl p-3 lg:flex"
-      style={{ maxHeight: "calc(100vh - 475px)" }}
-    >
-      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-white/60">
+    <div className="flex w-full min-w-0 flex-row items-center gap-2 rounded-xl p-2 sm:gap-3 sm:p-3 lg:max-h-[calc(100vh-475px)] lg:w-56 lg:shrink-0 lg:flex-col lg:items-center">
+      <p className="w-24 shrink-0 text-xs font-medium uppercase tracking-wider text-white/60 sm:w-32 lg:w-full lg:text-center">
         {label}
       </p>
-      <div className="grid w-full grid-cols-3 place-items-center gap-1 overflow-auto">
-        {pieces.map((piece, index) => (
-          <img
-            key={`${piece.chessPieceType}-${index}`}
-            src={getPieceImage(piece, pieceImages)}
-            alt={piece.chessPieceType}
-            className="h-15 w-15 object-contain opacity-90 drop-shadow-sm"
-          />
-        ))}
-      </div>
+      {pieces.length === 0 ? (
+        <span className="text-sm text-white/40" aria-label="No captured pieces">—</span>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto lg:grid lg:w-full lg:flex-none lg:grid-cols-3 lg:place-items-center lg:gap-1 lg:overflow-y-auto">
+          {pieces.map((piece, index) => (
+            <img
+              key={`${piece.chessPieceType}-${index}`}
+              src={getPieceImage(piece, pieceImages)}
+              alt={piece.chessPieceType}
+              loading="lazy"
+              className="h-8 w-8 shrink-0 object-contain opacity-90 drop-shadow-sm sm:h-10 sm:w-10 lg:h-15 lg:w-15"
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

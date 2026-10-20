@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			{sessionExpired && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-					<div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-8 text-center shadow-2xl">
+					<div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5 text-center shadow-2xl sm:p-8">
 						<div className="mb-4 text-5xl">
 							⏱️
 						</div>

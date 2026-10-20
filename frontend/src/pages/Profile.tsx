@@ -335,7 +335,7 @@ function Profile() {
 
 			<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
 
-				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+				<section className="w-full min-w-0 max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
 
 					<div className="text-center mb-8">
 
@@ -383,7 +383,7 @@ function Profile() {
 							</div>
 						</div>
 
-						<h1 className={`text-4xl font-bold `}>
+						<h1 className="text-3xl font-bold sm:text-4xl">
 							♟ Profile
 						</h1>
 
@@ -401,7 +401,7 @@ function Profile() {
 								ID
 							</p>
 
-							<p className="text-xl font-semibold">
+							<p className="break-words text-lg font-semibold sm:text-xl">
 								{user.id}
 							</p>
 						</div>
@@ -419,7 +419,7 @@ function Profile() {
 										placeholder="New username"
 									/>
 
-									<div className="flex gap-2">
+									<div className="flex flex-wrap gap-2">
 										<button
 											onClick={handleSaveUsername}
 											disabled={savingProfile || !newUsername.trim()}
@@ -437,8 +437,8 @@ function Profile() {
 									</div>
 								</div>
 							) : (
-								<div className="flex items-center justify-between gap-3">
-									<p className="text-xl font-semibold">{user.username}</p>
+								<div className="flex min-w-0 items-center justify-between gap-3">
+									<p className="min-w-0 break-words text-lg font-semibold sm:text-xl">{user.username}</p>
 
 									{isMyProfile && (
 										<button
@@ -472,7 +472,7 @@ function Profile() {
 											placeholder="New email"
 										/>
 
-										<div className="flex gap-2">
+										<div className="flex flex-wrap gap-2">
 											<button
 												onClick={handleSaveEmail}
 												disabled={savingProfile || !newEmail.trim()}
@@ -490,7 +490,7 @@ function Profile() {
 										</div>
 									</div>
 								) : (
-									<div className="flex items-center justify-between gap-3">
+									<div className="flex min-w-0 items-center justify-between gap-3">
 										<p className="break-all text-white">
 											{user.email}
 										</p>
@@ -558,7 +558,7 @@ function Profile() {
 											{user.username} sent you a friend request
 										</p>
 
-										<div className="flex gap-3">
+										<div className="flex flex-col gap-3 sm:flex-row">
 
 											<button
 												onClick={() => handleAccept(receivedRequest.id)}

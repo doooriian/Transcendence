@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import Footer from "../components/Footer";
@@ -53,19 +54,24 @@ function Chess() {
 	getEndReasonText,
 	getGameResult,
 	handleSquareClick,
-	handleMouseDown,
-	handleMouseMove,
-	handleMouseUp,
+	handlePointerDown,
+	handlePointerMove,
+	handlePointerUp,
 	promote,
   } = chess;
 
   const capturedByMe =
-	game && mySideColor ? getCapturedPieces(game.chess.chessBoard, mySideColor) : [];
+	game && mySideColor
+	  ? getCapturedPieces(game.chess.chessBoard, mySideColor)
+	  : [];
+
   const capturedByOpponent =
-	game && hisSideColor ? getCapturedPieces(game.chess.chessBoard, hisSideColor) : [];
+	game && hisSideColor
+	  ? getCapturedPieces(game.chess.chessBoard, hisSideColor)
+	  : [];
 
   return (
-	<div className="flex min-h-screen flex-col">
+	<div className="flex min-h-screen flex-col overflow-x-clip">
 	  {game && receivedDrawOffer && (
 		<DrawOfferDialog
 		  key={receivedDrawOffer.id}
@@ -76,29 +82,13 @@ function Chess() {
 		/>
 	  )}
 
-	  <main>
-		<Header />
+	  <Header />
 
-		<section className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4 py-8">
+	  <main className="flex-1">
+		<section className="mx-auto flex w-full max-w-screen-2xl flex-col items-center px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
 		  <div className="w-full max-w-6xl">
-			
-			<div className="relative mx-auto mb-6 w-full max-w-4xl">
-			  {game && (
-				<div className={`flex items-center gap-3 justify-self-start rounded-2xl border border-white/20 container-theme-${theme} px-5 py-3 shadow-lg backdrop-blur-lg`}>
-				  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 to-orange-400 text-xl font-bold">
-					O
-				  </div>
-				  <div>
-					<p className="text-lg font-bold">
-					  {game.bot ? `Stockfish · ${game.bot.difficulty}` : "Opponent"}
-					</p>
-					<p className="text-sm text-white/70">
-					  {game.bot ? "Computer opponent" : "1200 Elo"}
-					</p>
-				  </div>
-				</div>
-			  )}
-
+			{!game && (
+			  <div className="mx-auto mb-8 w-full max-w-4xl">
 				<ChessLobby
 				  game={game}
 				  error={error}
@@ -117,39 +107,70 @@ function Chess() {
 				  getGameResult={getGameResult}
 				  getEndReasonText={getEndReasonText}
 				/>
+			  </div>
+			)}
 
-			  {game && (
-				<div className={`justify-self-end rounded-2xl border border-white/20 container-theme-${theme} px-6 py-3 font-mono text-xl shadow-lg backdrop-blur-lg`}>
+			{game && (
+			  <div className="mx-auto mb-4 flex w-full max-w-[660px] items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+				<div
+				  className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/20 container-theme-${theme} px-3 py-3 shadow-lg backdrop-blur-lg sm:gap-3 sm:rounded-2xl sm:px-5`}
+				>
+				  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 to-orange-400 text-lg font-bold sm:h-12 sm:w-12 sm:text-xl">
+					O
+				  </div>
+
+				  <div className="min-w-0">
+					<p className="truncate text-sm font-bold sm:text-lg">
+					  {game.bot
+						? `Stockfish · ${game.bot.difficulty}`
+						: "Opponent"}
+					</p>
+					<p className="truncate text-xs text-white/70 sm:text-sm">
+					  {game.bot ? "Computer opponent" : "1200 Elo"}
+					</p>
+				  </div>
+				</div>
+
+				<div
+				  className={`shrink-0 rounded-xl border border-white/20 container-theme-${theme} px-3 py-3 font-mono text-base shadow-lg backdrop-blur-lg sm:rounded-2xl sm:px-6 sm:text-xl`}
+				>
 				  00:00
 				</div>
-			  )}
-			</div>
+			  </div>
+			)}
 
-			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-3 sm:gap-4 lg:grid-cols-[minmax(0,auto)_minmax(0,660px)_minmax(0,auto)] lg:justify-center">
-			  <div className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1 lg:w-auto">
+			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)_minmax(0,1fr)] lg:gap-5">
+			  <aside className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1">
 				{searchingGame ? (
-				  <div className={`hidden w-56 shrink-0 rounded-2xl border border-white/20 container-theme-${theme} p-4 shadow-lg lg:block`}>
+				  <div
+					className={`w-full min-w-0 rounded-2xl border border-white/20 container-theme-${theme} p-4 shadow-lg`}
+				  >
 					<p className="text-sm text-white/70">Game ID:</p>
-					<p className="mb-2 font-mono text-sm">{searchingGame.id}</p>
-					<div className="space-y-1">
+					<p className="mb-2 break-all font-mono text-sm">
+					  {searchingGame.id}
+					</p>
+
+					<div className="space-y-1 break-words">
 					  <p className="text-sm">
-						<span className="text-white/70">White:</span> {searchingGame.white}
+						<span className="text-white/70">White:</span>{" "}
+						{searchingGame.white}
 					  </p>
 					  <p className="text-sm">
-						<span className="text-white/70">Black:</span> {searchingGame.black ?? "Waiting..."}
+						<span className="text-white/70">Black:</span>{" "}
+						{searchingGame.black ?? "Waiting..."}
 					  </p>
 					</div>
 				  </div>
-				) : (
+				) : game ? (
 				  <CapturedTray
 					pieces={capturedByMe}
 					label="Captured by you"
 					pieceImages={appearance.pieceImages}
 				  />
-				)}
-			  </div>
+				) : null}
+			  </aside>
 
-			  <div className="order-1 mx-auto aspect-square w-full min-w-0 max-w-[660px] lg:order-2">
+			  <div className="order-1 mx-auto w-full min-w-0 max-w-[660px] lg:order-2">
 				{game ? (
 				  <ChessBoard
 					game={game}
@@ -164,15 +185,21 @@ function Chess() {
 					selectedSquare={selectedSquare}
 					mousePosition={mousePosition}
 					onSquareClick={handleSquareClick}
-					onMouseDown={handleMouseDown}
-					onMouseMove={handleMouseMove}
-					onMouseUp={handleMouseUp}
+					onPointerDown={handlePointerDown}
+					onPointerMove={handlePointerMove}
+					onPointerUp={handlePointerUp}
 				  />
 				) : (
-				  <div className={`flex aspect-square items-center justify-center rounded-2xl border border-white/20 container-theme-${theme} shadow-2xl backdrop-blur-lg`}>
-					<div className="text-center">
-					  <div className="mb-4 text-6xl">♛</div>
-					  <p className="text-lg text-white/80">Create or join a game</p>
+				  <div
+					className={`mx-auto flex aspect-square w-full items-center justify-center rounded-2xl border border-white/20 container-theme-${theme} shadow-2xl backdrop-blur-lg`}
+				  >
+					<div className="px-4 text-center">
+					  <div className="mb-3 text-5xl sm:mb-4 sm:text-6xl">
+						♛
+					  </div>
+					  <p className="text-base text-white/80 sm:text-lg">
+						Create or join a game
+					  </p>
 					</div>
 				  </div>
 				)}
@@ -185,30 +212,32 @@ function Chess() {
 				/>
 			  </div>
 
-			  <div className="order-3 mx-auto w-full min-w-0 max-w-[660px] lg:order-3 lg:w-auto">
+			  <aside className="order-3 mx-auto w-full min-w-0 max-w-[660px] lg:order-3">
 				{searchingGame ? (
-				  <div className="hidden w-56 shrink-0 lg:block" aria-hidden="true" />
-				) : (
+				  <div className="hidden w-full lg:block" aria-hidden="true" />
+				) : game ? (
 				  <CapturedTray
 					pieces={capturedByOpponent}
 					label="Captured by opponent"
 					pieceImages={appearance.pieceImages}
 				  />
-				)}
-			  </div>
+				) : null}
+			  </aside>
 			</div>
 
 			{game && (
-			  <ChessGameControls
-				game={game}
-				theme={theme}
-				myAuthId={myAuthId}
-				myColor={myColor}
-				drawOffersMade={drawOffersMade}
-				drawButtonColors={drawButtonColors}
-				onResign={resignGame}
-				onOfferDraw={offerDraw}
-			  />
+			  <div className="mx-auto mt-4 w-full max-w-[660px] sm:mt-6">
+				<ChessGameControls
+				  game={game}
+				  theme={theme}
+				  myAuthId={myAuthId}
+				  myColor={myColor}
+				  drawOffersMade={drawOffersMade}
+				  drawButtonColors={drawButtonColors}
+				  onResign={resignGame}
+				  onOfferDraw={offerDraw}
+				/>
+			  </div>
 			)}
 		  </div>
 		</section>
