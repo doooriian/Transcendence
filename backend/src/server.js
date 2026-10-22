@@ -70,7 +70,7 @@ io.on("connection", (socket) => {
   }
 
   registerGameHandlers(io, socket);
-  registerChatHandlers(socket);
+  registerChatHandlers(io, socket);
 
   console.log(`Socket connected: ${socket.id}`);
   console.log(`Authenticated user: ${authId}`);

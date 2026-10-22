@@ -39,7 +39,7 @@ function validateChatMessage(data) {
  * Handles an incoming chat message and reports validation errors
  * to the requesting socket.
  */
-async function handleChatSend(socket, data) {
+async function handleChatSend(io, socket, data) {
   const messageData = validateChatMessage(data);
 
   if (messageData.error) {
@@ -73,6 +73,31 @@ async function handleChatSend(socket, data) {
       return;
     }
 
+    const sender = await prisma.user.findUnique({
+      where: {
+        authId: socket.data.authId,
+      },
+      select: {
+        authId: true,
+        username: true,
+      },
+    });
+
+    if (!sender) {
+      socket.emit("chat:error", { message: "Invalid session" });
+      return;
+    }
+
+    const message = {
+      from: sender.username,
+      to: recipient.username,
+      content: messageData.content,
+      sentAt: new Date().toISOString(),
+    };
+
+    io.to(`user:${recipient.authId}`).emit("chat:message", message);
+    io.to(`user:${sender.authId}`).emit("chat:message", message);
+
     console.log("Valid chat message:", messageData);
   } catch (err) {
     console.error(err.message);
@@ -83,8 +108,8 @@ async function handleChatSend(socket, data) {
 /**
  * Registers chat-related Socket.IO events for an authenticated socket.
  */
-function registerChatHandlers(socket) {
-  socket.on("chat:send", (data) => handleChatSend(socket, data));
+function registerChatHandlers(io, socket) {
+  socket.on("chat:send", (data) => handleChatSend(io, socket, data));
 }
 
 export default registerChatHandlers;
