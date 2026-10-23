@@ -6,6 +6,8 @@ const games = new Map();
 const chessEngines = new Map();
 const activeGameByUser = new Map();
 const botSearches = new Map();
+const MAX_DRAW_OFFERS = 3;
+const DRAW_RESPONSE_DELAY_MS = 3_000;
 
 /**
  * Creates a new game with the authenticated user as white.
@@ -44,6 +46,9 @@ function createGame(authId, options = {}) {
     white: authId,
     black: null,
     bot: null,
+    drawOffers: { white: 0, black: 0 },
+    lastDrawOfferPly: { white: null, black: null },
+    drawOffer: null,
   };
 
   if (mode === "bot") {
@@ -123,6 +128,7 @@ function getGameState(gameId, authId) {
     white: game.white,
     black: game.black,
     bot: game.bot,
+    draw: getDrawState(game),
     chess: chessEngine.getGameState(),
   };
 }
@@ -157,6 +163,98 @@ function getLegalMoves(gameId, authId, startingSquare) {
   return chessEngine.getLegalMoves(startingSquare);
 }
 
+// Return snapshots so later changes cannot alter a previously published state.
+function getDrawState(game) {
+  let offer = null;
+  if (game.drawOffer !== null) {
+    offer = { ...game.drawOffer };
+  }
+
+  return {
+    offer: offer,
+    offersMade: { ...game.drawOffers },
+    maxOffers: MAX_DRAW_OFFERS,
+    responseDelayMs: DRAW_RESPONSE_DELAY_MS,
+  };
+}
+
+/** Offers are counted separately for each player and each actual chess turn. */
+function offerDraw(gameId, authId) {
+  const game = games.get(gameId);
+  const engine = getChessEngine(gameId);
+  if (!game || !game.black || !engine || engine.isGameFinished()) {
+    return { errorMessage: "A draw can only be offered during an active game." };
+  }
+
+  const playerColor = getPlayerColor(game, authId);
+  if (!playerColor) {
+    return { errorMessage: "You are not a player in this game." };
+  }
+  if (game.bot) {
+    return { errorMessage: "Draw offers are only available in two-player games." };
+  }
+  if (engine.getCurrentPlayerColor() !== playerColor) {
+    return { errorMessage: "You can only offer a draw during your own turn." };
+  }
+  if (game.drawOffers[playerColor] >= MAX_DRAW_OFFERS) {
+    return { errorMessage: "You have already offered a draw 3 times in this game." };
+  }
+
+  const currentPly = engine.getMoveHistory().length;
+  if (game.lastDrawOfferPly[playerColor] === currentPly) {
+    return { errorMessage: "You have already offered a draw during this turn." };
+  }
+  if (game.drawOffer !== null) {
+    return { errorMessage: "A draw offer is already waiting for a response." };
+  }
+
+  game.drawOffers[playerColor]++;
+  game.lastDrawOfferPly[playerColor] = currentPly;
+  game.drawOffer = {
+    id: randomUUID(),
+    offeredBy: authId,
+    responseAvailableAt: Date.now() + DRAW_RESPONSE_DELAY_MS,
+  };
+
+  return { drawOfferWasSuccessful: true };
+}
+
+/** Checks the opponent's response and delay, ends the game if accepted, then clears the offer. */
+function respondToDraw(gameId, authId, offerId, accept) {
+  const game = games.get(gameId);
+  const engine = getChessEngine(gameId);
+  if (!game || !engine || engine.isGameFinished() || game.bot) {
+    return { errorMessage: "This draw offer is no longer available." };
+  }
+  if (!getPlayerColor(game, authId)) {
+    return { errorMessage: "You are not a player in this game." };
+  }
+  if (typeof accept !== "boolean" || typeof offerId !== "string") {
+    return { errorMessage: "Invalid draw response." };
+  }
+
+  const offer = game.drawOffer;
+  if (offer === null || offer.id !== offerId) {
+    return { errorMessage: "This draw offer is no longer available." };
+  }
+  if (offer.offeredBy === authId) {
+    return { errorMessage: "Only your opponent can answer your draw offer." };
+  }
+  if (Date.now() < offer.responseAvailableAt) {
+    return { errorMessage: "Please wait 3 seconds before answering the draw offer." };
+  }
+
+  if (accept) {
+    const result = engine.agreeDraw();
+    if (!result.drawWasSuccessful) {
+      return { errorMessage: "This draw offer is no longer available." };
+    }
+  }
+
+  game.drawOffer = null;
+  return { drawResponseWasSuccessful: true };
+}
+
 /**
  * Attempts to apply a chess move for the authenticated player.
  * Validates the game, player, and turn before delegating the move to the chess engine.
@@ -186,6 +284,13 @@ function makeGameMove(gameId, authId, move) {
 
   if (playerColor !== chessEngine.getCurrentPlayerColor()) {
     return null;
+  }
+
+  if (game.drawOffer !== null) {
+    return {
+      moveWasSuccessful: false,
+      errorMessage: "Please wait for the response to the draw offer before playing.",
+    };
   }
 
   return chessEngine.makeMove(move);
@@ -367,6 +472,8 @@ export {
   getActiveGameByUser,
   getGameState,
   getLegalMoves,
+  offerDraw,
+  respondToDraw,
   makeGameMove,
   makeBotMove,
   resignGame,
