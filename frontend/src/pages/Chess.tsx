@@ -69,6 +69,8 @@ function Chess() {
 	game && hisSideColor
 	  ? getCapturedPieces(game.chess.chessBoard, hisSideColor)
 	  : [];
+	
+	const opponentFound = Boolean(game && (game.bot || game.black));
 
   return (
 	<div className="flex min-h-screen flex-col overflow-x-clip">
@@ -87,8 +89,7 @@ function Chess() {
 	  <main className="flex-1">
 		<section className="mx-auto flex w-full max-w-screen-2xl flex-col items-center px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
 		  <div className="w-full max-w-6xl">
-			{!game && (
-			  <div className="mx-auto mb-8 w-full max-w-4xl">
+			<div className="mx-auto mb-8 w-full max-w-4xl">
 				<ChessLobby
 				  game={game}
 				  error={error}
@@ -107,10 +108,9 @@ function Chess() {
 				  getGameResult={getGameResult}
 				  getEndReasonText={getEndReasonText}
 				/>
-			  </div>
-			)}
+			</div>
 
-			{game && (
+			{game && opponentFound && (
 			  <div className="mx-auto mb-4 flex w-full max-w-[660px] items-center justify-between gap-3 sm:mb-6 sm:gap-4">
 				<div
 				  className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/20 container-theme-${theme} px-3 py-3 shadow-lg backdrop-blur-lg sm:gap-3 sm:rounded-2xl sm:px-5`}
@@ -126,20 +126,14 @@ function Chess() {
 						: "Opponent"}
 					</p>
 					<p className="truncate text-xs text-white/70 sm:text-sm">
-					  {game.bot ? "Computer opponent" : "1200 Elo"}
+					  {game.bot ? "Computer opponent" : "Online opponent"}
 					</p>
 				  </div>
-				</div>
-
-				<div
-				  className={`shrink-0 rounded-xl border border-white/20 container-theme-${theme} px-3 py-3 font-mono text-base shadow-lg backdrop-blur-lg sm:rounded-2xl sm:px-6 sm:text-xl`}
-				>
-				  00:00
 				</div>
 			  </div>
 			)}
 
-			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)_minmax(0,1fr)] lg:gap-5">
+			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)_minmax(0,1fr)] lg:gap-5">
 			  <aside className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1">
 				{searchingGame ? (
 				  <div
@@ -225,8 +219,8 @@ function Chess() {
 			  </aside>
 			</div>
 
-			{game && (
-			  <div className="mx-auto mt-4 w-full max-w-[660px] sm:mt-6">
+			{game && opponentFound &&(
+			  <div className="mx-auto mt-4 w-full max-w-[460px] sm:mt-6">
 				<ChessGameControls
 				  game={game}
 				  theme={theme}

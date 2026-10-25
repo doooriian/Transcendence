@@ -126,7 +126,7 @@ function Home() {
 
 					{/* Information cards */}
 
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
 						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-5 sm:p-6`}>
 
@@ -141,23 +141,6 @@ function Home() {
 							<p className="mt-2">
 								Play chess against
 								other players
-							</p>
-
-						</div>
-
-						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-5 sm:p-6`}>
-
-							<div className="text-3xl">
-								🎖
-							</div>
-
-							<h2 className="mt-4 text-xl font-bold">
-								Compete
-							</h2>
-
-							<p className="mt-2">
-								Climb the rankings and improve
-								your Elo
 							</p>
 
 						</div>

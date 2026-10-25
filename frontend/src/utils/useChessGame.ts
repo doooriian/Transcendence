@@ -228,7 +228,16 @@ export function useChessGame() {
   }
 
   function handleSquareClick(row: number, col: number) {
-    if (!game || game.chess.isGameFinished || game.draw.offer !== null) return;
+    if (
+      !game ||
+      !myColor ||
+      game.chess.isGameFinished ||
+      game.draw.offer !== null ||
+      game.chess.currentPlayerColor !== myColor ||
+      !game.black
+    ) {
+      return;
+    }
 
     const { row: backendRow, col: backendCol } = getBackendCoordinates(row, col);
     const piece = game.chess.chessBoard[backendRow][backendCol];
@@ -269,7 +278,7 @@ export function useChessGame() {
       }
     }
 
-    if (piece && piece.chessPieceColor === game.chess.currentPlayerColor) {
+    if (piece && piece.chessPieceColor === myColor) {
       setSelectedSquare({ row, col });
       socket.emit("game:get-legal-moves", {
         gameId: game.id,

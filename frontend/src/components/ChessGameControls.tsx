@@ -29,7 +29,6 @@ export default function ChessGameControls({
         </div>
         <div>
           <p className="text-base font-bold sm:text-lg">You</p>
-          <p className="text-sm text-white/70">1200 Elo</p>
         </div>
       </div>
 
@@ -58,10 +57,6 @@ export default function ChessGameControls({
             Draw offer sent. Waiting for your opponent’s response…
           </p>
         )}
-      </div>
-
-      <div className={`self-start rounded-xl border border-white/20 container-theme-${theme} px-4 py-2 font-mono text-lg shadow-lg backdrop-blur-lg sm:self-auto sm:rounded-2xl sm:px-6 sm:py-3 sm:text-xl`}>
-        00:00
       </div>
     </div>
   );
