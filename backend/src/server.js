@@ -17,6 +17,8 @@ import registerGameHandlers, {
   scheduleGameDisconnect,
 } from "./sockets/gameSocket.js";
 
+import registerChatHandlers from "./sockets/chatSocket.js";
+
 const app = express();
 
 // Create the HTTP server used by both Express and Socket.IO
@@ -68,6 +70,7 @@ io.on("connection", (socket) => {
   }
 
   registerGameHandlers(io, socket);
+  registerChatHandlers(io, socket);
 
   console.log(`Socket connected: ${socket.id}`);
   console.log(`Authenticated user: ${authId}`);
