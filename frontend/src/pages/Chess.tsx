@@ -1096,6 +1096,7 @@ function Chess() {
 
 					<br></br>
 
+					{(!game || game.black === null) && (
 					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 						<button
 							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
@@ -1103,6 +1104,7 @@ function Chess() {
 							Waiting for opponent...
 						</button>
 					</div>
+					)}
 
 					{(game && !game?.chess.isGameFinished && game.black !== null &&
 					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
