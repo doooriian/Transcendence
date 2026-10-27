@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import {
@@ -17,7 +16,7 @@ function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [received, setReceived] = useState<FriendRequest[]>([]);
   const [sent, setSent] = useState<FriendRequest[]>([]);
-  const { theme } = useTheme();
+  const theme = "blue";
 
   const [error, setError] = useState("");
 

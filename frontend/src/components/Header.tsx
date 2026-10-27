@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
 import { searchUsers, type UserSearchResult } from "../services/users";
 
 function Header() {
@@ -12,7 +11,7 @@ function Header() {
 	const [selectedIndex, setSelectedIndex] = useState(-1);
 
 	const { isLoggedIn, username, logout } = useAuth();
-	const { theme } = useTheme();
+	const theme = "blue";
 	const navigate = useNavigate();
 
 	function handleLogout() {

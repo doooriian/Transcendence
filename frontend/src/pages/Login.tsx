@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { loginResponse } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +13,7 @@ function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const { login } = useAuth();
-	const { theme } = useTheme();
+	const theme = "blue";
 	const navigate = useNavigate();
 
 	const location = useLocation();

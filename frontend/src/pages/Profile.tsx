@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { getMyProfile, getUser, updateMyProfile, type User } from "../services/users";
 import Header from "../components/Header";
@@ -20,7 +19,7 @@ function Profile() {
 	const { username } = useParams();
 	const { username: myUsername, updateUsername} = useAuth();
 	const navigate = useNavigate();
-	const { theme } = useTheme();
+	const theme = "blue";
 
 	const [user, setUser] = useState<User | null>(null);
 

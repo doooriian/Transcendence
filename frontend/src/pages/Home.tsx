@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -12,7 +11,7 @@ type BackendHealth = {
 function Home() {
 	const [backendStatus, setBackendStatus] = useState("loading");
 	const { isLoggedIn, username } = useAuth();
-	const { theme } = useTheme();
+	const theme = "blue";
 
 	useEffect(() => {
 		async function checkBackendHealth() {

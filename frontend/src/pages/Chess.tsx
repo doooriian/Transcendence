@@ -1,137 +1,27 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../context/ThemeContext";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import DrawOfferDialog from "../components/DrawOfferDialog";
 import socket from "../services/socket";
-import { getRandomInt } from "../utils/random";
 import { getMyProfile } from "../services/users";
 
-import bbp from "../assets/pieces_pink/bb.svg";
-import bwp from "../assets/pieces_pink/bw.svg";
-import kbp from "../assets/pieces_pink/kb.svg";
-import kwp from "../assets/pieces_pink/kw.svg";
-import nbp from "../assets/pieces_pink/nb.svg";
-import nwp from "../assets/pieces_pink/nw.svg";
-import pbp from "../assets/pieces_pink/pb.svg";
-import pwp from "../assets/pieces_pink/pw.svg";
-import qbp from "../assets/pieces_pink/qb.svg";
-import qwp from "../assets/pieces_pink/qw.svg";
-import rbp from "../assets/pieces_pink/rb.svg";
-import rwp from "../assets/pieces_pink/rw.svg";
+import bb from "../assets/pieces_blue/bb.svg";
+import bw from "../assets/pieces_blue/bw.svg";
+import kb from "../assets/pieces_blue/kb.svg";
+import kw from "../assets/pieces_blue/kw.svg";
+import nb from "../assets/pieces_blue/nb.svg";
+import nw from "../assets/pieces_blue/nw.svg";
+import pb from "../assets/pieces_blue/pb.svg";
+import pw from "../assets/pieces_blue/pw.svg";
+import qb from "../assets/pieces_blue/qb.svg";
+import qw from "../assets/pieces_blue/qw.svg";
+import rb from "../assets/pieces_blue/rb.svg";
+import rw from "../assets/pieces_blue/rw.svg";
 
-import bbl from "../assets/pieces_blue/bb.svg";
-import bwl from "../assets/pieces_blue/bw.svg";
-import kbl from "../assets/pieces_blue/kb.svg";
-import kwl from "../assets/pieces_blue/kw.svg";
-import nbl from "../assets/pieces_blue/nb.svg";
-import nwl from "../assets/pieces_blue/nw.svg";
-import pbl from "../assets/pieces_blue/pb.svg";
-import pwl from "../assets/pieces_blue/pw.svg";
-import qbl from "../assets/pieces_blue/qb.svg";
-import qwl from "../assets/pieces_blue/qw.svg";
-import rbl from "../assets/pieces_blue/rb.svg";
-import rwl from "../assets/pieces_blue/rw.svg";
 
-import bbb from "../assets/pieces_brown/bb.svg";
-import bwb from "../assets/pieces_brown/bw.svg";
-import kbb from "../assets/pieces_brown/kb.svg";
-import kwb from "../assets/pieces_brown/kw.svg";
-import nbb from "../assets/pieces_brown/nb.svg";
-import nwb from "../assets/pieces_brown/nw.svg";
-import pbb from "../assets/pieces_brown/pb.svg";
-import pwb from "../assets/pieces_brown/pw.svg";
-import qbb from "../assets/pieces_brown/qb.svg";
-import qwb from "../assets/pieces_brown/qw.svg";
-import rbb from "../assets/pieces_brown/rb.svg";
-import rwb from "../assets/pieces_brown/rw.svg";
-
-let borderThemeClass: string;
-let whiteCaseClass: string;
-let darkCaseClass: string;
-let bb: string;
-let bw: string;
-let kb: string;
-let kw: string;
-let nb: string;
-let nw: string;
-let pb: string;
-let pw: string;
-let qb: string;
-let qw: string;
-let rb: string;
-let rw: string;
-
-const rand1 = getRandomInt(1, 3);
-const rand2 = getRandomInt(1, 3);
-switch (rand1)
-{
-
-    case 1:
-	  borderThemeClass = "rounded-2xl overflow-hidden border-8 border-olive-950";
-	  whiteCaseClass = "bg-gradient-to-br from-stone-600 via-stone-300 to-white";
-	  darkCaseClass = "bg-gradient-to-br from-black via-stone-800 to-black";
-	  break;
-
-    case 2:
-      borderThemeClass = "rounded-2xl overflow-hidden border-8 border-indigo-950";
-	  whiteCaseClass = "bg-gradient-to-br from-cyan-300 via-sky-350 to-white";
-	  darkCaseClass = "bg-gradient-to-br from-cyan-900 via-sky-950 to-black";
-	  break;
-
-    default:
-	  borderThemeClass = "rounded-2xl overflow-hidden border-8 border-amber-950";
-	  whiteCaseClass = "bg-gradient-to-br from-pink-200 via-rose-300 to-white";
-	  darkCaseClass = "bg-gradient-to-br from-rose-400 via-pink-350 to-black";
-}
-
-switch (rand2)
-{
-	case 1:
-	  bb = bbb;
-	  bw = bwb;
-	  kb = kbb;
-	  kw = kwb;
-	  nb = nbb;
-	  nw = nwb;
-	  pb = pbb;
-	  pw = pwb;
-	  qb = qbb;
-	  qw = qwb;
-	  rb = rbb;
-	  rw = rwb;
-	  break;
-
-	case 2:
-	  bb = bbl;
-	  bw = bwl;
-	  kb = kbl;
-	  kw = kwl;
-	  nb = nbl;
-	  nw = nwl;
-	  pb = pbl;
-	  pw = pwl;
-	  qb = qbl;
-	  qw = qwl;
-	  rb = rbl;
-	  rw = rwl;
-      break;
-
-	default:
-	  bb = bbp;
-	  bw = bwp;
-	  kb = kbp;
-	  kw = kwp;
-	  nb = nbp;
-	  nw = nwp;
-	  pb = pbp;
-	  pw = pwp;
- 	  qb = qbp;
-	  qw = qwp;
-	  rb = rbp;
-	  rw = rwp;
-	  break;
-}
+const borderThemeClass = "rounded-2xl overflow-hidden border-8 border-olive-950";
+const whiteCaseClass = "bg-gradient-to-br from-stone-600 via-stone-300 to-white";
+const darkCaseClass = "bg-gradient-to-br from-black via-stone-800 to-black";
 
 type ChessPiece = {
 	chessPieceType: string;
@@ -151,7 +41,7 @@ type ChessGame = {
 	id: string;
 	white: string;
 	black: string | null;
-	bot: { difficulty: "easy" | "medium" | "hard" } | null;
+	bot: { difficulty: "easy" | "medium" | "hard"} | null;
 	draw: {
 		offer: { id: string; offeredBy: string; responseAvailableAt: number } | null;
 		offersMade: { white: number; black: number };
@@ -310,7 +200,7 @@ function CapturedTray({
 						key={`${piece.chessPieceType}-${index}`}
 						src={getPieceImage(piece) ?? undefined}
 						alt={piece.chessPieceType}
-						className="h-15 w-15 object-contain opacity-90 drop-shadow-sm"
+						className={`h-[19.5px] w-[19.5px] object-contain opacity-90 drop-shadow-sm ${piece.chessPieceType === "king" ? "translate-y-[-12px]" : piece.chessPieceType === "pawn" ? "translate-y-[10px]" : "translate-y-[-10px]"}`}
 					/>
 				))}
 			</div>
@@ -319,10 +209,12 @@ function CapturedTray({
 }
 
 function Chess() {
-	const { theme } = useTheme();
+	const theme = "blue";
 	const [game, setGame] = useState<ChessGame | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [joinGameId, setJoinGameId] = useState("");
+	const [showJoinInput, setShowJoinInput] = useState(false);
+	const [showBotInput, setShowBotInput] = useState(false);
 	const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
 	const [botError, setBotError] = useState(false);
 	const [drawResponsePending, setDrawResponsePending] = useState(false);
@@ -463,6 +355,16 @@ function Chess() {
 		};
 	}, []);
 
+	function askID() {
+	setShowJoinInput(true);
+	setShowBotInput(false);
+	}
+
+	function askDifficulty() {
+	setShowBotInput(true);
+	setShowJoinInput(false);
+	}
+
 	function createGame() {
 		setError(null);
 		socket.emit("game:create");
@@ -475,6 +377,7 @@ function Chess() {
 	}
 
 	function joinGame() {
+		
 		const gameId = joinGameId.trim();
 
 		if (gameId === "") {
@@ -896,10 +799,12 @@ function Chess() {
 				<div className="w-full max-w-6xl">
 
 					<div className="mx-auto mb-6 grid w-[min(660px,100%,calc(100vh-475px))] grid-cols-[1fr_auto_1fr] items-center gap-4">
+						{(game && !game?.chess.isGameFinished && game.black !== null &&
 						<div className={`justify-self-start flex items-center gap-3 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-5 py-3 shadow-lg`}>
 							<div className="h-12 w-12 rounded-full bg-gradient-to-br from-rose-400 to-orange-400 flex items-center justify-center text-xl font-bold">
 								O
 							</div>
+
 							<div>
 								<p className="text-lg font-bold">
 									{game?.bot ? `Stockfish · ${game.bot.difficulty}` : "Opponent"}
@@ -910,19 +815,20 @@ function Chess() {
 								</p>
 							</div>
 						</div>
+						)}
 
 						<div className="justify-self-center">
 							{!game && (
-								<div className="flex flex-col items-center">
-									<button
-										onClick={createGame}
-										className="mt-6 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-8 py-3 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all transform hover:scale-105"
-									>
-										Create a game
-									</button>
+								<div className="flex flex-col items-left">
+									{showBotInput && (
 									<div className="relative mt-3 w-full">
 										<select aria-label="Bot difficulty" value={botDifficulty}
-											onChange={(event) => setBotDifficulty(event.target.value as "easy" | "medium" | "hard")}
+											onChange={(event) => {
+											setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
+											}}
+											onClick={(event) => { 
+											createBotGame();
+											}}
 											className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg py-3 pl-4 pr-11 text-sm font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
 											style={{ colorScheme: "dark" }}>
 											<option className="bg-slate-900 text-white" value="easy">Easy</option>
@@ -934,11 +840,9 @@ function Chess() {
 											<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
 										</svg>
 									</div>
-									<button onClick={createBotGame}
-										className="mt-3 rounded-xl bg-violet-600 px-6 py-3 font-semibold hover:bg-violet-500">
-										Play against bot
-									</button>
+									)}
 
+									{showJoinInput && (
 									<input
 										type="text"
 										placeholder="Join a game with the ID"
@@ -953,6 +857,7 @@ function Chess() {
 										}}
 										className={`mt-3 w-full rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg px-4 py-3 outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
 									/>
+									)}
 								</div>
 							)}
 
@@ -961,6 +866,7 @@ function Chess() {
 									{error}
 								</p>
 							)}
+
 							{game?.bot && !game.chess.isGameFinished && game.chess.currentPlayerColor === "black" && (
 								<div className="mt-3 text-center" aria-live="polite">
 									{botError ? <button className="rounded-xl bg-violet-600 px-4 py-2"
@@ -968,28 +874,6 @@ function Chess() {
 										Retry bot turn
 									</button> : "Stockfish is thinking…"}
 								</div>
-							)}
-							{game && !game?.chess.isGameFinished && game.black === null && (
-								<div className={`mt-6 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-4 shadow-lg`}>
-									{game.black === null && (
-										<div className="flex flex-col items-center mt-4">
-											<p className="mt-2 text-amber-300">
-												Waiting for an opponent...
-											</p>
-
-											<button
-												onClick={cancelGame}
-												className="mt-3 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 px-6 py-2 font-semibold shadow-lg hover:from-rose-400 hover:to-red-500 transition-all"
-											>
-												Cancel
-											</button>
-										</div>
-
-									)}
-
-								</div>
-
-
 							)}
 
 							{game && game?.chess.isGameFinished && (
@@ -1014,37 +898,68 @@ function Chess() {
 							)}
 						</div>
 
+						{game && !game?.chess.isGameFinished && game.black !== null &&(
 						<div className={`justify-self-end rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-3 font-mono text-xl shadow-lg`}>
 							00:00
 						</div>
-					</div>
-
-					<div className="mx-auto grid w-full grid-cols-[auto_1fr_auto] items-start gap-4">
-						{searchingGame ? (
-							<div
-								className={`hidden w-56 shrink-0 rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg lg:block`}
-							>
-								<p className="text-sm /70">Game ID :</p>
-								<p className="font-mono text-sm mb-2">{searchingGame.id}</p>
-
-								<div className="space-y-1">
-									<p className="text-sm">
-										<span className="/70">White :</span> {searchingGame.white}
-									</p>
-									<p className="text-sm">
-										<span className="/70">Black :</span>{" "}
-										{searchingGame.black ?? "Waiting..."}
-									</p>
-								</div>
-							</div>
-						) : (
-							<CapturedTray
-								pieces={capturedByMe}
-								label="Captured by you"
-							/>
 						)}
 
-						<div className="mx-auto aspect-square w-[min(660px,100%,calc(100vh-475px))]">
+					</div>
+
+					{(!game || (game && !game?.chess.isGameFinished && game.black === null)) && (
+					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+						<button
+							onClick={createGame}
+							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+						>
+							Create a game
+						</button>
+						<button 
+							onClick={askDifficulty}
+							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+						>
+							Play against bot
+						</button>
+						<button
+							onClick={askID}
+							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-end w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+						>
+							Join a game
+						</button>
+					</div>
+					)}
+
+					<br></br>
+
+					<div className="mx-auto flex w-full items-start justify-center gap-4">
+
+						<div className="hidden w-56 shrink-0 justify-center lg:flex">
+							{searchingGame ? (
+								<div
+									className={`w-full rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg`}
+								>
+									<p className="text-sm /70">Game ID :</p>
+									<p className="mb-2 font-mono text-sm break-all">{searchingGame.id}</p>
+
+									<div className="space-y-1">
+										<p className="text-sm">
+											<span className="/70">White :</span> {searchingGame.white}
+										</p>
+										<p className="text-sm">
+											<span className="/70">Black :</span>{" "}
+											{searchingGame.black ?? "Waiting..."}
+										</p>
+									</div>
+								</div>
+							) : (
+								<CapturedTray
+									pieces={capturedByMe}
+									label="Captured by you"
+								/>
+							)}
+						</div>
+
+						<div className="aspect-square w-[min(660px,100%,calc(100vh-475px))]">
 							{game ? (
 								<div
 									className={`grid aspect-square w-full grid-cols-8 grid-rows-8 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}
@@ -1086,7 +1001,7 @@ function Chess() {
 															src={pieceImage}
 															alt=""
 															draggable={false}
-															className="pointer-events-none h-[88%] w-[88%] object-contain drop-shadow-lg"
+															className={`pointer-events-none h-[114%] w-[114%] object-contain drop-shadow-lg`}
 														/>
 													)}
 
@@ -1107,7 +1022,7 @@ function Chess() {
 											src={getPieceImage(draggedPiece.piece)}
 											alt=""
 											draggable={false}
-											className="pointer-events-none fixed z-50 h-24 w-24 object-contain drop-shadow-2xl"
+											className="pointer-events-none fixed z-50 h-[125px] w-[125px] object-contain drop-shadow-2xl"
 											style={{
 												left: mousePosition.x - 48,
 												top: mousePosition.y - 48,
@@ -1156,14 +1071,21 @@ function Chess() {
 							)}
 						</div>
 
-						{searchingGame ? (
-							<div className="hidden w-56 shrink-0 lg:block" aria-hidden="true" />
-						) : (
-							<CapturedTray
-								pieces={capturedByOpponent}
-								label="Captured by opponent"
-							/>
-						)}
+						<div className="hidden w-56 shrink-0 justify-center lg:flex">
+							{searchingGame ? (
+								<div aria-hidden="true" className="w-full" />
+							) : (
+								<CapturedTray
+									pieces={capturedByOpponent}
+									label="Captured by opponent"
+								/>
+							)}
+						</div>
+					</div>
+
+					<br></br>
+
+					<div className={`grid aspect-square justify-self-center w-164 h-24 grid-cols-1 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 					</div>
 
 					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">

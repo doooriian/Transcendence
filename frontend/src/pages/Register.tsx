@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/auth";
 import Header from "../components/Header";
@@ -14,7 +13,7 @@ function Register() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const { login } = useAuth();
-	const { theme } = useTheme();
+	const theme = "blue";
 	const navigate = useNavigate();
 
 	async function handleRegister() {
