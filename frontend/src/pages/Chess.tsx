@@ -356,17 +356,37 @@ function Chess() {
 	}, []);
 
 	function askID() {
-	setShowJoinInput(true);
-	setShowBotInput(false);
+		if (searchingGame && myAuthId && searchingGame.white === myAuthId) {
+			socket.emit("game:leave", searchingGame.id);
+			setGame(null);
+			setLegalMoves([]);
+			setDraggedPiece(null);
+			setSelectedSquare(null);
+		}
+
+		setShowJoinInput(true);
+		setShowBotInput(false);
+		setError(null);
 	}
 
 	function askDifficulty() {
-	setShowBotInput(true);
-	setShowJoinInput(false);
+		if (searchingGame && myAuthId && searchingGame.white === myAuthId) {
+			socket.emit("game:leave", searchingGame.id);
+			setGame(null);
+			setLegalMoves([]);
+			setDraggedPiece(null);
+			setSelectedSquare(null);
+		}
+
+		setShowBotInput(true);
+		setShowJoinInput(false);
+		setError(null);
 	}
 
 	function createGame() {
 		setError(null);
+		setShowJoinInput(false);
+		setShowBotInput(false);
 		socket.emit("game:create");
 	}
 
@@ -861,6 +881,14 @@ function Chess() {
 								</div>
 							)}
 
+							{searchingGame && myAuthId && searchingGame.white === myAuthId && (
+								<div className={`mt-3 w-full rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg px-4 py-3 text-center shadow-lg`}>
+									<p className="text-sm text-white/70">Game ID :</p>
+									<p className="mt-1 font-mono text-lg tracking-widest select-all">{searchingGame.id}</p>
+									<p className="mt-1 text-xs text-white/60">Waiting for opponent...</p>
+								</div>
+							)}
+
 							{error && (
 								<p className="mt-4 text-red-400">
 									{error}
@@ -935,22 +963,7 @@ function Chess() {
 
 						<div className="hidden w-56 shrink-0 justify-center lg:flex">
 							{searchingGame ? (
-								<div
-									className={`w-full rounded-2xl container-theme-${theme} border border-white/20 p-4 shadow-lg`}
-								>
-									<p className="text-sm /70">Game ID :</p>
-									<p className="mb-2 font-mono text-sm break-all">{searchingGame.id}</p>
-
-									<div className="space-y-1">
-										<p className="text-sm">
-											<span className="/70">White :</span> {searchingGame.white}
-										</p>
-										<p className="text-sm">
-											<span className="/70">Black :</span>{" "}
-											{searchingGame.black ?? "Waiting..."}
-										</p>
-									</div>
-								</div>
+								<div aria-hidden="true" className="w-full" />
 							) : (
 								<CapturedTray
 									pieces={capturedByMe}
