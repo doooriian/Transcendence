@@ -962,13 +962,13 @@ function Chess() {
 					<div className="mx-auto flex w-full items-start justify-center gap-4">
 
 						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{searchingGame ? (
-								<div aria-hidden="true" className="w-full" />
-							) : (
+							{game && !game.chess.isGameFinished && game.black !== null ? (
 								<CapturedTray
 									pieces={capturedByMe}
 									label="Captured by you"
 								/>
+							) : (
+								<div aria-hidden="true" className="w-full" />
 							)}
 						</div>
 
@@ -1085,13 +1085,13 @@ function Chess() {
 						</div>
 
 						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{searchingGame ? (
-								<div aria-hidden="true" className="w-full" />
-							) : (
+							{game && !game.chess.isGameFinished && game.black !== null ? (
 								<CapturedTray
 									pieces={capturedByOpponent}
 									label="Captured by opponent"
 								/>
+							) : (
+								<div aria-hidden="true" className="w-full" />
 							)}
 						</div>
 					</div>
