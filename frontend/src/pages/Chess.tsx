@@ -883,9 +883,7 @@ function Chess() {
 
 							{searchingGame && myAuthId && searchingGame.white === myAuthId && (
 								<div className={`mt-3 w-full rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg px-4 py-3 text-center shadow-lg`}>
-									<p className="text-sm text-white/70">Game ID :</p>
-									<p className="mt-1 font-mono text-lg tracking-widest select-all">{searchingGame.id}</p>
-									<p className="mt-1 text-xs text-white/60">Waiting for opponent...</p>
+									<p className="mt-1 font-mono text-m tracking-widest select-all">{searchingGame.id}</p>
 								</div>
 							)}
 
@@ -1098,7 +1096,12 @@ function Chess() {
 
 					<br></br>
 
-					<div className={`grid aspect-square justify-self-center w-164 h-24 grid-cols-1 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+						<button
+							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
+						>
+							Waiting for opponent...
+						</button>
 					</div>
 
 					{(game && !game?.chess.isGameFinished && game.black !== null &&
