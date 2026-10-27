@@ -1088,8 +1088,12 @@ function Chess() {
 					<div className={`grid aspect-square justify-self-center w-164 h-24 grid-cols-1 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 					</div>
 
+					{(game && !game?.chess.isGameFinished && game.black !== null &&
 					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
+						
+						
 						<div className={`flex items-center gap-3 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-5 py-3 shadow-lg`}>
+						
 							<div className="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 flex items-center justify-center text-xl font-bold">
 								T
 							</div>
@@ -1102,7 +1106,9 @@ function Chess() {
 									1200 Elo
 								</p>
 							</div>
+						
 						</div>
+						
 
 						<div className="mt-8 flex flex-col items-start justify-self-start gap-3">
 						<div className="flex gap-4">
@@ -1128,7 +1134,9 @@ function Chess() {
 							00:00
 						</div>
 					</div>
+					)}
 				</div>
+				
 			</section>
 		</main>
 		<Footer />
