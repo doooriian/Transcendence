@@ -16,7 +16,7 @@ router.use(authToken);
  * Response:
  * {
  *   friends: [
- *     { username: "John", isOnline: true }
+ *     { authId: "...", username: "John", isOnline: true }
  *   ]
  * }
  */

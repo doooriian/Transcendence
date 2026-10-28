@@ -161,7 +161,7 @@ function Friends() {
               <div className="mt-4 space-y-3">
                 {friends.map((friend) => (
                   <div
-                    key={friend.username}
+                    key={friend.authId}
                     className="flex flex-col items-stretch gap-3 rounded-lg bg-slate-800 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4"
                   >
                     <div>

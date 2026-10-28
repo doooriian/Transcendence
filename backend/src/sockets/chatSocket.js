@@ -53,6 +53,7 @@ async function handleChatSend(io, socket, data) {
         authId: messageData.toAuthId,
       },
       select: {
+        id: true,
         authId: true,
         username: true,
       },
@@ -68,16 +69,12 @@ async function handleChatSend(io, socket, data) {
       return;
     }
 
-    if (!isUserOnline(recipient.authId)) {
-      socket.emit("chat:error", { message: "User is offline" });
-      return;
-    }
-
     const sender = await prisma.user.findUnique({
       where: {
         authId: socket.data.authId,
       },
       select: {
+        id: true,
         authId: true,
         username: true,
       },
@@ -85,6 +82,27 @@ async function handleChatSend(io, socket, data) {
 
     if (!sender) {
       socket.emit("chat:error", { message: "Invalid session" });
+      return;
+    }
+
+    const friendship = await prisma.friendship.findUnique({
+      where: {
+        userId_friendId: {
+          userId: sender.id,
+          friendId: recipient.id,
+        },
+      },
+    });
+
+    if (!friendship) {
+      socket.emit("chat:error", {
+        message: "You can only message your friends",
+      });
+      return;
+    }
+
+    if (!isUserOnline(recipient.authId)) {
+      socket.emit("chat:error", { message: "User is offline" });
       return;
     }
 
