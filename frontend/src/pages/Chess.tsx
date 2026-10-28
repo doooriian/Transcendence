@@ -838,54 +838,6 @@ function Chess() {
 						)}
 
 						<div className="justify-self-center">
-							{!game && (
-								<div className="flex flex-col items-left">
-									{showBotInput && (
-									<div className="relative mt-3 w-full">
-										<select aria-label="Bot difficulty" value={botDifficulty}
-											onChange={(event) => {
-											setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
-											}}
-											onClick={(event) => { 
-											createBotGame();
-											}}
-											className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg py-3 pl-4 pr-11 text-sm font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
-											style={{ colorScheme: "dark" }}>
-											<option className="bg-slate-900 text-white" value="easy">Easy</option>
-											<option className="bg-slate-900 text-white" value="medium">Medium</option>
-											<option className="bg-slate-900 text-white" value="hard">Hard</option>
-										</select>
-										<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-											className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
-											<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-										</svg>
-									</div>
-									)}
-
-									{showJoinInput && (
-									<input
-										type="text"
-										placeholder="Join a game with the ID"
-										value={joinGameId}
-										onChange={(event) =>
-											setJoinGameId(event.target.value)
-										}
-										onKeyDown={(event) => {
-											if (event.key === "Enter") {
-												joinGame();
-											}
-										}}
-										className={`mt-3 w-full rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg px-4 py-3 outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
-									/>
-									)}
-								</div>
-							)}
-
-							{searchingGame && myAuthId && searchingGame.white === myAuthId && (
-								<div className={`mt-3 w-full rounded-xl border border-white/20 container-theme-${theme} backdrop-blur-lg px-4 py-3 text-center shadow-lg`}>
-									<p className="mt-1 font-mono text-m tracking-widest select-all">{searchingGame.id}</p>
-								</div>
-							)}
 
 							{error && (
 								<p className="mt-4 text-red-400">
@@ -931,24 +883,88 @@ function Chess() {
 						)}
 
 					</div>
+				
+
+					{(!game || game.black === null) && (
+					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
+						{searchingGame && (
+						<button
+							className="select-text rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
+						>
+							{game.id}
+						</button>
+						)}
+						{showBotInput && (
+						<div className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+						<div className="relative justify-self-center w-full h-full">
+							<select aria-label="Bot difficulty" value={botDifficulty}
+								onChange={(event) => {
+								setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
+								}}
+								onClick={(event) => { 
+								createBotGame();
+								}}
+								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm text-center font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
+								style={{ colorScheme: "dark" }}>
+								<option className="bg-[#194b7b]  font-semibold" value="easy">Easy</option>
+								<option className="bg-[#194b7b]  font-semibold" value="medium">Medium</option>
+								<option className="bg-[#194b7b]  font-semibold" value="hard">Hard</option>
+							</select>
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+								className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
+								<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+							</svg>
+						</div>
+						</div>
+						)}
+
+						{showJoinInput && (
+						<div className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+						<input
+							type="text"
+							placeholder="   Paste game ID here"
+							value={joinGameId}
+							onChange={(event) =>
+								setJoinGameId(event.target.value)
+							}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									joinGame();
+								}
+							}}
+							className={`rounded-xl border border-white/20 backdrop-blur-lg w-full h-full outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
+						/>
+						</div>
+						)}
+
+						{!showJoinInput && !showBotInput && !searchingGame && (
+						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 w-164 h-12 font-semibold shadow-lg text-white">
+							Create or join a game
+						</div>
+						)}
+
+					</div>
+					)}
+
+					<br></br>
 
 					{(!game || (game && !game?.chess.isGameFinished && game.black === null)) && (
 					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 						<button
 							onClick={createGame}
-							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 						>
 							Create a game
 						</button>
 						<button 
 							onClick={askDifficulty}
-							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 						>
 							Play against bot
 						</button>
 						<button
 							onClick={askID}
-							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-end w-52 h-12 font-semibold shadow-lg hover:from-violet-400 hover:to-fuchsia-400 transition-all"
+							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-end w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 						>
 							Join a game
 						</button>
@@ -1045,7 +1061,6 @@ function Chess() {
 								<div className={`flex aspect-square items-center justify-center rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 shadow-2xl`}>
 									<div className="text-center">
 										<div className="text-6xl mb-4">♛</div>
-										<p className="/80 text-lg">Create or join a game</p>
 									</div>
 								</div>
 							)}
@@ -1094,69 +1109,7 @@ function Chess() {
 						</div>
 					</div>
 
-					<br></br>
 
-					{(!game || game.black === null) && (
-					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
-						{searchingGame && (
-						<button
-							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
-						>
-							Game ID : {game.id}
-						</button>
-						)}
-						{showBotInput && (
-						<div className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
-							
-						<div className="relative justify-self-center w-full h-full">
-							<select aria-label="Bot difficulty" value={botDifficulty}
-								onChange={(event) => {
-								setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
-								}}
-								onClick={(event) => { 
-								createBotGame();
-								}}
-								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm text-center font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
-								style={{ colorScheme: "dark" }}>
-								<option className="bg-slate-900 text-white" value="easy">Easy</option>
-								<option className="bg-slate-900 text-white" value="medium">Medium</option>
-								<option className="bg-slate-900 text-white" value="hard">Hard</option>
-							</select>
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-								className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
-								<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-							</svg>
-						</div>
-						</div>
-						)}
-
-						{showJoinInput && (
-						<div className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
-						<input
-							type="text"
-							placeholder="   Paste game ID here"
-							value={joinGameId}
-							onChange={(event) =>
-								setJoinGameId(event.target.value)
-							}
-							onKeyDown={(event) => {
-								if (event.key === "Enter") {
-									joinGame();
-								}
-							}}
-							className={`rounded-xl border border-white/20 backdrop-blur-lg w-full h-full outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
-						/>
-						</div>
-						)}
-
-						{!showJoinInput && !showBotInput && !searchingGame && (
-						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 w-164 h-12 font-semibold shadow-lg text-white">
-							Waiting for opponent...
-						</div>
-						)}
-
-					</div>
-					)}
 
 					{(game && !game?.chess.isGameFinished && game.black !== null &&
 					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
@@ -1179,7 +1132,6 @@ function Chess() {
 						
 						</div>
 						
-
 						<div className="mt-8 flex flex-col items-start justify-self-start gap-3">
 						<div className="flex gap-4">
 							<button
