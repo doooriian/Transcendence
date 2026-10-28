@@ -1116,7 +1116,7 @@ function Chess() {
 								onClick={(event) => { 
 								createBotGame();
 								}}
-								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
+								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm text-center font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
 								style={{ colorScheme: "dark" }}>
 								<option className="bg-slate-900 text-white" value="easy">Easy</option>
 								<option className="bg-slate-900 text-white" value="medium">Medium</option>
@@ -1129,6 +1129,32 @@ function Chess() {
 						</div>
 						</div>
 						)}
+
+						{showJoinInput && (
+						<div className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+						<input
+							type="text"
+							placeholder="   Paste game ID here"
+							value={joinGameId}
+							onChange={(event) =>
+								setJoinGameId(event.target.value)
+							}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									joinGame();
+								}
+							}}
+							className={`rounded-xl border border-white/20 backdrop-blur-lg w-full h-full outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
+						/>
+						</div>
+						)}
+
+						{!showJoinInput && !showBotInput && !searchingGame && (
+						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 w-164 h-12 font-semibold shadow-lg text-white">
+							Waiting for opponent...
+						</div>
+						)}
+
 					</div>
 					)}
 
