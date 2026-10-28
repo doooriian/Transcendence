@@ -1097,12 +1097,38 @@ function Chess() {
 					<br></br>
 
 					{(!game || game.black === null) && (
-					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
+						{searchingGame && (
 						<button
 							className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
 						>
-							Waiting for opponent...
+							Game ID : {game.id}
 						</button>
+						)}
+						{showBotInput && (
+						<div className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+							
+						<div className="relative justify-self-center w-full h-full">
+							<select aria-label="Bot difficulty" value={botDifficulty}
+								onChange={(event) => {
+								setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
+								}}
+								onClick={(event) => { 
+								createBotGame();
+								}}
+								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
+								style={{ colorScheme: "dark" }}>
+								<option className="bg-slate-900 text-white" value="easy">Easy</option>
+								<option className="bg-slate-900 text-white" value="medium">Medium</option>
+								<option className="bg-slate-900 text-white" value="hard">Hard</option>
+							</select>
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+								className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
+								<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+							</svg>
+						</div>
+						</div>
+						)}
 					</div>
 					)}
 
