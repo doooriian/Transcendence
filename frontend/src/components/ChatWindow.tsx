@@ -1,21 +1,25 @@
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useMemo, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 
 type ChatWindowProps = {
-    recipient: string;
+    recipientAuthId: string;
+    recipientUsername: string,
     onClose: () => void;
 };
 
-function ChatWindow({ recipient, onClose }: ChatWindowProps) {
-    const { username } = useAuth();
+function ChatWindow({ recipientAuthId, recipientUsername, onClose }: ChatWindowProps) {
+    const { authId } = useAuth();
     const { conversations, error, sendMessage, clearError } = useChat();
 
     const [draft, setDraft] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const messages = conversations[recipient] ?? [];
+    const messages = useMemo(
+        () => conversations[recipientAuthId] ?? [],
+        [conversations, recipientAuthId],
+    );
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -24,7 +28,7 @@ function ChatWindow({ recipient, onClose }: ChatWindowProps) {
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (sendMessage(recipient, draft)) {
+        if (sendMessage(recipientAuthId, draft)) {
             setDraft("");
         }
     }
@@ -39,13 +43,13 @@ function ChatWindow({ recipient, onClose }: ChatWindowProps) {
             <section
                 role="dialog"
                 aria-modal="true"
-                aria-label={`Conversation with ${recipient}`}
+                aria-label={`Conversation with ${recipientUsername}`}
                 className="flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/20 bg-slate-900 shadow-2xl"
             >
                 <header className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
                     <div className="min-w-0">
                         <h2 className="truncate text-lg font-bold text-white">
-                            {recipient}
+                            {recipientUsername}
                         </h2>
                         <p className="text-sm text-slate-400">
                             Private conversation
@@ -72,9 +76,7 @@ function ChatWindow({ recipient, onClose }: ChatWindowProps) {
                         </p>
                     ) : (
                         messages.map((message, index) => {
-                            const isMine =
-                                message.from.toLowerCase() ===
-                                (username ?? "").toLowerCase();
+                            const isMine = message.fromAuthId === authId;
 
                             return (
                                 <div
@@ -144,7 +146,7 @@ function ChatWindow({ recipient, onClose }: ChatWindowProps) {
                         onChange={(event) => setDraft(event.target.value)}
                         maxLength={500}
                         rows={3}
-                        placeholder={`Message ${recipient}...`}
+                        placeholder={`Message ${recipientUsername}...`}
                         className="w-full resize-none rounded-xl border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-violet-400"
                     />
 

@@ -11,7 +11,7 @@ function validateChatMessage(data) {
     return { error: "Invalid message data" };
   }
 
-  if (typeof data.to !== "string" || data.to.trim().length === 0) {
+  if (typeof data.toAuthId !== "string" || data.toAuthId.trim().length === 0) {
     return { error: "Invalid recipient" };
   }
 
@@ -30,7 +30,7 @@ function validateChatMessage(data) {
   }
 
   return {
-    to: data.to.trim(),
+    toAuthId: data.toAuthId.trim(),
     content,
   };
 }
@@ -50,7 +50,7 @@ async function handleChatSend(io, socket, data) {
   try {
     const recipient = await prisma.user.findUnique({
       where: {
-        username: messageData.to,
+        authId: messageData.toAuthId,
       },
       select: {
         authId: true,
@@ -89,7 +89,9 @@ async function handleChatSend(io, socket, data) {
     }
 
     const message = {
+      fromAuthId: sender.authId,
       from: sender.username,
+      toAuthId: recipient.authId,
       to: recipient.username,
       content: messageData.content,
       sentAt: new Date().toISOString(),
@@ -97,8 +99,6 @@ async function handleChatSend(io, socket, data) {
 
     io.to(`user:${recipient.authId}`).emit("chat:message", message);
     io.to(`user:${sender.authId}`).emit("chat:message", message);
-
-    console.log("Valid chat message:", messageData);
   } catch (err) {
     console.error(err.message);
     socket.emit("chat:error", { message: "Unable to send message" });

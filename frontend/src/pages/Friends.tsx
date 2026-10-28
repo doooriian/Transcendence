@@ -18,7 +18,9 @@ function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [received, setReceived] = useState<FriendRequest[]>([]);
   const [sent, setSent] = useState<FriendRequest[]>([]);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedChatAuthId, setSelectedChatAuthId] = useState<string | null>(
+    null,
+  );
   const { theme } = useTheme();
 
   const [error, setError] = useState("");
@@ -124,17 +126,21 @@ function Friends() {
     await loadFriends();
   }
 
+  const selectedFriend = friends.find(
+    (friend) => friend.authId === selectedChatAuthId,
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="min-h-[calc(100vh-73px)] px-3 py-8 pb-12 sm:px-4 sm:py-10 sm:pb-16">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-3xl font-bold text-center sm:text-4xl">♟ Friends</h1>
+          <h1 className="text-3xl font-bold text-center sm:text-4xl">
+            ♟ Friends
+          </h1>
 
-          <p className="mt-3 text-center">
-            Manage your friends and requests
-          </p>
+          <p className="mt-3 text-center">Manage your friends and requests</p>
 
           {error && (
             <p className="mt-6 rounded-lg border border-red-700 bg-red-900/40 p-4 text-center text-red-300">
@@ -144,13 +150,13 @@ function Friends() {
 
           {/* Friends */}
 
-          <section className={`mt-10 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}>
+          <section
+            className={`mt-10 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}
+          >
             <h2 className={`text-2xl font-bold`}>Your friends</h2>
 
             {friends.length === 0 ? (
-              <p className="mt-4">
-                You don't have any friends yet.
-              </p>
+              <p className="mt-4">You don't have any friends yet.</p>
             ) : (
               <div className="mt-4 space-y-3">
                 {friends.map((friend) => (
@@ -167,19 +173,19 @@ function Friends() {
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
-                        <button
-                            onClick={() => setSelectedChat(friend.username)}
-                            className="rounded-lg bg-violet-600 px-4 py-2 font-semibold transition hover:bg-violet-500"
-                        >
-                            Message
-                        </button>
+                      <button
+                        onClick={() => setSelectedChatAuthId(friend.authId)}
+                        className="rounded-lg bg-violet-600 px-4 py-2 font-semibold transition hover:bg-violet-500"
+                      >
+                        Message
+                      </button>
 
-                        <button
-                            onClick={() => handleRemove(friend.username)}
-                            className="rounded-lg bg-red-600 px-4 py-2 font-semibold transition hover:bg-red-700"
-                        >
-                            Remove
-                        </button>
+                      <button
+                        onClick={() => handleRemove(friend.username)}
+                        className="rounded-lg bg-red-600 px-4 py-2 font-semibold transition hover:bg-red-700"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -189,7 +195,9 @@ function Friends() {
 
           {/* Received requests */}
 
-          <section className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}>
+          <section
+            className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}
+          >
             <h2 className={`text-2xl font-bold`}>Friend requests</h2>
 
             {received.length === 0 ? (
@@ -226,7 +234,9 @@ function Friends() {
 
           {/* Sent requests */}
 
-          <section className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}>
+          <section
+            className={`mt-6 rounded-2xl border border-slate-800 container-theme-${theme} p-4 sm:p-6`}
+          >
             <h2 className={`text-2xl font-bold`}>Sent requests</h2>
 
             {sent.length === 0 ? (
@@ -253,14 +263,15 @@ function Friends() {
           </section>
         </div>
       </main>
-        {selectedChat && (
-            <ChatWindow
-                recipient={selectedChat}
-                onClose={() => setSelectedChat(null)}
-            />
-        )}
+      {selectedFriend && (
+        <ChatWindow
+          recipientAuthId={selectedFriend.authId}
+          recipientUsername={selectedFriend.username}
+          onClose={() => setSelectedChatAuthId(null)}
+        />
+      )}
       <Footer />
-     </div>
+    </div>
   );
 }
 

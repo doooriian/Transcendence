@@ -12,7 +12,9 @@ import { useAuth } from "./AuthContext";
 import socket from "../services/socket";
 
 export type ChatMessage = {
+    fromAuthId: string,
     from: string;
+    toAuthId: string,
     to: string;
     content: string;
     sentAt: string;
@@ -21,14 +23,14 @@ export type ChatMessage = {
 type ChatContextType = {
     conversations: Record<string, ChatMessage[]>;
     error: string | null;
-    sendMessage: (to: string, content: string) => boolean;
+    sendMessage: (toAuthId: string, content: string) => boolean;
     clearError: () => void;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-    const { username, isLoggedIn } = useAuth();
+    const { authId, isLoggedIn } = useAuth();
 
     const [conversations, setConversations] = useState<
         Record<string, ChatMessage[]>
@@ -37,19 +39,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!isLoggedIn || !username) {
+        if (!isLoggedIn || !authId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setConversations({});
+            setError(null);
             return;
         }
 
         function handleMessage(message: ChatMessage) {
-            const otherUser =
-                message.from === username ? message.to : message.from;
+            const otherAuthId =
+                message.fromAuthId === authId
+                    ? message.toAuthId
+                    : message.fromAuthId;
 
             setConversations((previous) => ({
                 ...previous,
-                [otherUser]: [
-                    ...(previous[otherUser] ?? []),
+                [otherAuthId]: [
+                    ...(previous[otherAuthId] ?? []),
                     message,
                 ],
             }));
@@ -66,10 +72,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             socket.off("chat:message", handleMessage);
             socket.off("chat:error", handleError);
         };
-    }, [username, isLoggedIn]);
+    }, [authId, isLoggedIn]);
 
     const sendMessage = useCallback(
-        (to: string, content: string): boolean => {
+        (toAuthId: string, content: string): boolean => {
             const trimmedMessage = content.trim();
 
             if (!trimmedMessage) {
@@ -82,12 +88,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 return false;
             }
 
-            if (!to.trim()) {
+            if (!toAuthId.trim()) {
                 setError("Choose a recipient first.");
                 return false;
             }
 
-            if (username && to.toLowerCase() === username.toLowerCase()) {
+            if (authId === toAuthId) {
                 setError("You cannot send a message to yourself.");
                 return false;
             }
@@ -102,13 +108,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // The backend sends chat:message back to the sender too.
             // Do not add the message to conversations here.
             socket.emit("chat:send", {
-                to: to.trim(),
+                toAuthId: toAuthId.trim(),
                 content: trimmedMessage,
             });
 
             return true;
         },
-        [username],
+        [authId],
     );
 
     const clearError = useCallback(() => {
@@ -129,6 +135,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useChat() {
     const context = useContext(ChatContext);
 
