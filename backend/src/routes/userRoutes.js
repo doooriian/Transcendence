@@ -149,6 +149,63 @@ router.patch("/me", async (req, res) => {
       },
     });
 
+    if (data.username !== undefined) {
+      const relations = await prisma.user.findUnique({
+        where: {
+          authId: req.authId,
+        },
+        select: {
+          friendships: {
+            select: {
+              friend: {
+                select: {
+                  authId: true,
+                },
+              },
+            },
+          },
+          sentFriendRequests: {
+            select: {
+              receiver: {
+                select: {
+                  authId: true,
+                },
+              },
+            },
+          },
+          receivedFriendRequests: {
+            select: {
+              sender: {
+                select: {
+                  authId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (relations) {
+        const authIds = new Set([
+          ...relations.friendships.map(
+            (friendship) => friendship.friend.authId,
+          ),
+          ...relations.sentFriendRequests.map(
+            (request) => request.receiver.authId,
+          ),
+          ...relations.receivedFriendRequests.map(
+            (request) => request.sender.authId,
+          ),
+        ]);
+
+        const io = req.app.get("io");
+
+        for (const authId of authIds) {
+          io.to(`user:${authId}`).emit("friends:changed");
+        }
+      }
+    }
+
     return res.json({ user });
   } catch (err) {
     // Prisma P2002: unique constraint violation

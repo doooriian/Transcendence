@@ -1,6 +1,7 @@
 import { apiFetch } from "./api";
 
 export type Friend = {
+	authId: string,
 	username: string;
 	isOnline: boolean;
 };

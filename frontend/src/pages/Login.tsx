@@ -29,7 +29,7 @@ function Login() {
 			return;
 		}
 
-		login(result.data.username, result.data.token);
+		login(result.data.authId, result.data.username, result.data.token);
 		navigate("/");
 	}
 

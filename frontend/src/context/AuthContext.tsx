@@ -11,8 +11,9 @@ import socket from "../services/socket";
 
 type AuthContextType = {
 	isLoggedIn: boolean;
+	authId: string | null,
 	username: string | null;
-	login: (username: string, token: string) => void;
+	login: (authId: string, username: string, token: string) => void;
 	logout: () => void;
 	updateUsername: (username: string) => void;
 };
@@ -26,17 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		localStorage.getItem("token") !== null,
 	);
 
+	const [authId, setAuthId] = useState(
+		localStorage.getItem("authId"),
+	);
+
 	const [username, setUsername] = useState(
 		localStorage.getItem("username"),
 	);
 
 	const [sessionExpired, setSessionExpired] = useState(false);
 
-	function login(username: string, token: string) {
+	function login(authId: string, username: string, token: string) {
 		localStorage.setItem("token", token);
+		localStorage.setItem("authId", authId);
 		localStorage.setItem("username", username);
 
 		setIsLoggedIn(true);
+		setAuthId(authId);
 		setUsername(username);
 		setSessionExpired(false);
 
@@ -54,9 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		socket.auth = {};
 
 		localStorage.removeItem("token");
+		localStorage.removeItem("authId");
 		localStorage.removeItem("username");
 
 		setIsLoggedIn(false);
+		setAuthId(null);
 		setUsername(null);
 		setSessionExpired(false);
 
@@ -71,9 +80,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			socket.auth = {};
 
 			localStorage.removeItem("token");
+			localStorage.removeItem("authId");
 			localStorage.removeItem("username");
 
 			setIsLoggedIn(false);
+			setAuthId(null);
 			setUsername(null);
 		}
 
@@ -108,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		<AuthContext.Provider
 			value={{
 				isLoggedIn,
+				authId,
 				username,
 				login,
 				logout,
