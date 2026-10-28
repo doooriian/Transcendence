@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import ChatWindow from "../components/ChatWindow";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import {
@@ -17,6 +18,7 @@ function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [received, setReceived] = useState<FriendRequest[]>([]);
   const [sent, setSent] = useState<FriendRequest[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const { theme } = useTheme();
 
   const [error, setError] = useState("");
@@ -164,12 +166,21 @@ function Friends() {
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => handleRemove(friend.username)}
-                      className="rounded-lg bg-red-600 px-3 py-2 font-semibold transition hover:bg-red-700 sm:px-4"
-                    >
-                      Remove
-                    </button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <button
+                            onClick={() => setSelectedChat(friend.username)}
+                            className="rounded-lg bg-violet-600 px-4 py-2 font-semibold transition hover:bg-violet-500"
+                        >
+                            Message
+                        </button>
+
+                        <button
+                            onClick={() => handleRemove(friend.username)}
+                            className="rounded-lg bg-red-600 px-4 py-2 font-semibold transition hover:bg-red-700"
+                        >
+                            Remove
+                        </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -242,6 +253,12 @@ function Friends() {
           </section>
         </div>
       </main>
+        {selectedChat && (
+            <ChatWindow
+                recipient={selectedChat}
+                onClose={() => setSelectedChat(null)}
+            />
+        )}
       <Footer />
      </div>
   );
