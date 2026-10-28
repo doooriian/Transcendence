@@ -5,6 +5,8 @@ import { useTheme } from "../context/ThemeContext";
 import { searchUsers, type UserSearchResult } from "../services/users";
 
 function Header() {
+	const [menuOpen, setMenuOpen] = useState(false);
+	
 	const [searchName, setSearchName] = useState("");
 	const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
 
@@ -70,42 +72,54 @@ function Header() {
 		setSuggestions([]);
 		navigate(`/profile/${username}`);
 	}
-
+	
 	return (
 		<header className={`container-theme-${theme} border-b border-slate-800 text-white`}>
-			<div className="mx-auto flex max-w-6xl items-center justify-between p-4">
+			<div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:p-4">
 
 				<Link
 					to="/"
-					className="text-2xl font-bold text-white hover:text-blue-400 transition"
+					className="min-w-0 text-lg font-bold text-white transition hover:text-blue-400 sm:text-2xl"
+					onClick={() => setMenuOpen(false)}
 				>
 					♟ ft_chess
 				</Link>
 
-				<nav className="flex items-center gap-6">
+				<button
+					type="button"
+					onClick={() => setMenuOpen((open) => !open)}
+					className="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xl hover:bg-slate-800 md:hidden"
+					aria-label={menuOpen ? "Close menu" : "Open menu"}
+					aria-expanded={menuOpen}
+				>
+					{menuOpen ? "✕" : "☰"}
+				</button>
 
+				<nav
+					className={`${
+						menuOpen ? "flex" : "hidden"
+					} w-full min-w-0 flex-col items-stretch gap-3 md:flex md:w-auto md:flex-row md:items-center md:gap-6`}
+				>
 					{isLoggedIn ? (
 						<>
-							<div
-								ref={searchRef}
-								className="relative"
-							>
-
+							<div ref={searchRef} className="relative w-full md:w-auto">
 								<form
 									onSubmit={(event) => {
 										event.preventDefault();
 
 										if (selectedIndex >= 0 && suggestions[selectedIndex]) {
 											handleSelectUser(suggestions[selectedIndex].username);
+											setMenuOpen(false);
 											return;
 										}
 
 										if (!searchName.trim())
 											return;
 
-										navigate(`/profile/${searchName.trim()}`);
+										navigate(`/profile/${encodeURIComponent(searchName.trim())}`);
 										setSearchName("");
 										setSuggestions([]);
+										setMenuOpen(false);
 									}}
 								>
 									<input
@@ -114,7 +128,6 @@ function Header() {
 										value={searchName}
 										onChange={(event) => {
 											const value = event.target.value;
-
 											setSearchName(value);
 
 											if (value.trim().length < 2) {
@@ -154,18 +167,20 @@ function Header() {
 												setSelectedIndex(-1);
 											}
 										}}
-										className="w-64 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 outline-none focus:border-blue-500"
+										className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 outline-none focus:border-blue-500 md:w-64"
 									/>
 								</form>
 
 								{suggestions.length > 0 && (
 									<div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-
 										{suggestions.map((user, index) => (
 											<button
 												key={user.username}
 												type="button"
-												onClick={() => handleSelectUser(user.username)}
+												onClick={() => {
+													handleSelectUser(user.username);
+													setMenuOpen(false);
+												}}
 												className={`block w-full px-4 py-3 text-left transition ${
 													index === selectedIndex
 														? "bg-blue-600 text-white"
@@ -175,29 +190,32 @@ function Header() {
 												{user.username}
 											</button>
 										))}
-
 									</div>
 								)}
-
 							</div>
 
 							<Link
 								to="/friends"
-								className="text-slate-300 hover:text-blue-400 transition"
+								onClick={() => setMenuOpen(false)}
+								className="rounded-lg py-2 text-slate-300 hover:text-blue-400 transition"
 							>
 								Friends
 							</Link>
 
 							<Link
-								to={`/profile/${username}`}
-								className="text-slate-300 hover:text-blue-400 transition"
+								to={`/profile/${encodeURIComponent(username ?? "")}`}
+								onClick={() => setMenuOpen(false)}
+								className="rounded-lg py-2 text-slate-300 hover:text-blue-400 transition"
 							>
 								{username}
 							</Link>
 
 							<button
-								onClick={handleLogout}
-								className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 transition"
+								onClick={() => {
+									handleLogout();
+									setMenuOpen(false);
+								}}
+								className="rounded-lg bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 transition"
 							>
 								Logout
 							</button>
@@ -206,22 +224,22 @@ function Header() {
 						<>
 							<Link
 								to="/login"
-								className="hover:text-blue-400 transition"
+								onClick={() => setMenuOpen(false)}
+								className="py-2 hover:text-blue-400 transition"
 							>
 								Login
 							</Link>
 
 							<Link
 								to="/register"
-								className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition"
+								onClick={() => setMenuOpen(false)}
+								className="rounded-lg bg-blue-600 px-4 py-3 text-center font-semibold text-white hover:bg-blue-700 transition"
 							>
 								Register
 							</Link>
 						</>
 					)}
-
 				</nav>
-
 			</div>
 		</header>
 	);

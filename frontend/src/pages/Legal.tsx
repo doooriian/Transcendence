@@ -11,7 +11,7 @@ function Legal() {
 		<div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
 			<Header />
 
-			<main className="flex-1 w-full max-w-4xl mx-auto px-4 py-12">
+			<main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:py-12">
 				<div className="mb-8">
 					<Link
 						to="/"
@@ -54,7 +54,7 @@ function Legal() {
 				</div>
 
 				{isPrivacy ? (
-					<div className="space-y-8">
+					<div className="space-y-6 sm:space-y-8">
 						<section>
 							<h2 className="text-xl font-semibold mb-3">
 								1. Introduction
@@ -223,7 +223,7 @@ function Legal() {
 						</section>
 					</div>
 				) : (
-					<div className="space-y-8">
+					<div className="space-y-6 sm:space-y-8">
 						<section>
 							<h2 className="text-xl font-semibold mb-3">
 								1. Acceptance of These Terms

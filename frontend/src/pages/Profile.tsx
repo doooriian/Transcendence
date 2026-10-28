@@ -45,12 +45,14 @@ function Profile() {
 			if (!username)
 				return;
 
+			const currentUsername = localStorage.getItem("username");
+
 			let result;
 
-			if (username !== myUsername)
-				result = await getUser(username);
-			else
+			if (username === currentUsername)
 				result = await getMyProfile();
+			else
+				result = await getUser(username);
 
 			if (result.ok)
 				setUser(result.data);
@@ -59,7 +61,7 @@ function Profile() {
 		}
 
 		loadUser();
-	}, [username, myUsername]);
+	}, [username]);
 
 
 	useEffect(() => {
@@ -168,12 +170,24 @@ function Profile() {
 
 
 	async function handleSaveUsername() {
+		const username = newUsername.trim();
+
+		if (username.length < 3 || username.length > 20) {
+			setProfileMessage("Username must be between 3 and 20 characters");
+		return;
+		}
+
+		if (!/^[A-Za-z0-9_]+$/.test(username)) {
+			setProfileMessage("Username can only contain letters, numbers and underscores");
+			return;
+		}
+
 		setSavingProfile(true);
 		setProfileMessage("");
 
 		try {
 			const result = await updateMyProfile({
-				username: newUsername.trim(),
+				username,
 			});
 
 			if (!result.ok) {
@@ -211,12 +225,23 @@ function Profile() {
 
 
 	async function handleSaveEmail() {
+		const email = newEmail.trim();
+
+		if (
+			email.length === 0 ||
+			email.length > 254 ||
+			!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+		) {
+			setProfileMessage("Invalid email address");
+			return;
+		}
+
 		setSavingProfile(true);
 		setProfileMessage("");
 
 		try {
 			const result = await updateMyProfile({
-				email: newEmail.trim(),
+				email,
 			});
 
 			if (!result.ok) {
@@ -335,7 +360,7 @@ function Profile() {
 
 			<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
 
-				<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+				<section className="w-full min-w-0 max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
 
 					<div className="text-center mb-8">
 
@@ -383,7 +408,7 @@ function Profile() {
 							</div>
 						</div>
 
-						<h1 className={`text-4xl font-bold `}>
+						<h1 className="text-3xl font-bold sm:text-4xl">
 							♟ Profile
 						</h1>
 
@@ -401,7 +426,7 @@ function Profile() {
 								ID
 							</p>
 
-							<p className="text-xl font-semibold">
+							<p className="break-words text-lg font-semibold sm:text-xl">
 								{user.id}
 							</p>
 						</div>
@@ -413,13 +438,17 @@ function Profile() {
 							{editingUsername ? (
 								<div className="mt-2 space-y-3">
 									<input
+										type="text"
+										minLength={3}
+										maxLength={20}
+										pattern="[A-Za-z0-9_]+"
 										value={newUsername}
 										onChange={(event) => setNewUsername(event.target.value)}
 										className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
 										placeholder="New username"
 									/>
 
-									<div className="flex gap-2">
+									<div className="flex flex-wrap gap-2">
 										<button
 											onClick={handleSaveUsername}
 											disabled={savingProfile || !newUsername.trim()}
@@ -437,8 +466,8 @@ function Profile() {
 									</div>
 								</div>
 							) : (
-								<div className="flex items-center justify-between gap-3">
-									<p className="text-xl font-semibold">{user.username}</p>
+								<div className="flex min-w-0 items-center justify-between gap-3">
+									<p className="min-w-0 break-words text-lg font-semibold sm:text-xl">{user.username}</p>
 
 									{isMyProfile && (
 										<button
@@ -457,7 +486,7 @@ function Profile() {
 							)}
 						</div>
 
-						
+
 						{isMyProfile && (
 							<div className={`rounded-lg container-theme-${theme} p-4`}>
 								<p className="text-sm text-slate-400">Mail</p>
@@ -466,13 +495,15 @@ function Profile() {
 									<div className="mt-2 space-y-3">
 										<input
 											type="email"
+											required
+											maxLength={254}
 											value={newEmail}
 											onChange={(event) => setNewEmail(event.target.value)}
 											className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
 											placeholder="New email"
 										/>
 
-										<div className="flex gap-2">
+										<div className="flex flex-wrap gap-2">
 											<button
 												onClick={handleSaveEmail}
 												disabled={savingProfile || !newEmail.trim()}
@@ -490,7 +521,7 @@ function Profile() {
 										</div>
 									</div>
 								) : (
-									<div className="flex items-center justify-between gap-3">
+									<div className="flex min-w-0 items-center justify-between gap-3">
 										<p className="break-all text-white">
 											{user.email}
 										</p>
@@ -534,7 +565,7 @@ function Profile() {
 								{new Date(user.updatedAt).toLocaleString("fr-FR")}
 							</p>
 						</div>
-						
+
 						{profileMessage && (
 							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
 								{profileMessage}
@@ -558,7 +589,7 @@ function Profile() {
 											{user.username} sent you a friend request
 										</p>
 
-										<div className="flex gap-3">
+										<div className="flex flex-col gap-3 sm:flex-row">
 
 											<button
 												onClick={() => handleAccept(receivedRequest.id)}
