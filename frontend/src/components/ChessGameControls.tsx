@@ -35,8 +35,14 @@ export default function ChessGameControls({
       <div className="flex min-w-0 flex-col items-stretch gap-2 sm:items-start sm:gap-3">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
           <button
-            className={`min-w-0 rounded-xl border border-white/20 container-theme-${theme} px-2 py-3 text-sm font-semibold shadow-lg backdrop-blur-lg transition-all hover:opacity-90 sm:px-5 sm:text-base sm:hover:scale-105`}
+            type="button"
+            disabled={game.chess.isGameFinished}
             onClick={onResign}
+            className={`min-w-0 rounded-xl border border-white/20 container-theme-${theme} px-2 py-3 text-sm font-semibold shadow-lg backdrop-blur-lg transition-all sm:px-5 sm:text-base ${
+                game.chess.isGameFinished
+                    ? "cursor-not-allowed opacity-40"
+                    : "hover:opacity-90 sm:hover:scale-105"
+            }`}
           >
             Give up
           </button>
@@ -44,11 +50,11 @@ export default function ChessGameControls({
           <button
             type="button"
             onClick={onOfferDraw}
-            disabled={!myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
+            disabled={!myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot) || game.chess.currentPlayerColor !== myColor || game.draw.offer !== null || drawOffersMade >= game.draw.maxOffers}
             title={game.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
             className={`min-w-0 rounded-xl bg-gradient-to-r px-2 py-3 text-sm font-semibold shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:text-base ${drawButtonColors}`}
           >
-            Offer draw ({drawOffersMade}/3)
+            Offer draw ({drawOffersMade}/{game.draw.maxOffers})
           </button>
         </div>
 

@@ -61,15 +61,15 @@ function Chess() {
   } = chess;
 
   const capturedByMe =
+	game && hisSideColor
+	  ? getCapturedPieces(game.chess.chessBoard, hisSideColor)
+	  : [];
+
+  const capturedByOpponent =
 	game && mySideColor
 	  ? getCapturedPieces(game.chess.chessBoard, mySideColor)
 	  : [];
 
-  const capturedByOpponent =
-	game && hisSideColor
-	  ? getCapturedPieces(game.chess.chessBoard, hisSideColor)
-	  : [];
-	
 	const opponentFound = Boolean(game && (game.bot || game.black));
 
   return (

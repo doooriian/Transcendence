@@ -80,7 +80,6 @@ export function useChessGame() {
     }
 
     function handleGameError(data: { message: string }) {
-      console.error(data.message);
       setError(data.message);
       setDraggedPiece(null);
       setDrawResponsePending(false);

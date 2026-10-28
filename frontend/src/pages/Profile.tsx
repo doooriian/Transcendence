@@ -45,12 +45,14 @@ function Profile() {
 			if (!username)
 				return;
 
+			const currentUsername = localStorage.getItem("username");
+
 			let result;
 
-			if (username !== myUsername)
-				result = await getUser(username);
-			else
+			if (username === currentUsername)
 				result = await getMyProfile();
+			else
+				result = await getUser(username);
 
 			if (result.ok)
 				setUser(result.data);
@@ -59,7 +61,7 @@ function Profile() {
 		}
 
 		loadUser();
-	}, [username, myUsername]);
+	}, [username]);
 
 
 	useEffect(() => {
