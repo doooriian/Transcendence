@@ -56,7 +56,9 @@ router.get("/", async (req, res) => {
     res.json({ friends });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -131,7 +133,9 @@ router.get("/requests", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -234,7 +238,9 @@ router.post("/requests", async (req, res) => {
       return res.status(409).json({ message: "Friend request already exists" });
     }
 
-    res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -339,7 +345,9 @@ router.post("/requests/:id/accept", async (req, res) => {
       });
     }
 
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -430,7 +438,9 @@ router.delete("/requests/:id", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -517,7 +527,9 @@ router.delete("/users/:username", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 

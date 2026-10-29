@@ -64,7 +64,9 @@ router.get("/", async (req, res) => {
     res.json({ users });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -103,7 +105,9 @@ router.get("/:username", async (req, res) => {
     res.json({ user });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -235,7 +239,9 @@ router.patch("/me", async (req, res) => {
     }
 
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
