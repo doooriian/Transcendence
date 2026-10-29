@@ -228,22 +228,22 @@ function CapturedTray({
 	const slots = getCapturedSlots(pieces);
 
 	return (
-		<div className={`flex h-48 w-full flex-col items-center p-3 shadow-2xl ring-4 ring-purple-500/20 ${backgroundClassName} ${borderThemeClass}`}>
-			<p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-white/60">
+		<div className={`flex h-full w-full flex-col items-center p-3 shadow-2xl ring-4 ring-purple-500/20 ${backgroundClassName} ${borderThemeClass}`}>
+			<p className="mb-2 shrink-0 text-center text-xs font-semibold uppercase tracking-wider text-white/60">
 				{label}
 				{pieces.length > 0 && (
 					<span className="ml-1 text-white/40">({pieces.length})</span>
 				)}
 			</p>
 
-			<div className="grid w-full grid-cols-5 place-items-center gap-1">
+			<div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-5 place-items-center gap-1">
 				{slots.map(({ type, piece }, index) => (
 					<img
 						key={`${type}-${index}`}
 						src={(piece ? getPieceImage(piece) : getPieceSilhouette(type)) ?? undefined}
 						alt={piece ? type : ""}
 						aria-hidden={piece ? undefined : true}
-						className={`h-8 w-8 object-contain ${piece ? "drop-shadow-md" : "opacity-40"}`}
+						className={`h-full w-full object-contain ${piece ? "drop-shadow-md" : "opacity-40"}`}
 					/>
 				))}
 			</div>
@@ -1015,17 +1015,17 @@ function Chess() {
 
 					<br></br>
 
-					<div className="mx-auto flex w-full items-start justify-center gap-4">
+					<div className="mx-auto flex w-full items-stretch justify-center gap-4">
 
-						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{game && game.black !== null ? (
-								<CapturedTray
-									pieces={capturedByMe}
-									label="Captured by you"
-									backgroundClassName="bg-gradient-to-r from-cyan-900 to-teal-500"
-								/>
-							) : (
-								<div aria-hidden="true" className="w-full" />
+						<div className="relative hidden w-56 shrink-0 lg:block">
+							{game && game.black !== null && (
+								<div className="absolute inset-0">
+									<CapturedTray
+										pieces={capturedByMe}
+										label="Captured by you"
+										backgroundClassName="bg-gradient-to-r from-cyan-900 to-teal-500"
+									/>
+								</div>
 							)}
 						</div>
 
@@ -1140,14 +1140,14 @@ function Chess() {
 							)}
 						</div>
 
-						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{game && game.black !== null ? (
-								<CapturedTray
-									pieces={capturedByOpponent}
-									label="Captured by opponent"
-								/>
-							) : (
-								<div aria-hidden="true" className="w-full" />
+						<div className="relative hidden w-56 shrink-0 lg:block">
+							{game && game.black !== null && (
+								<div className="absolute inset-0">
+									<CapturedTray
+										pieces={capturedByOpponent}
+										label="Captured by opponent"
+									/>
+								</div>
 							)}
 						</div>
 					</div>
