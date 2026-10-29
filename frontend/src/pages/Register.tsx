@@ -19,15 +19,19 @@ function Register() {
 	async function handleRegister() {
 		setError("");
 
-		const result = await register(username, email, password);
+		try {
+			const result = await register(username, email, password);
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			login(result.data.authId, result.data.username, result.data.token);
+			navigate("/");
+		} catch {
+			setError("Unable to reach server");
 		}
-
-		login(result.data.authId, result.data.username, result.data.token);
-		navigate("/");
 	}
 
 	return (

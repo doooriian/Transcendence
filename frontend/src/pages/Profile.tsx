@@ -4,6 +4,7 @@ import { getMyProfile, getUser, updateMyProfile, type User } from "../services/u
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
+import socket from "../services/socket";
 
 import {
 	getFriends,
@@ -46,17 +47,21 @@ function Profile() {
 
 			const currentUsername = localStorage.getItem("username");
 
-			let result;
+			try {
+				let result;
 
-			if (username === currentUsername)
-				result = await getMyProfile();
-			else
-				result = await getUser(username);
+				if (username === currentUsername)
+					result = await getMyProfile();
+				else
+					result = await getUser(username);
 
-			if (result.ok)
-				setUser(result.data);
-			else
-				setUser(null);
+				if (result.ok)
+					setUser(result.data);
+				else
+					setUser(null);
+			} catch {
+			setUser(null);
+			}
 		}
 
 		loadUser();
@@ -80,17 +85,19 @@ function Profile() {
 					setReceivedRequests(requestsResult.received);
 					setSentRequests(requestsResult.sent);
 				}
-			} catch (error) {
-				console.error(error);
+			} catch {
+				setError("Unable to reach server");
 			}
 		}
 
 		loadFriendData();
 
-		const intervalId = setInterval(loadFriendData, 1000);
+		socket.on("connect", loadFriendData);
+		socket.on("friends:changed", loadFriendData);
 
 		return () => {
-			clearInterval(intervalId);
+			socket.off("connect", loadFriendData);
+			socket.off("friends:changed", loadFriendData);
 		};
 	}, [username, myUsername]);
 
@@ -102,22 +109,25 @@ function Profile() {
 		setLoadingFriendAction(true);
 		setError("");
 
-		const result = await sendFriendRequest(username);
+		try {
+			const result = await sendFriendRequest(username);
 
-		if (!result.ok) {
-			setError(result.data.message);
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			const requestsResult = await getFriendRequests();
+
+			if (requestsResult.ok) {
+				setReceivedRequests(requestsResult.received);
+				setSentRequests(requestsResult.sent);
+			}
+		} catch {
+			setError("Unable to reach server");
+		} finally {
 			setLoadingFriendAction(false);
-			return;
 		}
-
-		const requestsResult = await getFriendRequests();
-
-		if (requestsResult.ok) {
-			setReceivedRequests(requestsResult.received);
-			setSentRequests(requestsResult.sent);
-		}
-
-		setLoadingFriendAction(false);
 	}
 
 
@@ -125,26 +135,29 @@ function Profile() {
 		setLoadingFriendAction(true);
 		setError("");
 
-		const result = await acceptFriendRequest(id);
+		try {
+			const result = await acceptFriendRequest(id);
 
-		if (!result.ok) {
-			setError(result.data.message);
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			const friendsResult = await getFriends();
+			const requestsResult = await getFriendRequests();
+
+			if (friendsResult.ok)
+				setFriends(friendsResult.friends);
+
+			if (requestsResult.ok) {
+				setReceivedRequests(requestsResult.received);
+				setSentRequests(requestsResult.sent);
+			}
+		} catch {
+			setError("Unable to reach server");
+		} finally {
 			setLoadingFriendAction(false);
-			return;
 		}
-
-		const friendsResult = await getFriends();
-		const requestsResult = await getFriendRequests();
-
-		if (friendsResult.ok)
-			setFriends(friendsResult.friends);
-
-		if (requestsResult.ok) {
-			setReceivedRequests(requestsResult.received);
-			setSentRequests(requestsResult.sent);
-		}
-
-		setLoadingFriendAction(false);
 	}
 
 
@@ -152,19 +165,22 @@ function Profile() {
 		setLoadingFriendAction(true);
 		setError("");
 
-		const result = await deleteFriendRequest(id);
+		try {
+			const result = await deleteFriendRequest(id);
 
-		if (!result.ok) {
-			setError(result.data.message);
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			setReceivedRequests((current) =>
+				current.filter((request) => request.id !== id)
+			);
+		} catch {
+			setError("Unable to reach server");
+		} finally {
 			setLoadingFriendAction(false);
-			return;
 		}
-
-		setReceivedRequests((current) =>
-			current.filter((request) => request.id !== id)
-		);
-
-		setLoadingFriendAction(false);
 	}
 
 

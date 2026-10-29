@@ -21,15 +21,20 @@ function Login() {
 
 	async function handleLogin() {
 		setError("");
-		const result = await loginResponse(email, password);
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
+		try {
+			const result = await loginResponse(email, password);
+
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			login(result.data.authId, result.data.username, result.data.token);
+			navigate("/");
+		} catch {
+			setError("Unable to reach server");
 		}
-
-		login(result.data.authId, result.data.username, result.data.token);
-		navigate("/");
 	}
 
 	return (
