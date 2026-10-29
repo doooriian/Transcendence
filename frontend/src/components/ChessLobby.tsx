@@ -79,6 +79,7 @@ export default function ChessLobby({
                 type="text"
                 placeholder="Paste game ID here"
                 value={joinGameId}
+                maxLength={36}
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
                   onJoinGameIdChange(event.target.value)
                 }

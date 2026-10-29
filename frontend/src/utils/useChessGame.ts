@@ -156,7 +156,13 @@ export function useChessGame() {
 
   function joinGame() {
     const gameId = joinGameId.trim();
-    if (!gameId) return;
+    const gameIdPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (!gameIdPattern.test(gameId)) {
+      setError("Invalid game ID");
+      return;
+    }
 
     setError(null);
     socket.emit("game:join", gameId);
