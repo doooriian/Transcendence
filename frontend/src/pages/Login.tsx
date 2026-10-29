@@ -28,7 +28,7 @@ function Login() {
 			return;
 		}
 
-		login(result.data.username, result.data.token);
+		login(result.data.authId, result.data.username, result.data.token);
 		navigate("/");
 	}
 
@@ -36,12 +36,12 @@ function Login() {
 		<div className="min-h-screen flex flex-col">
 		<Header/>
 
-		<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-10 pb-16">
+		<main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4 py-8 sm:py-10 sm:pb-16">
 
-			<section className={`w-full max-w-md rounded-2xl container-theme-${theme} border border-slate-800 p-8 shadow-xl`}>
+			<section className={`w-full max-w-md min-w-0 rounded-2xl container-theme-${theme} border border-slate-800 p-5 shadow-xl sm:p-8`}>
 
 				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold">
+					<h1 className="text-3xl font-bold sm:text-4xl">
 						♟ ft_chess
 					</h1>
 

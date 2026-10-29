@@ -4,7 +4,7 @@ function Footer() {
 	return (
 		<footer className="border-t border-slate-800 bg-slate-950">
 			<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row">
-				
+
 				<div className="text-sm text-slate-400">
 					<span className="font-bold text-white">
 						♟ ft_chess
@@ -12,7 +12,7 @@ function Footer() {
 					{" "}— © 2026
 				</div>
 
-				<div className="flex gap-6 text-sm">
+				<div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-center text-sm sm:gap-6">
 					<Link
 						to="/"
 						onClick={() => {

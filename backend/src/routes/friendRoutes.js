@@ -16,7 +16,7 @@ router.use(authToken);
  * Response:
  * {
  *   friends: [
- *     { username: "John", isOnline: true }
+ *     { authId: "...", username: "John", isOnline: true }
  *   ]
  * }
  */
@@ -46,6 +46,7 @@ router.get("/", async (req, res) => {
 
     const friends = friendList.friendships.map((friendship) => {
       return {
+        authId: friendship.friend.authId,
         username: friendship.friend.username,
         isOnline: isUserOnline(friendship.friend.authId),
       };

@@ -11,8 +11,9 @@ import socket from "../services/socket";
 
 type AuthContextType = {
 	isLoggedIn: boolean;
+	authId: string | null,
 	username: string | null;
-	login: (username: string, token: string) => void;
+	login: (authId: string, username: string, token: string) => void;
 	logout: () => void;
 	updateUsername: (username: string) => void;
 };
@@ -26,17 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		localStorage.getItem("token") !== null,
 	);
 
+	const [authId, setAuthId] = useState(
+		localStorage.getItem("authId"),
+	);
+
 	const [username, setUsername] = useState(
 		localStorage.getItem("username"),
 	);
 
 	const [sessionExpired, setSessionExpired] = useState(false);
 
-	function login(username: string, token: string) {
+	function login(authId: string, username: string, token: string) {
 		localStorage.setItem("token", token);
+		localStorage.setItem("authId", authId);
 		localStorage.setItem("username", username);
 
 		setIsLoggedIn(true);
+		setAuthId(authId);
 		setUsername(username);
 		setSessionExpired(false);
 
@@ -54,9 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		socket.auth = {};
 
 		localStorage.removeItem("token");
+		localStorage.removeItem("authId");
 		localStorage.removeItem("username");
 
 		setIsLoggedIn(false);
+		setAuthId(null);
 		setUsername(null);
 		setSessionExpired(false);
 
@@ -65,18 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		function handleUnauthorized() {
-			// Évite d'afficher plusieurs popups
 			setSessionExpired(true);
 
-			// On déconnecte déjà le socket
 			socket.disconnect();
 			socket.auth = {};
 
-			// On supprime les informations de session
 			localStorage.removeItem("token");
+			localStorage.removeItem("authId");
 			localStorage.removeItem("username");
 
 			setIsLoggedIn(false);
+			setAuthId(null);
 			setUsername(null);
 		}
 
@@ -111,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		<AuthContext.Provider
 			value={{
 				isLoggedIn,
+				authId,
 				username,
 				login,
 				logout,
@@ -121,26 +130,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			{sessionExpired && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-					<div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-8 text-center shadow-2xl">
+					<div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5 text-center shadow-2xl sm:p-8">
 						<div className="mb-4 text-5xl">
 							⏱️
 						</div>
 
 						<h2 className="mb-3 text-2xl font-bold text-white">
-							Session expirée
+							Session expired
 						</h2>
 
 						<p className="mb-6 text-slate-400">
-							Votre session a expiré.
+							Your session has expired.
 							<br />
-							Veuillez vous reconnecter pour continuer.
+							Please log in again to continue.
 						</p>
 
 						<button
 							onClick={handleSessionExpired}
 							className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
 						>
-							Se reconnecter
+							Log in again
 						</button>
 					</div>
 				</div>

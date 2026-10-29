@@ -5,15 +5,15 @@ function NotFound() {
 	return (
         <>
         <Header/>
-		<main className="min-h-screen flex items-center justify-center">
+		<main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4 py-12">
 
 			<section className="text-center">
 
-				<p className="text-8xl font-bold text-blue-500">
+				<p className="text-6xl font-bold text-blue-500 sm:text-8xl">
 					404
 				</p>
 
-				<h1 className="mt-6 text-4xl font-bold">
+				<h1 className="mt-6 text-2xl font-bold sm:text-4xl">
 					Page not found
 				</h1>
 

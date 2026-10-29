@@ -1,1420 +1,245 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import DrawOfferDialog from "../components/DrawOfferDialog";
-import socket from "../services/socket";
-import { getMyProfile } from "../services/users";
-
-import bb from "../assets/pieces/bb.svg";
-import bw from "../assets/pieces/bw.svg";
-import kb from "../assets/pieces/kb.svg";
-import kw from "../assets/pieces/kw.svg";
-import nb from "../assets/pieces/nb.svg";
-import nw from "../assets/pieces/nw.svg";
-import pb from "../assets/pieces/pb.svg";
-import pw from "../assets/pieces/pw.svg";
-import qb from "../assets/pieces/qb.svg";
-import qw from "../assets/pieces/qw.svg";
-import rb from "../assets/pieces/rb.svg";
-import rw from "../assets/pieces/rw.svg";
-
-import shapeB from "../assets/pieces_shape/b.svg";
-import shapeK from "../assets/pieces_shape/k.svg";
-import shapeN from "../assets/pieces_shape/n.svg";
-import shapeP from "../assets/pieces_shape/p.svg";
-import shapeQ from "../assets/pieces_shape/q.svg";
-import shapeR from "../assets/pieces_shape/r.svg";
-
-
-const borderThemeClass = "rounded-2xl overflow-hidden border-8 border-olive-950";
-const whiteCaseClass = "bg-gradient-to-br from-stone-600 via-stone-300 to-white";
-const darkCaseClass = "bg-gradient-to-br from-black via-stone-800 to-black";
-
-type ChessPiece = {
-	chessPieceType: string;
-	chessPieceColor: "white" | "black";
-} | null;
-
-type ChessMove = {
-	chessPlayerColor: "white" | "black";
-	startingSquare: string;
-	targetSquare: string;
-	chessPieceType: string;
-	capturedChessPieceType: string | null;
-	promotionChessPieceType: string | null;
-	standardAlgebraicNotation: string;
-};
-
-type LegalMove = Omit<ChessMove, "chessPlayerColor">;
-
-type ChessGame = {
-	id: string;
-	white: string;
-	black: string | null;
-	bot: { difficulty: "easy" | "medium" | "hard"} | null;
-	draw: {
-		offer: { id: string; offeredBy: string; responseAvailableAt: number } | null;
-		offersMade: { white: number; black: number };
-		maxOffers: number;
-		responseDelayMs: number;
-	};
-	chess: {
-		chessBoard: ChessPiece[][];
-		currentPlayerColor: "white" | "black";
-		isGameFinished: boolean;
-		chessGameResult: string | null;
-		chessGameEndReason: string | null;
-		isCurrentPlayerInCheck: boolean;
-		currentPositionFen: string;
-		moveHistory: ChessMove[];
-	};
-};
-
-const caseBoard = [
-	["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
-	["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
-	["a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"],
-	["a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"],
-	["a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"],
-	["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3"],
-	["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
-	["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"],
-];
-
-function getPieceImage(piece: ChessPiece) {
-	if (!piece) {
-		return undefined;
-	}
-
-	if (piece.chessPieceColor === "white") {
-		switch (piece.chessPieceType) {
-			case "pawn":
-				return pw;
-			case "rook":
-				return rw;
-			case "knight":
-				return nw;
-			case "bishop":
-				return bw;
-			case "queen":
-				return qw;
-			case "king":
-				return kw;
-		}
-	}
-
-	if (piece.chessPieceColor === "black") {
-		switch (piece.chessPieceType) {
-			case "pawn":
-				return pb;
-			case "rook":
-				return rb;
-			case "knight":
-				return nb;
-			case "bishop":
-				return bb;
-			case "queen":
-				return qb;
-			case "king":
-				return kb;
-		}
-	}
-
-	return undefined;
-}
-
-function getPieceSilhouette(chessPieceType: string) {
-	switch (chessPieceType) {
-		case "pawn":
-			return shapeP;
-		case "rook":
-			return shapeR;
-		case "knight":
-			return shapeN;
-		case "bishop":
-			return shapeB;
-		case "queen":
-			return shapeQ;
-		case "king":
-			return shapeK;
-	}
-
-	return undefined;
-}
-
-const CAPTURED_PIECE_ORDER = [
-	"queen",
-	"rook",
-	"bishop",
-	"knight",
-	"pawn",
-] as const;
-
-const CAPTURED_PIECE_SLOT_LAYOUT = [
-	"queen",
-	"rook",
-	"rook",
-	"bishop",
-	"bishop",
-	"knight",
-	"knight",
-	"pawn",
-	"pawn",
-	"pawn",
-	"pawn",
-	"pawn",
-	"pawn",
-	"pawn",
-	"pawn",
-] as const;
-
-const CAPTURED_PIECE_RANK = new Map<string, number>(
-	CAPTURED_PIECE_ORDER.map((type, index) => [type, index] as const),
-);
-
-type ChessPieceData = NonNullable<ChessPiece>;
-
-function getCapturedPieces(
-	moveHistory: ChessMove[],
-	capturedColor: "white" | "black",
-): ChessPieceData[] {
-	const captured: ChessPieceData[] = [];
-
-	for (const move of moveHistory) {
-		if (
-			move.capturedChessPieceType === null
-			|| move.chessPlayerColor === capturedColor
-		) {
-			continue;
-		}
-
-		captured.push({
-			chessPieceType: move.capturedChessPieceType,
-			chessPieceColor: capturedColor,
-		});
-	}
-
-	return captured.sort(
-		(a, b) =>
-			(CAPTURED_PIECE_RANK.get(a.chessPieceType) ?? CAPTURED_PIECE_ORDER.length)
-			- (CAPTURED_PIECE_RANK.get(b.chessPieceType) ?? CAPTURED_PIECE_ORDER.length),
-	);
-}
-
-function getCapturedSlots(pieces: ChessPieceData[]) {
-	const availablePieces = new Map<string, ChessPieceData[]>();
-
-	for (const piece of pieces) {
-		const piecesOfType = availablePieces.get(piece.chessPieceType) ?? [];
-		piecesOfType.push(piece);
-		availablePieces.set(piece.chessPieceType, piecesOfType);
-	}
-
-	return CAPTURED_PIECE_SLOT_LAYOUT.map((type) => ({
-		type,
-		piece: availablePieces.get(type)?.shift() ?? null,
-	}));
-}
-
-const KNIGHT_ATTACK_OFFSETS = [
-	[-2, -1],
-	[-2, 1],
-	[-1, -2],
-	[-1, 2],
-	[1, -2],
-	[1, 2],
-	[2, -1],
-	[2, 1],
-] as const;
-
-const KING_ATTACK_OFFSETS = [
-	[-1, -1],
-	[-1, 0],
-	[-1, 1],
-	[0, -1],
-	[0, 1],
-	[1, -1],
-	[1, 0],
-	[1, 1],
-] as const;
-
-const BISHOP_ATTACK_DIRECTIONS = [
-	[-1, -1],
-	[-1, 1],
-	[1, -1],
-	[1, 1],
-] as const;
-
-const ROOK_ATTACK_DIRECTIONS = [
-	[-1, 0],
-	[1, 0],
-	[0, -1],
-	[0, 1],
-] as const;
-
-function isInsideBoard(row: number, col: number) {
-	return row >= 0 && row < 8 && col >= 0 && col < 8;
-}
-
-function getThreatenedSquares(
-	chessBoard: ChessPiece[][],
-	threatenedColor: "white" | "black",
-): Set<string> {
-	const attackerColor = threatenedColor === "white" ? "black" : "white";
-	const attackedSquares = new Set<string>();
-
-	function addAttack(row: number, col: number) {
-		if (isInsideBoard(row, col)) {
-			attackedSquares.add(caseBoard[row][col]);
-		}
-	}
-
-	function addSlidingAttacks(
-		row: number,
-		col: number,
-		directions: readonly (readonly [number, number])[],
-	) {
-		for (const [rowStep, colStep] of directions) {
-			let attackRow = row + rowStep;
-			let attackCol = col + colStep;
-
-			while (isInsideBoard(attackRow, attackCol)) {
-				attackedSquares.add(caseBoard[attackRow][attackCol]);
-
-				if (chessBoard[attackRow][attackCol] !== null) {
-					break;
-				}
-
-				attackRow += rowStep;
-				attackCol += colStep;
-			}
-		}
-	}
-
-	chessBoard.forEach((row, rowIndex) => {
-		row.forEach((piece, columnIndex) => {
-			if (!piece || piece.chessPieceColor !== attackerColor) {
-				return;
-			}
-
-			switch (piece.chessPieceType) {
-				case "pawn": {
-					const rowStep = attackerColor === "white" ? -1 : 1;
-					addAttack(rowIndex + rowStep, columnIndex - 1);
-					addAttack(rowIndex + rowStep, columnIndex + 1);
-					break;
-				}
-				case "knight":
-					for (const [rowStep, colStep] of KNIGHT_ATTACK_OFFSETS) {
-						addAttack(rowIndex + rowStep, columnIndex + colStep);
-					}
-					break;
-				case "king":
-					for (const [rowStep, colStep] of KING_ATTACK_OFFSETS) {
-						addAttack(rowIndex + rowStep, columnIndex + colStep);
-					}
-					break;
-				case "bishop":
-					addSlidingAttacks(rowIndex, columnIndex, BISHOP_ATTACK_DIRECTIONS);
-					break;
-				case "rook":
-					addSlidingAttacks(rowIndex, columnIndex, ROOK_ATTACK_DIRECTIONS);
-					break;
-				case "queen":
-					addSlidingAttacks(rowIndex, columnIndex, BISHOP_ATTACK_DIRECTIONS);
-					addSlidingAttacks(rowIndex, columnIndex, ROOK_ATTACK_DIRECTIONS);
-					break;
-			}
-		});
-	});
-
-	const threatenedSquares = new Set<string>();
-
-	chessBoard.forEach((row, rowIndex) => {
-		row.forEach((piece, columnIndex) => {
-			const square = caseBoard[rowIndex][columnIndex];
-
-			if (
-				piece
-				&& piece.chessPieceColor === threatenedColor
-				&& piece.chessPieceType !== "king"
-				&& attackedSquares.has(square)
-			) {
-				threatenedSquares.add(square);
-			}
-		});
-	});
-
-	return threatenedSquares;
-}
-
-const SQUARE_HIGHLIGHT_STYLES = {
-	violet: {
-		strong: "bg-violet-500/60 ring-4 ring-inset ring-violet-400",
-		light: "bg-violet-300/15 ring-4 ring-inset ring-violet-300/40",
-	},
-	emerald: {
-		strong: "bg-emerald-400/40 ring-4 ring-inset ring-emerald-300",
-		light: "bg-emerald-300/15 ring-4 ring-inset ring-emerald-300/40",
-	},
-	red: {
-		strong: "bg-red-500/40 ring-4 ring-inset ring-red-500",
-		light: "bg-red-400/20 ring-4 ring-inset ring-red-400/40",
-	},
-	amber: {
-		strong: "bg-amber-300/40 ring-4 ring-inset ring-amber-300",
-		light: "bg-amber-200/20 ring-4 ring-inset ring-amber-300/40",
-	},
-} as const;
-
-type SquareHighlightTone = keyof typeof SQUARE_HIGHLIGHT_STYLES;
-type SquareHighlightVariant = keyof (typeof SQUARE_HIGHLIGHT_STYLES)["emerald"];
-
-function SquareHighlight({
-	tone,
-	variant,
-}: {
-	tone: SquareHighlightTone;
-	variant: SquareHighlightVariant;
-}) {
-	return (
-		<div
-			className={`pointer-events-none absolute inset-0 ${SQUARE_HIGHLIGHT_STYLES[tone][variant]}`}
-		/>
-	);
-}
-
-function CapturedTray({
-	pieces,
-	label,
-	backgroundClassName = "bg-gradient-to-r from-red-700 to-orange-500",
-}: {
-	pieces: ChessPieceData[];
-	label: string;
-	backgroundClassName?: string;
-}) {
-	const slots = getCapturedSlots(pieces);
-
-	return (
-		<div className={`flex h-full w-full flex-col items-center p-3 shadow-2xl ring-4 ring-purple-500/20 ${backgroundClassName} ${borderThemeClass}`}>
-			<p className="mb-2 shrink-0 text-center text-xs font-semibold uppercase tracking-wider text-white/60">
-				{label}
-				{pieces.length > 0 && (
-					<span className="ml-1 text-white/40">({pieces.length})</span>
-				)}
-			</p>
-
-			<div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-5 place-items-center gap-1">
-				{slots.map(({ type, piece }, index) => (
-					<img
-						key={`${type}-${index}`}
-						src={(piece ? getPieceImage(piece) : getPieceSilhouette(type)) ?? undefined}
-						alt={piece ? type : ""}
-						aria-hidden={piece ? undefined : true}
-						className={`h-full w-full object-contain ${piece ? "drop-shadow-md" : "opacity-40"}`}
-					/>
-				))}
-			</div>
-		</div>
-	);
-}
+import CapturedTray from "../components/CapturedTray";
+import ChessBoard from "../components/ChessBoard";
+import ChessGameControls from "../components/ChessGameControls";
+import ChessLobby from "../components/ChessLobby";
+import PromotionDialog from "../components/PromotionDialog";
+import { useChessGame } from "../utils/useChessGame";
+import { getCapturedPieces } from "../utils/capturedPieces";
+import { createChessAppearance } from "../utils/pieces";
 
 function Chess() {
-	const theme = "blue";
-	const [game, setGame] = useState<ChessGame | null>(null);
-	const [error, setError] = useState<string | null>(null);
-	const [joinGameId, setJoinGameId] = useState("");
-	const [showJoinInput, setShowJoinInput] = useState(false);
-	const [showBotInput, setShowBotInput] = useState(false);
-	const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
-	const [botError, setBotError] = useState(false);
-	const [drawResponsePending, setDrawResponsePending] = useState(false);
-	const [myAuthId, setMyAuthId] = useState<string | null>(null);
-
-	let myColor: "white" | "black" | null = null;
-
-	if (game && myAuthId) {
-		if (game.white === myAuthId) {
-			myColor = "white";
-		}
-		else if (game.black === myAuthId) {
-			myColor = "black";
-		}
-	}
-
-	const [draggedPiece, setDraggedPiece] = useState<{
-		row: number;
-		col: number;
-		piece: ChessPiece;
-	} | null>(null);
-
-	
-	const [selectedSquare, setSelectedSquare] = useState<{
-		row: number;
-		col: number;
-	} | null>(null);
-
-	const [promotionSquare, setPromotionSquare] = useState<{
-		startingSquare: string;
-		targetSquare: string;
-		pieceColor: "white" | "black";
-	} | null>(null);
-
-	const [legalMoves, setLegalMoves] = useState<LegalMove[]>([]);
-
-	const [mousePosition, setMousePosition] = useState({
-		x: 0,
-		y: 0,
-	});
-
-
-	useEffect(() => {
-		async function loadProfile() {
-			const result = await getMyProfile();
-
-			if (result.ok) {
-				setMyAuthId(result.data.authId);
-			}
-		}
-
-		loadProfile();
-	}, []);
-
-	useEffect(() => {
-		function updateGame(gameState: ChessGame) {
-			setDrawResponsePending(false);
-			setPromotionSquare(null);
-			if (!gameState) {
-				setGame(null);
-				return;
-			}
-			console.log("GAME RECUE :", gameState);
-			console.log("BOARD RECUE :", gameState.chess?.chessBoard);
-
-			setGame(gameState);
-			setDraggedPiece(null);
-			setSelectedSquare(null);
-			setLegalMoves([]);
-			setError("");
-			setBotError(false);
-		}
-
-		function handleGameActive(gameState: ChessGame | null) {
-			setGame(gameState);
-			setDraggedPiece(null);
-			setSelectedSquare(null);
-			setLegalMoves([]);
-			setDrawResponsePending(false);
-			// Allow recovery if a bot failure happened while this client was offline.
-			setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
-		}
-
-		function handleLegalMoves(data: {
-			startingSquare: string;
-			legalMoves: LegalMove[];
-		}) {
-			setLegalMoves(data.legalMoves);
-		}
-
-		function handleGameError(data: { message: string }) {
-			console.error(data.message);
-			setError(data.message);
-			setDraggedPiece(null);
-			setDrawResponsePending(false);
-		}
-		function handleDrawUpdated(gameState: ChessGame) {
-			setGame(gameState);
-			setDraggedPiece(null);
-			setSelectedSquare(null);
-			setLegalMoves([]);
-			setPromotionSquare(null);
-			setDrawResponsePending(false);
-			setError(null);
-		}
-		function handleBotError(data: { message: string }) {
-			setError(data.message);
-			setBotError(true);
-		}
-		function refreshGame() { socket.emit("game:get-active"); }
-
-		socket.on("game:created", updateGame);
-		socket.on("game:ready", updateGame);
-		socket.on("game:updated", updateGame);
-		socket.on("game:ended", updateGame);
-
-		socket.on("game:active", handleGameActive);
-		socket.on("game:legal-moves", handleLegalMoves);
-		socket.on("game:error", handleGameError);
-		socket.on("game:bot-error", handleBotError);
-		socket.on("game:draw-updated", handleDrawUpdated);
-		socket.on("connect", refreshGame);
-
-		socket.emit("game:get-active");
-
-		return () => {
-			socket.off("game:created", updateGame);
-			socket.off("game:ready", updateGame);
-			socket.off("game:updated", updateGame);
-			socket.off("game:ended", updateGame);
-
-			socket.off("game:active", handleGameActive);
-			socket.off("game:legal-moves", handleLegalMoves);
-			socket.off("game:error", handleGameError);
-			socket.off("game:bot-error", handleBotError);
-			socket.off("game:draw-updated", handleDrawUpdated);
-			socket.off("connect", refreshGame);
-		};
-	}, []);
-
-	function askID() {
-		if (searchingGame && myAuthId && searchingGame.white === myAuthId) {
-			socket.emit("game:leave", searchingGame.id);
-			setGame(null);
-			setLegalMoves([]);
-			setDraggedPiece(null);
-			setSelectedSquare(null);
-		}
-
-		setShowJoinInput(true);
-		setShowBotInput(false);
-		setError(null);
-	}
-
-	function askDifficulty() {
-		if (searchingGame && myAuthId && searchingGame.white === myAuthId) {
-			socket.emit("game:leave", searchingGame.id);
-			setGame(null);
-			setLegalMoves([]);
-			setDraggedPiece(null);
-			setSelectedSquare(null);
-		}
-
-		setShowBotInput(true);
-		setShowJoinInput(false);
-		setError(null);
-	}
-
-	function createGame() {
-		setError(null);
-		setShowJoinInput(false);
-		setShowBotInput(false);
-		socket.emit("game:create");
-	}
-
-	function createBotGame() {
-		setError(null);
-		setBotError(false);
-		socket.emit("game:create", { mode: "bot", difficulty: botDifficulty });
-	}
-
-	function joinGame() {
-		
-		const gameId = joinGameId.trim();
-
-		if (gameId === "") {
-			return;
-		}
-
-		setError(null);
-		socket.emit("game:join", gameId);
-		setJoinGameId("");
-	}
-
-	function cancelGame() {
-		if (!game)
-			return;
-
-		socket.emit("game:leave", game.id);
-
-		setGame(null);
-		setJoinGameId("");
-		setLegalMoves([]);
-	}
-
-	function resignGame() {
-		if (!game)
-			return;
-
-		socket.emit("game:resign", game.id);
-	}
-
-	function offerDraw() {
-		if (!game) return;
-		setError(null);
-		socket.emit("game:offer-draw", { gameId: game.id });
-	}
-
-	function respondToDraw(accept: boolean) {
-		if (!game || !game.draw.offer || drawResponsePending) return;
-		setError(null);
-		setDrawResponsePending(true);
-		socket.emit("game:respond-draw", {
-			gameId: game.id,
-			offerId: game.draw.offer.id,
-			accept: accept,
-		});
-	}
-
-	function endGame() {
-		if (!game)
-			return;
-
-		setError("");
-		setJoinGameId("");
-		setLegalMoves([]);
-		setGame(null);
-	}
-
-	function backHome() {
-		if (!game)
-			return;
-
-		setError("");
-		setJoinGameId("");
-		setLegalMoves([]);
-		setGame(null);
-	}
-
-	function getEndReasonText(reason: string | null) {
-		switch (reason) {
-			case "checkmate":
-				return "Mat";
-			case "resignation":
-				return "Give up";
-			case "stalemate":
-				return "Pat";
-			case "draw":
-				return "Null";
-			case "agreement":
-				return "Draw by agreement";
-			default:
-				return "Game over";
-		}
-	}
-
-	function getGameResult(result: string | null) {
-		if (result === "draw") {
-			return "Draw";
-		}
-
-		if (result === "whitePlayerWon") {
-			return myColor === "white"
-				? "Victory"
-				: "Defeat";
-		}
-
-		if (result === "blackPlayerWon") {
-			return myColor === "black"
-				? "Victory"
-				: "Defeat";
-		}
-
-		return "Game over";
-	}
-
-	function getBackendCoordinates(row: number, col: number) {
-		if (myColor === "black") {
-			return {
-				row: 7 - row,
-				col: 7 - col,
-			};
-		}
-
-		return {
-			row,
-			col,
-		};
-	}
-
-	
-	function handleSquareClick(row: number, col: number) {
-		if (!game || game.chess.isGameFinished || game.draw.offer !== null) {
-			return;
-		}
-
-		const {
-			row: backendRow,
-			col: backendCol,
-		} = getBackendCoordinates(row, col);
-
-		const piece = game.chess.chessBoard[backendRow][backendCol];
-		const square = displayedCaseBoard[row][col];
-
-		if (selectedSquare) {
-			const {
-				row: startBackendRow,
-				col: startBackendCol,
-			} = getBackendCoordinates(
-				selectedSquare.row,
-				selectedSquare.col
-			);
-
-			const startingSquare =
-				caseBoard[startBackendRow][startBackendCol];
-
-			const moveIsLegal = legalMoves.some(
-				(move) => move.targetSquare === square
-			);
-
-			if (moveIsLegal) {
-				const selectedPiece =
-					game.chess.chessBoard[startBackendRow][startBackendCol];
-
-				const isPromotion =
-					selectedPiece?.chessPieceType === "pawn" &&
-					(
-						(selectedPiece.chessPieceColor === "white" &&
-							square[1] === "8") ||
-						(selectedPiece.chessPieceColor === "black" &&
-							square[1] === "1")
-					);
-
-				if (isPromotion && selectedPiece) {
-					setPromotionSquare({
-						startingSquare,
-						targetSquare: square,
-						pieceColor: selectedPiece.chessPieceColor,
-					});
-				} else {
-					socket.emit("game:move", {
-						gameId: game.id,
-						move: {
-							startingSquare,
-							targetSquare: square,
-						},
-					});
-				}
-
-				setSelectedSquare(null);
-				setLegalMoves([]);
-				setDraggedPiece(null);
-				return;
-			}
-		}
-
-		if (piece && piece.chessPieceColor === game.chess.currentPlayerColor) {
-			setSelectedSquare({ row, col });
-
-			socket.emit("game:get-legal-moves", {
-				gameId: game.id,
-				startingSquare: square,
-			});
-
-			return;
-		}
-
-		setSelectedSquare(null);
-		setLegalMoves([]);
-	}
-
-	const handleMouseDown = (
-		event: React.MouseEvent,
-		row: number,
-		col: number
-	) => {
-		if (!game) {
-			return;
-		}
-
-		const { row: backendRow, col: backendCol } =
-			getBackendCoordinates(row, col);
-
-		const piece = game.chess.chessBoard[backendRow][backendCol];
-		if (game.chess.isGameFinished || !game.black
-			|| game.draw.offer !== null
-			|| game.chess.currentPlayerColor !== myColor || piece?.chessPieceColor !== myColor) return;
-
-		if (piece === null) {
-			return;
-		}
-
-		event.preventDefault();
-
-		const startingSquare = caseBoard[backendRow][backendCol];
-
-		socket.emit("game:get-legal-moves", {
-			gameId: game.id,
-			startingSquare,
-		});
-
-		setDraggedPiece({
-			row,
-			col,
-			piece,
-		});
-
-		setMousePosition({
-			x: event.clientX,
-			y: event.clientY,
-		});
-	};
-
-	const handleMouseMove = (event: React.MouseEvent) => {
-		if (!draggedPiece) {
-			return;
-		}
-
-		setMousePosition({
-			x: event.clientX,
-			y: event.clientY,
-		});
-	};
-
-	const handleMouseUp = (event: React.MouseEvent) => {
-		if (!draggedPiece || !game || game.draw.offer !== null) {
-			return;
-		}
-
-		const boardElement = event.currentTarget as HTMLElement;
-		const rect = boardElement.getBoundingClientRect();
-
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
-
-		if (
-			x < 0 ||
-			y < 0 ||
-			x > rect.width ||
-			y > rect.height
-		) {
-			setDraggedPiece(null);
-			setLegalMoves([]);
-			return;
-		}
-
-		const squareWidth = rect.width / 8;
-		const squareHeight = rect.height / 8;
-
-		const targetCol = Math.floor(x / squareWidth);
-		const targetRow = Math.floor(y / squareHeight);
-
-		const {
-			row: startBackendRow,
-			col: startBackendCol,
-		} = getBackendCoordinates(
-			draggedPiece.row,
-			draggedPiece.col
-		);
-
-		const startingSquare =
-			caseBoard[startBackendRow][startBackendCol];
-
-		const {
-			row: targetBackendRow,
-			col: targetBackendCol,
-		} = getBackendCoordinates(
-			targetRow,
-			targetCol
-		);
-
-		const targetSquare =
-			caseBoard[targetBackendRow][targetBackendCol];
-
-		const moveIsLegal = legalMoves.some(
-			(move) => move.targetSquare === targetSquare
-		);
-
-		if (!moveIsLegal) {
-			setDraggedPiece(null);
-			setLegalMoves([]);
-			return;
-		}
-
-		const piece = draggedPiece.piece;
-
-		const isPromotion =
-			piece?.chessPieceType === "pawn" &&
-			(
-				(piece.chessPieceColor === "white" && targetSquare[1] === "8") ||
-				(piece.chessPieceColor === "black" && targetSquare[1] === "1")
-			);
-
-		if (isPromotion) {
-			setPromotionSquare({
-				startingSquare,
-				targetSquare,
-				pieceColor: piece.chessPieceColor,
-			});
-
-			setDraggedPiece(null);
-			setLegalMoves([]);
-
-			return;
-		}
-
-		socket.emit("game:move", {
-			gameId: game.id,
-			move: {
-				startingSquare,
-				targetSquare,
-			},
-		});
-
-		setDraggedPiece(null);
-		setLegalMoves([]);
-	};
-
-	type PromotionPiece = "queen" | "rook" | "bishop" | "knight";
-	function promote(pieceType: PromotionPiece) {
-		if (!promotionSquare || !game) {
-			return;
-		}
-
-		socket.emit("game:move", {
-			gameId: game.id,
-			move: {
-				startingSquare: promotionSquare.startingSquare,
-				targetSquare: promotionSquare.targetSquare,
-				promotionChessPieceType: pieceType,
-			},
-		});
-
-		setPromotionSquare(null);
-	}
-
-	const displayedBoard =
-		myColor === "black"
-			? [...game?.chess.chessBoard ?? []]
-					.reverse()
-					.map((row) => [...row].reverse())
-			: game?.chess.chessBoard ?? [];
-
-	const displayedCaseBoard =
-		myColor === "black"
-			? [...caseBoard].reverse().map((row) => [...row].reverse())
-			: caseBoard;
-
-	const mySideColor =
-		myColor === "white" || myColor === "black" ? myColor : null;
-
-	const hisSideColor =
-		mySideColor === "white"
-			? "black"
-			: mySideColor === "black"
-				? "white"
-				: null;
-
-	const capturedByMe =
-		game && hisSideColor
-			? getCapturedPieces(game.chess.moveHistory, hisSideColor)
-			: [];
-
-	const capturedByOpponent =
-		game && mySideColor
-			? getCapturedPieces(game.chess.moveHistory, mySideColor)
-			: [];
-
-	const lastMove =
-		game && game.chess.moveHistory.length > 0
-			? game.chess.moveHistory[game.chess.moveHistory.length - 1]
-			: null;
-
-	const lastOpponentMove =
-		game
-		&& mySideColor
-		&& lastMove
-		&& !game.chess.isGameFinished
-		&& game.chess.currentPlayerColor === mySideColor
-		&& lastMove.chessPlayerColor !== mySideColor
-			? lastMove
-			: null;
-
-	const threatenedSquares =
-		game && mySideColor && !game.chess.isGameFinished
-			? getThreatenedSquares(game.chess.chessBoard, mySideColor)
-			: new Set<string>();
-
-	const enemyThreatenedSquares =
-		game && hisSideColor && !game.chess.isGameFinished
-			? getThreatenedSquares(game.chess.chessBoard, hisSideColor)
-			: new Set<string>();
-
-	const showsLegalMoves = selectedSquare !== null && legalMoves.length > 0;
-
-	const searchingGame =
-		game && !game.chess.isGameFinished && game.black === null
-			? game
-			: null;
-
-	let receivedDrawOffer: ChessGame["draw"]["offer"] = null;
-	let drawOffersMade = 0;
-	if (game && myColor) {
-		drawOffersMade = game.draw.offersMade[myColor];
-		if (!game.chess.isGameFinished && game.draw.offer !== null
-			&& game.draw.offer.offeredBy !== myAuthId) {
-			receivedDrawOffer = game.draw.offer;
-		}
-	}
-
-	let drawButtonColors;
-	if (drawOffersMade >= 3) {
-		drawButtonColors = "from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500";
-	} else {
-		drawButtonColors = "from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500";
-	}
-
-	return (
-		<div className="min-h-screen flex flex-col">
-		{game && receivedDrawOffer && (
-			<DrawOfferDialog key={receivedDrawOffer.id}
-				delayMs={game.draw.responseDelayMs} pending={drawResponsePending}
-				error={error} onRespond={respondToDraw} />
-		)}
-		<main>
-			<Header />
-
-			<section className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-8">
-				<div className="w-full max-w-6xl">
-
-					
-					<div className="mx-auto mb-6 grid w-[min(660px,100%,calc(100vh-475px))] grid-cols-[1fr_auto_1fr] items-center gap-4">
-
-
-						<div className="justify-self-center">
-
-							{error && (
-								<p className="mt-4 text-red-400">
-									{error}
-								</p>
-							)}
-
-							{game?.bot && !game.chess.isGameFinished && game.chess.currentPlayerColor === "black" && (
-								<div className="mt-3 text-center" aria-live="polite">
-									{botError ? <button className="rounded-xl bg-violet-600 px-4 py-2"
-										onClick={() => { setBotError(false); setError(null); socket.emit("game:retry-bot", game.id); }}>
-										Retry bot turn
-									</button> : "Stockfish is thinking…"}
-								</div>
-							)}
-						</div>
-					</div>
-				
-					{(!game || game.black === null) && (
-					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
-						{searchingGame && (
-						<button
-							className="select-text rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg"
-						>
-							{game.id}
-						</button>
-						)}
-						{showBotInput && (
-						<div className="rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg">
-						<div className="relative justify-self-center w-full h-full">
-							<select aria-label="Bot difficulty" value={botDifficulty}
-								onChange={(event) => {
-								setBotDifficulty(event.target.value as "easy" | "medium" | "hard");
-								}}
-								onClick={(event) => { 
-								createBotGame();
-								}}
-								className={`w-full cursor-pointer appearance-none rounded-xl border border-white/20 backdrop-blur-lg py-3 pl-4 pr-11 text-sm text-center font-semibold text-white shadow-lg outline-none transition duration-200 hover:border-white/40 focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400/30`}
-								style={{ colorScheme: "dark" }}>
-								<option className="bg-[#194b7b]  font-semibold" value="easy">Easy</option>
-								<option className="bg-[#194b7b]  font-semibold" value="medium">Medium</option>
-								<option className="bg-[#194b7b]  font-semibold" value="hard">Hard</option>
-							</select>
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-								className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70">
-								<path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-							</svg>
-						</div>
-						</div>
-						)}
-
-						{showJoinInput && (
-						<div className="rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg">
-						<input
-							type="text"
-							placeholder="   Paste game ID here"
-							value={joinGameId}
-							onChange={(event) =>
-								setJoinGameId(event.target.value)
-							}
-							onKeyDown={(event) => {
-								if (event.key === "Enter") {
-									joinGame();
-								}
-							}}
-							className={`rounded-xl border border-white/20 backdrop-blur-lg w-full h-full outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-400/20`}
-						/>
-						</div>
-						)}
-
-						{!showJoinInput && !showBotInput && !searchingGame && (
-						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 w-164 h-12 font-semibold shadow-lg text-white">
-							Create or join a game
-						</div>
-						)}
-
-					</div>
-					)}
-
-					{game && game.black !== null && !game.chess.isGameFinished && (
-						<div className={`grid aspect-square bg-black justify-self-center w-56 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-							<button 
-								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-start w-52 h-12 font-semibold shadow-lg"
-							>
-								Opponent
-							</button>
-						</div>						
-					)}
-
-					{game && game.chess.isGameFinished && (
-						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-							<button
-								type="button"
-								onClick={endGame}
-								className="w-52 h-12 rounded-xl justify-self-start bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
-							>
-								New Game
-							</button>
-
-							<button 
-								type="button"
-								className={`justify-self-center w-52 h-12 rounded-xl font-semibold text-white shadow-lg flex items-center justify-center px-2 text-center text-xl select-none ${
-									game.chess.chessGameResult === "draw"
-										? "bg-amber-600"
-										: getGameResult(game.chess.chessGameResult) === "Victory"
-										? "bg-emerald-600"
-										: "bg-rose-700"
-								}`}
-							>
-								<p className="bg-transparent m-0 p-0">
-									{getGameResult(game.chess.chessGameResult)} : {getEndReasonText(game.chess.chessGameEndReason)}
-								</p>
-							</button>
-
-							<button
-								type="button"
-								onClick={backHome}
-								className="w-52 h-12 rounded-xl bg-gradient-to-r justify-self-end from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
-							>
-								Home
-							</button>
-						</div>                      
-					)}
-
-					<br></br>
-
-					{(!game || (game && !game?.chess.isGameFinished && game.black === null)) && (
-					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-						<button
-							onClick={createGame}
-							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
-						>
-							Create a game
-						</button>
-						<button 
-							onClick={askDifficulty}
-							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
-						>
-							Play against bot
-						</button>
-						<button
-							onClick={askID}
-							className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-end w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
-						>
-							Join a game
-						</button>
-					</div>
-					)}
-
-					<br></br>
-
-					<div className="mx-auto flex w-full items-stretch justify-center gap-4">
-
-						<div className="relative hidden w-56 shrink-0 lg:block">
-							{game && game.black !== null && (
-								<div className="absolute inset-0">
-									<CapturedTray
-										pieces={capturedByMe}
-										label="Captured by you"
-										backgroundClassName="bg-gradient-to-r from-cyan-900 to-teal-500"
-									/>
-								</div>
-							)}
-						</div>
-
-						<div className="aspect-square w-[min(660px,100%,calc(100vh-475px))]">
-							{game ? (
-								<div
-									className={`grid aspect-square w-full grid-cols-8 grid-rows-8 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}
-									onMouseMove={handleMouseMove}
-									onMouseUp={handleMouseUp}
-								>
-									{displayedBoard.map((row, rowIndex) =>
-										row.map((piece, columnIndex) => {
-											const pieceImage = getPieceImage(piece);
-											const isDark = (rowIndex + columnIndex) % 2 === 1;
-											const square = displayedCaseBoard[rowIndex][columnIndex];
-											const isDragging =
-												draggedPiece?.row === rowIndex &&
-												draggedPiece?.col === columnIndex;																						
-											const isSelected =
-												selectedSquare?.row === rowIndex &&
-												selectedSquare?.col === columnIndex;											
-											const isKingInCheck =
-												game !== null &&
-												game.chess.isCurrentPlayerInCheck &&
-												piece?.chessPieceType === "king" &&
-												piece.chessPieceColor === game.chess.currentPlayerColor;
-											const isLegalMove = legalMoves.some(
-												(move) => move.targetSquare === square
-											);
-											const isLastOpponentOrigin =
-												lastOpponentMove?.startingSquare === square;
-											const isLastOpponentDestination =
-												lastOpponentMove?.targetSquare === square;
-											const isThreatenedPiece =
-												threatenedSquares.has(square);
-											const isEnemyThreatenedPiece =
-												showsLegalMoves
-												&& enemyThreatenedSquares.has(square);
-
-											return (
-												<div
-													key={`${rowIndex}-${columnIndex}`}
-													onClick={() => handleSquareClick(rowIndex, columnIndex)}
-													onMouseDown={(event) =>
-														handleMouseDown(event, rowIndex, columnIndex)
-													}
-													className={`relative flex aspect-square select-none items-center justify-center cursor-grab transition-all
-														${isDragging ? "opacity-30 scale-105" : ""} ${isDark ? darkCaseClass : whiteCaseClass}`}
-												>
-													{isThreatenedPiece && (
-														<SquareHighlight tone="red" variant="strong" />
-													)}
-
-													{isLastOpponentOrigin && (
-														<SquareHighlight tone="amber" variant="light" />
-													)}
-
-													{isLastOpponentDestination && (
-														<SquareHighlight tone="amber" variant="strong" />
-													)}
-
-													{isLegalMove && (
-														<SquareHighlight tone="emerald" variant="strong" />
-													)}
-
-													{isSelected && (
-														<SquareHighlight tone="emerald" variant="strong" />
-													)}
-
-													{isEnemyThreatenedPiece && (
-														<SquareHighlight tone="violet" variant="strong" />
-													)}
-
-													{isKingInCheck && (
-														<SquareHighlight tone="red" variant="strong" />
-													)}
-
-													{pieceImage && (
-														<img
-															src={pieceImage}
-															alt=""
-															draggable={false}
-															className={`pointer-events-none relative z-10 h-[114%] w-[114%] object-contain drop-shadow-lg`}
-														/>
-													)}
-												</div>
-											);
-										})
-									)}
-
-									{draggedPiece && (
-										<img
-											src={getPieceImage(draggedPiece.piece)}
-											alt=""
-											draggable={false}
-											className="pointer-events-none fixed z-50 h-[125px] w-[125px] object-contain drop-shadow-2xl"
-											style={{
-												left: mousePosition.x - 48,
-												top: mousePosition.y - 48,
-											}}
-										/>
-									)}
-								</div>
-							) : (
-								<div className={`flex aspect-square items-center justify-center rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 shadow-2xl`}>
-									<div className="text-center">
-										<div className="text-6xl mb-4">♛</div>
-									</div>
-								</div>
-							)}
-
-							{promotionSquare && (
-								<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-									<div className="rounded-3xl bg-gradient-to-br from-purple-900/95 to-indigo-950/95 border border-white/30 p-8 shadow-2xl">
-										<h2 className="mb-6 text-center text-2xl font-bold bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
-											Promotion
-										</h2>
-
-										<div className="flex gap-4">
-											{[
-												{ type: "queen" as PromotionPiece, image: promotionSquare.pieceColor === "white" ? qw : qb, alt: "Dame" },
-												{ type: "rook" as PromotionPiece, image: promotionSquare.pieceColor === "white" ? rw : rb, alt: "Tour" },
-												{ type: "bishop" as PromotionPiece, image: promotionSquare.pieceColor === "white" ? bw : bb, alt: "Fou" },
-												{ type: "knight" as PromotionPiece, image: promotionSquare.pieceColor === "white" ? nw : nb, alt: "Cavalier" },
-											].map((piece) => (
-												<button
-													key={piece.type}
-													onClick={() => promote(piece.type)}
-													className={`flex h-28 w-24 items-center justify-center rounded-2xl container-theme-${theme} border border-white/20 transition-all hover:opacity-90 hover:scale-110 shadow-lg`}
-												>
-													<img
-														src={piece.image}
-														alt={piece.alt}
-														className="h-20 w-20 object-contain drop-shadow-lg"
-													/>
-												</button>
-											))}
-										</div>
-									</div>
-								</div>
-							)}
-						</div>
-
-						<div className="relative hidden w-56 shrink-0 lg:block">
-							{game && game.black !== null && (
-								<div className="absolute inset-0">
-									<CapturedTray
-										pieces={capturedByOpponent}
-										label="Captured by opponent"
-									/>
-								</div>
-							)}
-						</div>
-					</div>
-
-					<br></br>
-											
-					{game && game.black !== null && (
-						<div className={`grid bg-black justify-self-center w-108 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-							<button
-								onClick={resignGame}
-								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
-							>
-								Give up
-							</button>
-							<button 
-								onClick={offerDraw}
-								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
-								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-								className="rounded-xl ml-[75px] bg-gradient-to-r from-cyan-900 to-teal-500 w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
-							>
-								Offer draw ({drawOffersMade}/3)
-							</button>
-						</div>						
-					)}
+  const { theme } = useTheme();
+  const [appearance] = useState(createChessAppearance);
+  const chess = useChessGame();
+
+  const {
+	game,
+	error,
+	joinGameId,
+	setJoinGameId,
+	botDifficulty,
+	setBotDifficulty,
+	botError,
+	drawResponsePending,
+	myAuthId,
+	myColor,
+	draggedPiece,
+	selectedSquare,
+	promotionSquare,
+	legalMoves,
+	mousePosition,
+	displayedBoard,
+	displayedCaseBoard,
+	mySideColor,
+	hisSideColor,
+	searchingGame,
+	receivedDrawOffer,
+	drawOffersMade,
+	drawButtonColors,
+	createGame,
+	createBotGame,
+	joinGame,
+	cancelGame,
+	resignGame,
+	offerDraw,
+	respondToDraw,
+	endGame,
+	retryBot,
+	getEndReasonText,
+	getGameResult,
+	handleSquareClick,
+	handlePointerDown,
+	handlePointerMove,
+	handlePointerUp,
+	promote,
+  } = chess;
+
+  const capturedByMe =
+	game && hisSideColor
+	  ? getCapturedPieces(game.chess.chessBoard, hisSideColor)
+	  : [];
+
+  const capturedByOpponent =
+	game && mySideColor
+	  ? getCapturedPieces(game.chess.chessBoard, mySideColor)
+	  : [];
+
+	const opponentFound = Boolean(game && (game.bot || game.black));
+
+  return (
+	<div className="flex min-h-screen flex-col overflow-x-clip">
+	  {game && receivedDrawOffer && (
+		<DrawOfferDialog
+		  key={receivedDrawOffer.id}
+		  delayMs={game.draw.responseDelayMs}
+		  pending={drawResponsePending}
+		  error={error}
+		  onRespond={respondToDraw}
+		/>
+	  )}
+
+	  <Header />
+
+	  <main className="flex-1">
+		<section className="mx-auto flex w-full max-w-screen-2xl flex-col items-center px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+		  <div className="w-full max-w-6xl">
+			<div className="mx-auto mb-8 w-full max-w-4xl">
+				<ChessLobby
+				  game={game}
+				  error={error}
+				  theme={theme}
+				  botDifficulty={botDifficulty}
+				  onBotDifficultyChange={setBotDifficulty}
+				  joinGameId={joinGameId}
+				  onJoinGameIdChange={setJoinGameId}
+				  botError={botError}
+				  onCreateGame={createGame}
+				  onCreateBotGame={createBotGame}
+				  onJoinGame={joinGame}
+				  onCancelGame={cancelGame}
+				  onRetryBot={retryBot}
+				  onEndGame={endGame}
+				  getGameResult={getGameResult}
+				  getEndReasonText={getEndReasonText}
+				/>
+			</div>
+
+			{game && opponentFound && (
+			  <div className="mx-auto mb-4 flex w-full max-w-[660px] items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+				<div
+				  className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/20 container-theme-${theme} px-3 py-3 shadow-lg backdrop-blur-lg sm:gap-3 sm:rounded-2xl sm:px-5`}
+				>
+				  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 to-orange-400 text-lg font-bold sm:h-12 sm:w-12 sm:text-xl">
+					O
+				  </div>
+
+				  <div className="min-w-0">
+					<p className="truncate text-sm font-bold sm:text-lg">
+					  {game.bot
+						? `Stockfish · ${game.bot.difficulty}`
+						: "Opponent"}
+					</p>
+					<p className="truncate text-xs text-white/70 sm:text-sm">
+					  {game.bot ? "Computer opponent" : "Online opponent"}
+					</p>
+				  </div>
 				</div>
-				
-			</section>
-		</main>
-		<Footer />
-		</div>
-	);
+			  </div>
+			)}
+
+			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)_minmax(0,1fr)] lg:gap-5">
+			  <aside className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1">
+				{searchingGame ? (
+				  <div
+					className={`w-full min-w-0 rounded-2xl border border-white/20 container-theme-${theme} p-4 shadow-lg`}
+				  >
+					<p className="text-sm text-white/70">Game ID:</p>
+					<p className="mb-2 break-all font-mono text-sm">
+					  {searchingGame.id}
+					</p>
+
+					<div className="space-y-1 break-words">
+					  <p className="text-sm">
+						<span className="text-white/70">White:</span>{" "}
+						{searchingGame.white}
+					  </p>
+					  <p className="text-sm">
+						<span className="text-white/70">Black:</span>{" "}
+						{searchingGame.black ?? "Waiting..."}
+					  </p>
+					</div>
+				  </div>
+				) : game ? (
+				  <CapturedTray
+					pieces={capturedByMe}
+					label="Captured by you"
+					pieceImages={appearance.pieceImages}
+				  />
+				) : null}
+			  </aside>
+
+			  <div className="order-1 mx-auto w-full min-w-0 max-w-[660px] lg:order-2">
+				{game ? (
+				  <ChessBoard
+					game={game}
+					board={displayedBoard}
+					caseBoard={displayedCaseBoard}
+					borderThemeClass={appearance.borderThemeClass}
+					whiteCaseClass={appearance.whiteCaseClass}
+					darkCaseClass={appearance.darkCaseClass}
+					pieceImages={appearance.pieceImages}
+					legalMoves={legalMoves}
+					draggedPiece={draggedPiece}
+					selectedSquare={selectedSquare}
+					mousePosition={mousePosition}
+					onSquareClick={handleSquareClick}
+					onPointerDown={handlePointerDown}
+					onPointerMove={handlePointerMove}
+					onPointerUp={handlePointerUp}
+				  />
+				) : (
+				  <div
+					className={`mx-auto flex aspect-square w-full items-center justify-center rounded-2xl border border-white/20 container-theme-${theme} shadow-2xl backdrop-blur-lg`}
+				  >
+					<div className="px-4 text-center">
+					  <div className="mb-3 text-5xl sm:mb-4 sm:text-6xl">
+						♛
+					  </div>
+					  <p className="text-base text-white/80 sm:text-lg">
+						Create or join a game
+					  </p>
+					</div>
+				  </div>
+				)}
+
+				<PromotionDialog
+				  promotionSquare={promotionSquare}
+				  theme={theme}
+				  pieceImages={appearance.pieceImages}
+				  onPromote={promote}
+				/>
+			  </div>
+
+			  <aside className="order-3 mx-auto w-full min-w-0 max-w-[660px] lg:order-3">
+				{searchingGame ? (
+				  <div className="hidden w-full lg:block" aria-hidden="true" />
+				) : game ? (
+				  <CapturedTray
+					pieces={capturedByOpponent}
+					label="Captured by opponent"
+					pieceImages={appearance.pieceImages}
+				  />
+				) : null}
+			  </aside>
+			</div>
+
+			{game && opponentFound &&(
+			  <div className="mx-auto mt-4 w-full max-w-[460px] sm:mt-6">
+				<ChessGameControls
+				  game={game}
+				  theme={theme}
+				  myAuthId={myAuthId}
+				  myColor={myColor}
+				  drawOffersMade={drawOffersMade}
+				  drawButtonColors={drawButtonColors}
+				  onResign={resignGame}
+				  onOfferDraw={offerDraw}
+				/>
+			  </div>
+			)}
+		  </div>
+		</section>
+	  </main>
+
+	  <Footer />
+	</div>
+  );
 }
 
 export default Chess;

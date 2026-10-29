@@ -1,6 +1,7 @@
 import { apiFetch } from "./api";
 
 export type Friend = {
+	authId: string,
 	username: string;
 	isOnline: boolean;
 };
@@ -17,7 +18,6 @@ function getAuthHeaders() {
 }
 
 
-// Récupérer mes amis
 export async function getFriends() {
 	const response = await apiFetch("/api/friends",
 		{
@@ -34,7 +34,6 @@ export async function getFriends() {
 }
 
 
-// Récupérer mes demandes reçues et envoyées
 export async function getFriendRequests() {
 	const response = await apiFetch("/api/friends/requests",
 		{
@@ -52,7 +51,6 @@ export async function getFriendRequests() {
 }
 
 
-// Envoyer une demande
 export async function sendFriendRequest(username: string) {
 	const response = await apiFetch("/api/friends/requests",
 		{
@@ -73,7 +71,6 @@ export async function sendFriendRequest(username: string) {
 }
 
 
-// Accepter une demande
 export async function acceptFriendRequest(id: number) {
 	const response = await apiFetch(`/api/friends/requests/${id}/accept`,
 		{
@@ -91,7 +88,6 @@ export async function acceptFriendRequest(id: number) {
 }
 
 
-// Refuser une demande OU annuler une demande envoyée
 export async function deleteFriendRequest(id: number) {
 	const response = await apiFetch(`/api/friends/requests/${id}`,
 		{
@@ -109,7 +105,6 @@ export async function deleteFriendRequest(id: number) {
 }
 
 
-// Supprimer un ami
 export async function removeFriend(username: string) {
 	const response = await apiFetch(`/api/friends/users/${username}`,
 		{
