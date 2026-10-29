@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
+import { validateUsername } from "../utils/authValidation.js";
 import { isUserOnline } from "../services/presenceService.js";
 
 const router = express.Router();
@@ -148,13 +149,15 @@ router.get("/requests", async (req, res) => {
  */
 router.post("/requests", async (req, res) => {
   try {
-    const username = req.body?.username;
+    const usernameValidation = validateUsername(req.body?.username);
 
-    if (typeof username !== "string") {
+    if (usernameValidation.error) {
       return res.status(400).json({
-        message: "Username is required",
+        message: usernameValidation.error,
       });
     }
+
+    const username = usernameValidation.username;
 
     const sender = await prisma.user.findUnique({
       where: {
