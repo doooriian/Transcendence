@@ -61,11 +61,12 @@ function Register() {
 					>
 
 						<div>
-							<label className="block text-sm text-slate-300 mb-2">
+							<label htmlFor="username" className="block text-sm text-slate-300 mb-2">
 								Username
 							</label>
 
 							<input
+								id="username"
 								type="text"
 								required
 								minLength={3}
@@ -80,11 +81,12 @@ function Register() {
 
 
 						<div>
-							<label className="block text-sm text-slate-300 mb-2">
+							<label htmlFor="email" className="block text-sm text-slate-300 mb-2">
 								Email
 							</label>
 
 							<input
+								id="email"
 								type="email"
 								required
 								maxLength={254}
@@ -96,13 +98,14 @@ function Register() {
 						</div>
 
 						<div>
-							<label className="block text-sm text-slate-300 mb-2">
+							<label htmlFor="password" className="block text-sm text-slate-300 mb-2">
 								Password
 							</label>
 
 							<div className="relative">
 
 								<input
+									id="password"
 									type={showPassword ? "text" : "password"}
 									required
 									minLength={8}
