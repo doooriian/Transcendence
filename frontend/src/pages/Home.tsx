@@ -1,45 +1,12 @@
-import { useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 
-type BackendHealth = {
-	status: string;
-};
-
 function Home() {
-	const [backendStatus, setBackendStatus] = useState("loading");
 	const { isLoggedIn, username } = useAuth();
 	const { theme } = useTheme();
-
-	useEffect(() => {
-		async function checkBackendHealth() {
-			try {
-				const response = await fetch("/health");
-
-				if (!response.ok) {
-					throw new Error("Backend response was not ok");
-				}
-
-				const data: BackendHealth = await response.json();
-
-				setBackendStatus(data.status);
-			} catch (error) {
-				console.error("Failed to reach backend:", error);
-				setBackendStatus("unreachable");
-			}
-		}
-
-		checkBackendHealth();
-
-		const intervalId = setInterval(checkBackendHealth, 2000);
-
-		return () => {
-			clearInterval(intervalId);
-		};
-	}, []);
 
 	return (
 		<main className="min-h-screen">
@@ -160,24 +127,6 @@ function Home() {
 							</p>
 
 						</div>
-
-					</div>
-
-					{/* Backend status */}
-
-					<div className="mt-8 text-sm text-slate-500">
-
-						<span>Backend: </span>
-
-						<span
-							className={
-								backendStatus === "ok"
-									? "text-green-400"
-									: "text-red-400"
-							}
-						>
-							{backendStatus}
-						</span>
 
 					</div>
 
