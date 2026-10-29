@@ -29,6 +29,7 @@ type ChessPiece = {
 } | null;
 
 type ChessMove = {
+	chessPlayerColor: "white" | "black";
 	startingSquare: string;
 	targetSquare: string;
 	chessPieceType: string;
@@ -36,6 +37,8 @@ type ChessMove = {
 	promotionChessPieceType: string | null;
 	standardAlgebraicNotation: string;
 };
+
+type LegalMove = Omit<ChessMove, "chessPlayerColor">;
 
 type ChessGame = {
 	id: string;
@@ -113,15 +116,6 @@ function getPieceImage(piece: ChessPiece) {
 	return undefined;
 }
 
-const INITIAL_PIECE_COUNTS = {
-	pawn: 8,
-	knight: 2,
-	bishop: 2,
-	rook: 2,
-	queen: 1,
-	king: 1,
-};
-
 const CAPTURED_PIECE_ORDER = [
 	"queen",
 	"rook",
@@ -130,80 +124,71 @@ const CAPTURED_PIECE_ORDER = [
 	"pawn",
 ] as const;
 
-type ChessPieceType = keyof typeof INITIAL_PIECE_COUNTS;
+const CAPTURED_PIECE_RANK = new Map<string, number>(
+	CAPTURED_PIECE_ORDER.map((type, index) => [type, index] as const),
+);
 
 type ChessPieceData = NonNullable<ChessPiece>;
 
 function getCapturedPieces(
-	chessBoard: ChessPiece[][],
-	color: "white" | "black",
+	moveHistory: ChessMove[],
+	capturedColor: "white" | "black",
 ): ChessPieceData[] {
-	const remaining: Record<ChessPieceType, number> = {
-		pawn: 0,
-		knight: 0,
-		bishop: 0,
-		rook: 0,
-		queen: 0,
-		king: 0,
-	};
-
-	for (const row of chessBoard) {
-		for (const piece of row) {
-			if (piece === null) {
-				continue;
-			}
-
-			const pieceType = piece.chessPieceType as ChessPieceType;
-
-			if (piece.chessPieceColor === color && pieceType in remaining) {
-				remaining[pieceType] += 1;
-			}
-		}
-	}
-
 	const captured: ChessPieceData[] = [];
 
-	for (const type of CAPTURED_PIECE_ORDER) {
-		const missingCount = INITIAL_PIECE_COUNTS[type] - remaining[type];
-
-		for (let i = 0; i < missingCount; i++) {
-			captured.push({ chessPieceType: type, chessPieceColor: color });
+	for (const move of moveHistory) {
+		if (
+			move.capturedChessPieceType === null
+			|| move.chessPlayerColor === capturedColor
+		) {
+			continue;
 		}
+
+		captured.push({
+			chessPieceType: move.capturedChessPieceType,
+			chessPieceColor: capturedColor,
+		});
 	}
 
-	return captured;
+	return captured.sort(
+		(a, b) =>
+			(CAPTURED_PIECE_RANK.get(a.chessPieceType) ?? CAPTURED_PIECE_ORDER.length)
+			- (CAPTURED_PIECE_RANK.get(b.chessPieceType) ?? CAPTURED_PIECE_ORDER.length),
+	);
 }
 
 function CapturedTray({
 	pieces,
 	label,
-}: { pieces: ChessPieceData[]; label: string }) {
-	if (pieces.length === 0) {
-		return (
-			<div className="hidden w-56 shrink-0 lg:block" aria-hidden="true">
-				<p className="text-xs /50 text-center py-2">{label}</p>
-			</div>
-		);
-	}
-
+	backgroundClassName = "bg-gradient-to-r from-red-700 to-orange-500",
+}: {
+	pieces: ChessPieceData[];
+	label: string;
+	backgroundClassName?: string;
+}) {
 	return (
-		<div
-			className={`hidden w-56 shrink-0 flex flex-col items-center rounded-2xl p-3 lg:flex`}
-			style={{ maxHeight: "calc(100vh - 475px)" }}
-		>
-			<p className="text-xs font-medium /60 mb-2 uppercase tracking-wider">
+		<div className={`flex h-48 w-full flex-col items-center p-3 shadow-2xl ring-4 ring-purple-500/20 ${backgroundClassName} ${borderThemeClass}`}>
+			<p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-white/60">
 				{label}
+				{pieces.length > 0 && (
+					<span className="ml-1 text-white/40">({pieces.length})</span>
+				)}
 			</p>
-			<div className="grid grid-cols-3 place-items-center gap-1 overflow-auto w-full">
-				{pieces.map((piece, index) => (
-					<img
-						key={`${piece.chessPieceType}-${index}`}
-						src={getPieceImage(piece) ?? undefined}
-						alt={piece.chessPieceType}
-						className={`h-[19.5px] w-[19.5px] object-contain opacity-90 drop-shadow-sm ${piece.chessPieceType === "king" ? "translate-y-[-12px]" : piece.chessPieceType === "pawn" ? "translate-y-[10px]" : "translate-y-[-10px]"}`}
-					/>
-				))}
-			</div>
+
+			{pieces.length === 0 ? (
+				<p className="py-2 text-xs text-white/35">No captures</p>
+			) : (
+				<div className="grid w-full grid-cols-5 place-items-center gap-1">
+					{pieces.map((piece, index) => (
+						<img
+							key={`${piece.chessPieceType}-${index}`}
+							src={getPieceImage(piece) ?? undefined}
+							alt={piece.chessPieceType}
+							className="h-8 w-8 object-contain drop-shadow-md"
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }
@@ -249,7 +234,7 @@ function Chess() {
 		pieceColor: "white" | "black";
 	} | null>(null);
 
-	const [legalMoves, setLegalMoves] = useState<ChessMove[]>([]);
+	const [legalMoves, setLegalMoves] = useState<LegalMove[]>([]);
 
 	const [mousePosition, setMousePosition] = useState({
 		x: 0,
@@ -300,7 +285,7 @@ function Chess() {
 
 		function handleLegalMoves(data: {
 			startingSquare: string;
-			legalMoves: ChessMove[];
+			legalMoves: LegalMove[];
 		}) {
 			setLegalMoves(data.legalMoves);
 		}
@@ -774,13 +759,13 @@ function Chess() {
 				: null;
 
 	const capturedByMe =
-		game && mySideColor
-			? getCapturedPieces(game.chess.chessBoard, mySideColor)
+		game && hisSideColor
+			? getCapturedPieces(game.chess.moveHistory, hisSideColor)
 			: [];
 
 	const capturedByOpponent =
-		game && hisSideColor
-			? getCapturedPieces(game.chess.chessBoard, hisSideColor)
+		game && mySideColor
+			? getCapturedPieces(game.chess.moveHistory, mySideColor)
 			: [];
 
 	const searchingGame =
@@ -975,10 +960,11 @@ function Chess() {
 					<div className="mx-auto flex w-full items-start justify-center gap-4">
 
 						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{game && !game.chess.isGameFinished && game.black !== null ? (
+							{game && game.black !== null ? (
 								<CapturedTray
 									pieces={capturedByMe}
 									label="Captured by you"
+									backgroundClassName="bg-gradient-to-r from-cyan-900 to-teal-500"
 								/>
 							) : (
 								<div aria-hidden="true" className="w-full" />
@@ -1097,7 +1083,7 @@ function Chess() {
 						</div>
 
 						<div className="hidden w-56 shrink-0 justify-center lg:flex">
-							{game && !game.chess.isGameFinished && game.black !== null ? (
+							{game && game.black !== null ? (
 								<CapturedTray
 									pieces={capturedByOpponent}
 									label="Captured by opponent"
@@ -1127,7 +1113,7 @@ function Chess() {
 								Offer draw ({drawOffersMade}/3)
 							</button>
 							<button
-								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
+								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
 							>
 								00:00
 							</button>
