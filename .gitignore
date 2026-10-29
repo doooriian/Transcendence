@@ -5,3 +5,5 @@ dist/
 .env.*.local
 backend/src/generated/prisma/
 backend/*.rest
+
+compile_commands.json

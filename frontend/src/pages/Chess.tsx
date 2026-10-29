@@ -216,6 +216,174 @@ function getCapturedSlots(pieces: ChessPieceData[]) {
 	}));
 }
 
+const KNIGHT_ATTACK_OFFSETS = [
+	[-2, -1],
+	[-2, 1],
+	[-1, -2],
+	[-1, 2],
+	[1, -2],
+	[1, 2],
+	[2, -1],
+	[2, 1],
+] as const;
+
+const KING_ATTACK_OFFSETS = [
+	[-1, -1],
+	[-1, 0],
+	[-1, 1],
+	[0, -1],
+	[0, 1],
+	[1, -1],
+	[1, 0],
+	[1, 1],
+] as const;
+
+const BISHOP_ATTACK_DIRECTIONS = [
+	[-1, -1],
+	[-1, 1],
+	[1, -1],
+	[1, 1],
+] as const;
+
+const ROOK_ATTACK_DIRECTIONS = [
+	[-1, 0],
+	[1, 0],
+	[0, -1],
+	[0, 1],
+] as const;
+
+function isInsideBoard(row: number, col: number) {
+	return row >= 0 && row < 8 && col >= 0 && col < 8;
+}
+
+function getThreatenedSquares(
+	chessBoard: ChessPiece[][],
+	threatenedColor: "white" | "black",
+): Set<string> {
+	const attackerColor = threatenedColor === "white" ? "black" : "white";
+	const attackedSquares = new Set<string>();
+
+	function addAttack(row: number, col: number) {
+		if (isInsideBoard(row, col)) {
+			attackedSquares.add(caseBoard[row][col]);
+		}
+	}
+
+	function addSlidingAttacks(
+		row: number,
+		col: number,
+		directions: readonly (readonly [number, number])[],
+	) {
+		for (const [rowStep, colStep] of directions) {
+			let attackRow = row + rowStep;
+			let attackCol = col + colStep;
+
+			while (isInsideBoard(attackRow, attackCol)) {
+				attackedSquares.add(caseBoard[attackRow][attackCol]);
+
+				if (chessBoard[attackRow][attackCol] !== null) {
+					break;
+				}
+
+				attackRow += rowStep;
+				attackCol += colStep;
+			}
+		}
+	}
+
+	chessBoard.forEach((row, rowIndex) => {
+		row.forEach((piece, columnIndex) => {
+			if (!piece || piece.chessPieceColor !== attackerColor) {
+				return;
+			}
+
+			switch (piece.chessPieceType) {
+				case "pawn": {
+					const rowStep = attackerColor === "white" ? -1 : 1;
+					addAttack(rowIndex + rowStep, columnIndex - 1);
+					addAttack(rowIndex + rowStep, columnIndex + 1);
+					break;
+				}
+				case "knight":
+					for (const [rowStep, colStep] of KNIGHT_ATTACK_OFFSETS) {
+						addAttack(rowIndex + rowStep, columnIndex + colStep);
+					}
+					break;
+				case "king":
+					for (const [rowStep, colStep] of KING_ATTACK_OFFSETS) {
+						addAttack(rowIndex + rowStep, columnIndex + colStep);
+					}
+					break;
+				case "bishop":
+					addSlidingAttacks(rowIndex, columnIndex, BISHOP_ATTACK_DIRECTIONS);
+					break;
+				case "rook":
+					addSlidingAttacks(rowIndex, columnIndex, ROOK_ATTACK_DIRECTIONS);
+					break;
+				case "queen":
+					addSlidingAttacks(rowIndex, columnIndex, BISHOP_ATTACK_DIRECTIONS);
+					addSlidingAttacks(rowIndex, columnIndex, ROOK_ATTACK_DIRECTIONS);
+					break;
+			}
+		});
+	});
+
+	const threatenedSquares = new Set<string>();
+
+	chessBoard.forEach((row, rowIndex) => {
+		row.forEach((piece, columnIndex) => {
+			const square = caseBoard[rowIndex][columnIndex];
+
+			if (
+				piece
+				&& piece.chessPieceColor === threatenedColor
+				&& piece.chessPieceType !== "king"
+				&& attackedSquares.has(square)
+			) {
+				threatenedSquares.add(square);
+			}
+		});
+	});
+
+	return threatenedSquares;
+}
+
+const SQUARE_HIGHLIGHT_STYLES = {
+	violet: {
+		strong: "bg-violet-500/60 ring-4 ring-inset ring-violet-400",
+		light: "bg-violet-300/15 ring-4 ring-inset ring-violet-300/40",
+	},
+	emerald: {
+		strong: "bg-emerald-400/40 ring-4 ring-inset ring-emerald-300",
+		light: "bg-emerald-300/15 ring-4 ring-inset ring-emerald-300/40",
+	},
+	red: {
+		strong: "bg-red-500/40 ring-4 ring-inset ring-red-500",
+		light: "bg-red-400/20 ring-4 ring-inset ring-red-400/40",
+	},
+	amber: {
+		strong: "bg-amber-300/40 ring-4 ring-inset ring-amber-300",
+		light: "bg-amber-200/20 ring-4 ring-inset ring-amber-300/40",
+	},
+} as const;
+
+type SquareHighlightTone = keyof typeof SQUARE_HIGHLIGHT_STYLES;
+type SquareHighlightVariant = keyof (typeof SQUARE_HIGHLIGHT_STYLES)["emerald"];
+
+function SquareHighlight({
+	tone,
+	variant,
+}: {
+	tone: SquareHighlightTone;
+	variant: SquareHighlightVariant;
+}) {
+	return (
+		<div
+			className={`pointer-events-none absolute inset-0 ${SQUARE_HIGHLIGHT_STYLES[tone][variant]}`}
+		/>
+	);
+}
+
 function CapturedTray({
 	pieces,
 	label,
@@ -488,6 +656,16 @@ function Chess() {
 	}
 
 	function endGame() {
+		if (!game)
+			return;
+
+		setError("");
+		setJoinGameId("");
+		setLegalMoves([]);
+		setGame(null);
+	}
+
+	function backHome() {
 		if (!game)
 			return;
 
@@ -826,6 +1004,33 @@ function Chess() {
 			? getCapturedPieces(game.chess.moveHistory, mySideColor)
 			: [];
 
+	const lastMove =
+		game && game.chess.moveHistory.length > 0
+			? game.chess.moveHistory[game.chess.moveHistory.length - 1]
+			: null;
+
+	const lastOpponentMove =
+		game
+		&& mySideColor
+		&& lastMove
+		&& !game.chess.isGameFinished
+		&& game.chess.currentPlayerColor === mySideColor
+		&& lastMove.chessPlayerColor !== mySideColor
+			? lastMove
+			: null;
+
+	const threatenedSquares =
+		game && mySideColor && !game.chess.isGameFinished
+			? getThreatenedSquares(game.chess.chessBoard, mySideColor)
+			: new Set<string>();
+
+	const enemyThreatenedSquares =
+		game && hisSideColor && !game.chess.isGameFinished
+			? getThreatenedSquares(game.chess.chessBoard, hisSideColor)
+			: new Set<string>();
+
+	const showsLegalMoves = selectedSquare !== null && legalMoves.length > 0;
+
 	const searchingGame =
 		game && !game.chess.isGameFinished && game.black === null
 			? game
@@ -881,32 +1086,9 @@ function Chess() {
 									</button> : "Stockfish is thinking…"}
 								</div>
 							)}
-
-							{game && game?.chess.isGameFinished && (
-								<div className={`flex flex-col items-center justify-center rounded-2xl container-theme-${theme} backdrop-blur-xl border border-white/30 px-6 py-8 text-center shadow-2xl`}>
-									<p
-										className={`text-2xl font-bold mb-2 ${ game.chess.chessGameResult === "draw" ? "text-amber-300" : getGameResult(game.chess.chessGameResult) === "Victoire" ? "text-emerald-300" : "text-rose-300" }`}
-									>
-										{getGameResult(game.chess.chessGameResult)}
-									</p>
-
-									<p className="text-sm /70">
-										{getEndReasonText(game.chess.chessGameEndReason)}
-									</p>
-
-									<button
-										onClick={endGame}
-										className="mt-4 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-8 py-3 font-semibold transition-all hover:from-violet-400 hover:to-fuchsia-400 transform hover:scale-105"
-									>
-										New game
-									</button>
-								</div>
-							)}
 						</div>
-
 					</div>
 				
-
 					{(!game || game.black === null) && (
 					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
 						{searchingGame && (
@@ -968,7 +1150,7 @@ function Chess() {
 					</div>
 					)}
 
-					{game && game.black !== null && (
+					{game && game.black !== null && !game.chess.isGameFinished && (
 						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 							<button
 								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-start w-52 h-12 font-semibold shadow-lg"
@@ -986,6 +1168,32 @@ function Chess() {
 								00:00
 							</button>
 						</div>						
+					)}
+
+					{game?.chess?.isGameFinished && (
+					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+						<button
+							type="button"
+							onClick={endGame}
+							className="w-53 h-12 rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
+						>
+							New Game
+						</button>
+
+						<button 
+							className="rounded-xl bg-red-700 justify-self-center w-50 h-12 font-semibold shadow-lg"
+						>
+							Game Over
+						</button>
+
+						<button
+							type="button"
+							onClick={backHome}
+							className="w-54 h-12 rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
+						>
+							Home
+						</button>
+					</div>	
 					)}
 
 					<br></br>
@@ -1055,6 +1263,15 @@ function Chess() {
 											const isLegalMove = legalMoves.some(
 												(move) => move.targetSquare === square
 											);
+											const isLastOpponentOrigin =
+												lastOpponentMove?.startingSquare === square;
+											const isLastOpponentDestination =
+												lastOpponentMove?.targetSquare === square;
+											const isThreatenedPiece =
+												threatenedSquares.has(square);
+											const isEnemyThreatenedPiece =
+												showsLegalMoves
+												&& enemyThreatenedSquares.has(square);
 
 											return (
 												<div
@@ -1064,23 +1281,43 @@ function Chess() {
 														handleMouseDown(event, rowIndex, columnIndex)
 													}
 													className={`relative flex aspect-square select-none items-center justify-center cursor-grab transition-all
-														${isDragging ? "opacity-30 scale-105" : ""} ${isDark ? darkCaseClass : whiteCaseClass} ${isSelected ? "ring-4 ring-inset ring-violet-400" : ""} ${isKingInCheck ? "ring-4 ring-inset ring-red-500" : ""}`}
+														${isDragging ? "opacity-30 scale-105" : ""} ${isDark ? darkCaseClass : whiteCaseClass}`}
 												>
+													{isThreatenedPiece && (
+														<SquareHighlight tone="red" variant="strong" />
+													)}
+
+													{isLastOpponentOrigin && (
+														<SquareHighlight tone="amber" variant="light" />
+													)}
+
+													{isLastOpponentDestination && (
+														<SquareHighlight tone="amber" variant="strong" />
+													)}
+
+													{isLegalMove && (
+														<SquareHighlight tone="emerald" variant="strong" />
+													)}
+
+													{isSelected && (
+														<SquareHighlight tone="emerald" variant="strong" />
+													)}
+
+													{isEnemyThreatenedPiece && (
+														<SquareHighlight tone="violet" variant="strong" />
+													)}
+
+													{isKingInCheck && (
+														<SquareHighlight tone="red" variant="strong" />
+													)}
+
 													{pieceImage && (
 														<img
 															src={pieceImage}
 															alt=""
 															draggable={false}
-															className={`pointer-events-none h-[114%] w-[114%] object-contain drop-shadow-lg`}
+															className={`pointer-events-none relative z-10 h-[114%] w-[114%] object-contain drop-shadow-lg`}
 														/>
-													)}
-
-													{isLegalMove && !pieceImage && (
-														<div className="pointer-events-none absolute h-5 w-5 rounded-full bg-violet-500/80 shadow-lg animate-pulse" />
-													)}
-
-													{isLegalMove && pieceImage && (
-														<div className="pointer-events-none absolute inset-1 rounded-full border-4 border-fuchsia-400/90 shadow-inner" />
 													)}
 												</div>
 											);
