@@ -550,7 +550,7 @@ function Profile() {
 							</p>
 
 							<p className="text-sm">
-								{new Date(user.updatedAt).toLocaleString("en-GB")}
+								{new Date(user.createdAt).toLocaleString("en-GB")}
 							</p>
 						</div>
 
@@ -561,7 +561,7 @@ function Profile() {
 							</p>
 
 							<p className="text-sm">
-								{new Date(user.updatedAt).toLocaleString("fr-FR")}
+								{new Date(user.updatedAt).toLocaleString("en-GB")}
 							</p>
 						</div>
 
