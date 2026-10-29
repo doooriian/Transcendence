@@ -818,24 +818,9 @@ function Chess() {
 			<section className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-8">
 				<div className="w-full max-w-6xl">
 
+					
 					<div className="mx-auto mb-6 grid w-[min(660px,100%,calc(100vh-475px))] grid-cols-[1fr_auto_1fr] items-center gap-4">
-						{(game && !game?.chess.isGameFinished && game.black !== null &&
-						<div className={`justify-self-start flex items-center gap-3 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-5 py-3 shadow-lg`}>
-							<div className="h-12 w-12 rounded-full bg-gradient-to-br from-rose-400 to-orange-400 flex items-center justify-center text-xl font-bold">
-								O
-							</div>
 
-							<div>
-								<p className="text-lg font-bold">
-									{game?.bot ? `Stockfish · ${game.bot.difficulty}` : "Opponent"}
-								</p>
-
-								<p className="text-sm /70">
-									{game?.bot ? "Computer opponent" : "1200 Elo"}
-								</p>
-							</div>
-						</div>
-						)}
 
 						<div className="justify-self-center">
 
@@ -876,12 +861,6 @@ function Chess() {
 							)}
 						</div>
 
-						{game && !game?.chess.isGameFinished && game.black !== null &&(
-						<div className={`justify-self-end rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-3 font-mono text-xl shadow-lg`}>
-							00:00
-						</div>
-						)}
-
 					</div>
 				
 
@@ -889,13 +868,13 @@ function Chess() {
 					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}> 
 						{searchingGame && (
 						<button
-							className="select-text rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg"
+							className="select-text rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg"
 						>
 							{game.id}
 						</button>
 						)}
 						{showBotInput && (
-						<div className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+						<div className="rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg">
 						<div className="relative justify-self-center w-full h-full">
 							<select aria-label="Bot difficulty" value={botDifficulty}
 								onChange={(event) => {
@@ -919,7 +898,7 @@ function Chess() {
 						)}
 
 						{showJoinInput && (
-						<div className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-164 h-12 font-semibold shadow-lg">
+						<div className="rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 justify-self-start w-164 h-12 font-semibold shadow-lg">
 						<input
 							type="text"
 							placeholder="   Paste game ID here"
@@ -938,12 +917,32 @@ function Chess() {
 						)}
 
 						{!showJoinInput && !showBotInput && !searchingGame && (
-						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 w-164 h-12 font-semibold shadow-lg text-white">
+						<div className="flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-700 to-sky-300 w-164 h-12 font-semibold shadow-lg text-white">
 							Create or join a game
 						</div>
 						)}
 
 					</div>
+					)}
+
+					{game && game.black !== null && (
+						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+							<button
+								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-start w-52 h-12 font-semibold shadow-lg"
+							>
+								1200 Elo
+							</button>
+							<button 
+								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-center w-52 h-12 font-semibold shadow-lg"
+							>
+								Opponent
+							</button>
+							<button
+								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
+							>
+								00:00
+							</button>
+						</div>						
 					)}
 
 					<br></br>
@@ -1109,53 +1108,30 @@ function Chess() {
 						</div>
 					</div>
 
-
-
-					{(game && !game?.chess.isGameFinished && game.black !== null &&
-					<div className="mx-auto mt-6 flex w-[min(660px,100%,calc(100vh-475px))] items-center justify-between gap-4">
-						
-						
-						<div className={`flex items-center gap-3 rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-5 py-3 shadow-lg`}>
-						
-							<div className="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 flex items-center justify-center text-xl font-bold">
-								T
-							</div>
-							<div>
-								<p className="text-lg font-bold">
-									You
-								</p>
-
-								<p className="text-sm /70">
-									1200 Elo
-								</p>
-							</div>
-						
-						</div>
-						
-						<div className="mt-8 flex flex-col items-start justify-self-start gap-3">
-						<div className="flex gap-4">
+					<br></br>
+											
+					{game && game.black !== null && (
+						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 							<button
-								className={`rounded-xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-8 py-3 font-semibold transition-all hover:opacity-90 hover:scale-105 shadow-lg`}
 								onClick={resignGame}
+								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 							>
 								Give up
 							</button>
-
-							<button type="button" onClick={offerDraw}
+							<button 
+								onClick={offerDraw}
 								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
 								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-								className={`rounded-xl bg-gradient-to-r px-8 py-3 font-semibold transition-all shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${drawButtonColors}`}>
+								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
+							>
 								Offer draw ({drawOffersMade}/3)
 							</button>
-						</div>
-						{game && !game.chess.isGameFinished && game.draw.offer?.offeredBy === myAuthId && (
-							<p className="max-w-xs text-sm text-amber-300" role="status">Draw offer sent. Waiting for your opponent’s response…</p>
-						)}
-						</div>
-								<div className={`rounded-2xl container-theme-${theme} backdrop-blur-lg border border-white/20 px-6 py-3 font-mono text-xl shadow-lg`}>
-							00:00
-						</div>
-					</div>
+							<button
+								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
+							>
+								00:00
+							</button>
+						</div>						
 					)}
 				</div>
 				
