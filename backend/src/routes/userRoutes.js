@@ -74,10 +74,18 @@ router.get("/", async (req, res) => {
  * Authentication is required before accessing this route.
  */
 router.get("/:username", async (req, res) => {
+  const usernameValidation = validateUsername(req.params.username);
+
+  if (usernameValidation.error) {
+    return res.status(400).json({
+      message: usernameValidation.error,
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: {
-        username: req.params.username,
+        username: usernameValidation.username,
       },
       select: {
         id: true,
