@@ -5,18 +5,25 @@ import DrawOfferDialog from "../components/DrawOfferDialog";
 import socket from "../services/socket";
 import { getMyProfile } from "../services/users";
 
-import bb from "../assets/pieces_blue/bb.svg";
-import bw from "../assets/pieces_blue/bw.svg";
-import kb from "../assets/pieces_blue/kb.svg";
-import kw from "../assets/pieces_blue/kw.svg";
-import nb from "../assets/pieces_blue/nb.svg";
-import nw from "../assets/pieces_blue/nw.svg";
-import pb from "../assets/pieces_blue/pb.svg";
-import pw from "../assets/pieces_blue/pw.svg";
-import qb from "../assets/pieces_blue/qb.svg";
-import qw from "../assets/pieces_blue/qw.svg";
-import rb from "../assets/pieces_blue/rb.svg";
-import rw from "../assets/pieces_blue/rw.svg";
+import bb from "../assets/pieces/bb.svg";
+import bw from "../assets/pieces/bw.svg";
+import kb from "../assets/pieces/kb.svg";
+import kw from "../assets/pieces/kw.svg";
+import nb from "../assets/pieces/nb.svg";
+import nw from "../assets/pieces/nw.svg";
+import pb from "../assets/pieces/pb.svg";
+import pw from "../assets/pieces/pw.svg";
+import qb from "../assets/pieces/qb.svg";
+import qw from "../assets/pieces/qw.svg";
+import rb from "../assets/pieces/rb.svg";
+import rw from "../assets/pieces/rw.svg";
+
+import shapeB from "../assets/pieces_shape/b.svg";
+import shapeK from "../assets/pieces_shape/k.svg";
+import shapeN from "../assets/pieces_shape/n.svg";
+import shapeP from "../assets/pieces_shape/p.svg";
+import shapeQ from "../assets/pieces_shape/q.svg";
+import shapeR from "../assets/pieces_shape/r.svg";
 
 
 const borderThemeClass = "rounded-2xl overflow-hidden border-8 border-olive-950";
@@ -116,11 +123,48 @@ function getPieceImage(piece: ChessPiece) {
 	return undefined;
 }
 
+function getPieceSilhouette(chessPieceType: string) {
+	switch (chessPieceType) {
+		case "pawn":
+			return shapeP;
+		case "rook":
+			return shapeR;
+		case "knight":
+			return shapeN;
+		case "bishop":
+			return shapeB;
+		case "queen":
+			return shapeQ;
+		case "king":
+			return shapeK;
+	}
+
+	return undefined;
+}
+
 const CAPTURED_PIECE_ORDER = [
 	"queen",
 	"rook",
 	"bishop",
 	"knight",
+	"pawn",
+] as const;
+
+const CAPTURED_PIECE_SLOT_LAYOUT = [
+	"queen",
+	"rook",
+	"rook",
+	"bishop",
+	"bishop",
+	"knight",
+	"knight",
+	"pawn",
+	"pawn",
+	"pawn",
+	"pawn",
+	"pawn",
+	"pawn",
+	"pawn",
 	"pawn",
 ] as const;
 
@@ -157,6 +201,21 @@ function getCapturedPieces(
 	);
 }
 
+function getCapturedSlots(pieces: ChessPieceData[]) {
+	const availablePieces = new Map<string, ChessPieceData[]>();
+
+	for (const piece of pieces) {
+		const piecesOfType = availablePieces.get(piece.chessPieceType) ?? [];
+		piecesOfType.push(piece);
+		availablePieces.set(piece.chessPieceType, piecesOfType);
+	}
+
+	return CAPTURED_PIECE_SLOT_LAYOUT.map((type) => ({
+		type,
+		piece: availablePieces.get(type)?.shift() ?? null,
+	}));
+}
+
 function CapturedTray({
 	pieces,
 	label,
@@ -166,6 +225,8 @@ function CapturedTray({
 	label: string;
 	backgroundClassName?: string;
 }) {
+	const slots = getCapturedSlots(pieces);
+
 	return (
 		<div className={`flex h-48 w-full flex-col items-center p-3 shadow-2xl ring-4 ring-purple-500/20 ${backgroundClassName} ${borderThemeClass}`}>
 			<p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-white/60">
@@ -175,20 +236,17 @@ function CapturedTray({
 				)}
 			</p>
 
-			{pieces.length === 0 ? (
-				<p className="py-2 text-xs text-white/35">No captures</p>
-			) : (
-				<div className="grid w-full grid-cols-5 place-items-center gap-1">
-					{pieces.map((piece, index) => (
-						<img
-							key={`${piece.chessPieceType}-${index}`}
-							src={getPieceImage(piece) ?? undefined}
-							alt={piece.chessPieceType}
-							className="h-8 w-8 object-contain drop-shadow-md"
-						/>
-					))}
-				</div>
-			)}
+			<div className="grid w-full grid-cols-5 place-items-center gap-1">
+				{slots.map(({ type, piece }, index) => (
+					<img
+						key={`${type}-${index}`}
+						src={(piece ? getPieceImage(piece) : getPieceSilhouette(type)) ?? undefined}
+						alt={piece ? type : ""}
+						aria-hidden={piece ? undefined : true}
+						className={`h-8 w-8 object-contain ${piece ? "drop-shadow-md" : "opacity-40"}`}
+					/>
+				))}
+			</div>
 		</div>
 	);
 }
