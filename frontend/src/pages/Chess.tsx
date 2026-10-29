@@ -1402,7 +1402,7 @@ function Chess() {
 								onClick={offerDraw}
 								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
 								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
+								className="rounded-xl ml-[75px] bg-gradient-to-r from-cyan-900 to-teal-500 w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 							>
 								Offer draw ({drawOffersMade}/3)
 							</button>
