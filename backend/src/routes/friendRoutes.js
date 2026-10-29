@@ -445,6 +445,14 @@ router.delete("/requests/:id", async (req, res) => {
  * Returns 200 when the friendship is successfully removed.
  */
 router.delete("/users/:username", async (req, res) => {
+  const usernameValidation = validateUsername(req.params.username);
+
+  if (usernameValidation.error) {
+    return res.status(400).json({
+      message: usernameValidation.error,
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -463,7 +471,7 @@ router.delete("/users/:username", async (req, res) => {
 
     const friend = await prisma.user.findUnique({
       where: {
-        username: req.params.username,
+        username: usernameValidation.username,
       },
       select: {
         id: true,
