@@ -9,6 +9,8 @@ import {
 
 const SEARCH_MIN_LENGTH = 2;
 const SEARCH_RESULT_LIMIT = 3;
+const SEARCH_MAX_LENGTH = 20;
+const SEARCH_REGEX = /^[a-zA-Z0-9_]+$/;
 
 const router = express.Router();
 
@@ -32,9 +34,13 @@ router.get("/", async (req, res) => {
 
   const username = query.trim();
 
-  if (username.length < SEARCH_MIN_LENGTH) {
+  if (
+    username.length < SEARCH_MIN_LENGTH ||
+    username.length > SEARCH_MAX_LENGTH ||
+    !SEARCH_REGEX.test(username)
+  ) {
     return res.status(400).json({
-      message: `Username query must contain at least ${SEARCH_MIN_LENGTH} characters`,
+      message: "Invalid username query",
     });
   }
 

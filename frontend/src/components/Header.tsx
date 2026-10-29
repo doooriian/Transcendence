@@ -126,6 +126,7 @@ function Header() {
 										type="text"
 										placeholder="Find a player..."
 										value={searchName}
+										maxLength={20}
 										onChange={(event) => {
 											const value = event.target.value;
 											setSearchName(value);
