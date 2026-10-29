@@ -699,17 +699,17 @@ function Chess() {
 
 		if (result === "whitePlayerWon") {
 			return myColor === "white"
-				? "Victoire"
-				: "Défaite";
+				? "Victory"
+				: "Defeat";
 		}
 
 		if (result === "blackPlayerWon") {
 			return myColor === "black"
-				? "Victoire"
-				: "Défaite";
+				? "Victory"
+				: "Defeat";
 		}
 
-		return "Partie terminée";
+		return "Game over";
 	}
 
 	function getBackendCoordinates(row: number, col: number) {
@@ -1151,49 +1151,48 @@ function Chess() {
 					)}
 
 					{game && game.black !== null && !game.chess.isGameFinished && (
-						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-							<button
+						<div className={`grid aspect-square bg-black justify-self-center w-56 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+							<button 
 								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-start w-52 h-12 font-semibold shadow-lg"
 							>
-								1200 Elo
-							</button>
-							<button 
-								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-center w-52 h-12 font-semibold shadow-lg"
-							>
 								Opponent
-							</button>
-							<button
-								className="rounded-xl bg-gradient-to-r from-red-700 to-orange-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
-							>
-								00:00
 							</button>
 						</div>						
 					)}
 
-					{game?.chess?.isGameFinished && (
-					<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
-						<button
-							type="button"
-							onClick={endGame}
-							className="w-53 h-12 rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
-						>
-							New Game
-						</button>
+					{game && game.chess.isGameFinished && (
+						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+							<button
+								type="button"
+								onClick={endGame}
+								className="w-52 h-12 rounded-xl justify-self-start bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
+							>
+								New Game
+							</button>
 
-						<button 
-							className="rounded-xl bg-red-700 justify-self-center w-50 h-12 font-semibold shadow-lg"
-						>
-							Game Over
-						</button>
+							<button 
+								type="button"
+								className={`justify-self-center w-52 h-12 rounded-xl font-semibold text-white shadow-lg flex items-center justify-center px-2 text-center text-xl select-none ${
+									game.chess.chessGameResult === "draw"
+										? "bg-amber-600"
+										: getGameResult(game.chess.chessGameResult) === "Victory"
+										? "bg-emerald-600"
+										: "bg-rose-700"
+								}`}
+							>
+								<p className="bg-transparent m-0 p-0">
+									{getGameResult(game.chess.chessGameResult)} : {getEndReasonText(game.chess.chessGameEndReason)}
+								</p>
+							</button>
 
-						<button
-							type="button"
-							onClick={backHome}
-							className="w-54 h-12 rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
-						>
-							Home
-						</button>
-					</div>	
+							<button
+								type="button"
+								onClick={backHome}
+								className="w-52 h-12 rounded-xl bg-gradient-to-r justify-self-end from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400 font-semibold text-white shadow-lg transition-all"
+							>
+								Home
+							</button>
+						</div>                      
 					)}
 
 					<br></br>
@@ -1392,7 +1391,7 @@ function Chess() {
 					<br></br>
 											
 					{game && game.black !== null && (
-						<div className={`grid aspect-square bg-black justify-self-center w-164 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
+						<div className={`grid bg-black justify-self-center w-108 h-16 grid-cols-3 grid-rows-1 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-purple-500/20 ${borderThemeClass}`}>
 							<button
 								onClick={resignGame}
 								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-start w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
@@ -1403,14 +1402,9 @@ function Chess() {
 								onClick={offerDraw}
 								disabled={!game || !myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot)}
 								title={game?.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-center w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
+								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 w-52 h-12 font-semibold shadow-lg hover:from-emerald-600 hover:to-green-400 transition-all"
 							>
 								Offer draw ({drawOffersMade}/3)
-							</button>
-							<button
-								className="rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 justify-self-end w-52 h-12 font-semibold shadow-lg"
-							>
-								00:00
 							</button>
 						</div>						
 					)}
