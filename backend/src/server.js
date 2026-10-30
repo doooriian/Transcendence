@@ -1,27 +1,82 @@
 import express from "express";
-import cors from "cors";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import friendRoutes from "./routes/friendRoutes.js";
+
+import authSocket from "./middleware/socketAuthMiddleware.js";
+
+import { addUserSocket, removeUserSocket } from "./services/presenceService.js";
+import { notifyFriendsPresenceChanged } from "./services/presenceNotificationService.js";
+
+import registerGameHandlers, {
+  cancelGameDisconnect,
+  scheduleGameDisconnect,
+} from "./sockets/gameSocket.js";
+
+import registerChatHandlers from "./sockets/chatSocket.js";
 
 const app = express();
+
+// Create the HTTP server used by both Express and Socket.IO
+const httpServer = createServer(app);
+
+// Attach Socket.IO to the existing HTTP server
+const io = new Server(httpServer);
+
+// Make the Socket.IO server accessible from Express routes
+app.set("io", io);
+
 const PORT = 3000;
 
-// Allow requests from the frontend application
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-  }),
-);
 // Parse incoming JSON request bodies
-app.use(express.json());
+app.use(express.json({ limit: "512kb" }));
 
 // API routes
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/friends", friendRoutes);
 
-// Start the HTTP server
-app.listen(PORT, () => {
-  console.log("Backend has started on port: 3000");
+// Authenticate Socket.IO clients before accepting their connection
+io.use(authSocket);
+
+// Handle authenticated Socket.IO client connections
+io.on("connection", (socket) => {
+  const authId = socket.data.authId;
+
+  socket.join(`user:${authId}`);
+
+  const becameOnline = addUserSocket(authId, socket.id);
+
+  cancelGameDisconnect(authId);
+
+  socket.on("disconnect", () => {
+    const becameOffline = removeUserSocket(authId, socket.id);
+
+    if (becameOffline) {
+      notifyFriendsPresenceChanged(io, authId);
+      scheduleGameDisconnect(io, authId);
+    }
+
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+
+  if (becameOnline) {
+    notifyFriendsPresenceChanged(io, authId);
+  }
+
+  registerGameHandlers(io, socket);
+  registerChatHandlers(io, socket);
+
+  console.log(`Socket connected: ${socket.id}`);
+  console.log(`Authenticated user: ${authId}`);
+});
+
+// Start the shared HTTP server
+httpServer.listen(PORT, () => {
+  console.log(`Backend has started on port: ${PORT}`);
 });

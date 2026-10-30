@@ -1,19 +1,23 @@
-FROM node:22-alpine
+FROM node:24-bookworm-slim
 
-# Set the working directory inside the container.
+# Install Stockfish and Prisma's OpenSSL dependency.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends stockfish openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Tell the backend where to find Stockfish.
+ENV STOCKFISH_PATH=/usr/games/stockfish
+
 WORKDIR /app
 
-# Copy dependency files first to take advantage of Docker build cache
 COPY package*.json ./
 
-# Install dependencies from package-lock.json.
 RUN npm ci
 
-# Copy the backend source code into the image.
+RUN chown -R node:node /app/node_modules
+
 COPY . .
 
-# Document the port used by the Express server.
 EXPOSE 3000
 
-# Start the backend in standard mode.
 CMD ["npm", "start"]

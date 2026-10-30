@@ -10,8 +10,38 @@ datasource db {
 model User {
   id           Int      @id @default(autoincrement())
   authId       String   @unique @default(uuid())
+  email        String   @unique
   username     String   @unique
   passwordHash String
+  avatar       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+
+  friendships   Friendship[] @relation("FriendshipUser")
+  friendshipsOf Friendship[] @relation("FriendshipFriend")
+}
+
+model FriendRequest {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  pairKey    String   @unique
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model Friendship {
+  userId    Int
+  friendId  Int
+  createdAt DateTime @default(now())
+
+  user   User @relation("FriendshipUser", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendshipFriend", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@id([userId, friendId])
 }

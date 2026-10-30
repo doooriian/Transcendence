@@ -1,21 +1,39 @@
+import { apiFetch } from "./api";
+
 export type User = {
-	id: number;
-	username: string;
-	createdAt: string;
-	updatedAt: string;
+    id: number;
+    username: string;
+    email?: string;
+    avatar?: string | null;
+    createdAt: string;
+    updatedAt: string;
 };
 
-export async function getMyProfile() {
-	const token = localStorage.getItem("token");
+function getAuthHeaders() {
+	return {
+		"Content-Type": "application/json",
+	};
+}	
 
-	const response = await fetch(
-		`${import.meta.env.VITE_API_URL}/api/auth/me`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
+export type UserSearchResult = {
+	username: string;
+};
+
+export async function searchUsers(query: string) {
+	const response = await apiFetch(
+		`/api/users?username=${encodeURIComponent(query)}`,
 	);
+
+	const data = await response.json();
+
+	return {
+		ok: response.ok,
+		users: data.users as UserSearchResult[],
+	};
+}
+
+export async function getMyProfile() {
+	const response = await apiFetch("/api/auth/me");
 
 	const data = await response.json();
 
@@ -26,16 +44,7 @@ export async function getMyProfile() {
 }
 
 export async function getUser(username: string) {
-	const token = localStorage.getItem("token");
-
-	const response = await fetch(
-		`${import.meta.env.VITE_API_URL}/api/users/${username}`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
-	);
+	const response = await apiFetch(`/api/users/${username}`);
 
 	const data = await response.json();
 
@@ -43,4 +52,20 @@ export async function getUser(username: string) {
 		ok: response.ok,
 		data: data.user,
 	};
+}
+
+export async function updateMyProfile( updates: Partial<Pick<User, "username" | "email" | "avatar">> ) {
+	const response = await apiFetch("/api/users/me", {
+		method: "PATCH",
+		headers: getAuthHeaders(),
+		body: JSON.stringify(updates),
+	});
+
+	const data = await response.json();
+
+	return {
+		ok: response.ok,
+		data: data.user ?? data,
+	};
+
 }

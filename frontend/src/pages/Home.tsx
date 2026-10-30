@@ -1,114 +1,140 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 
-type BackendHealth = {
-	status: string;
-};
-
 function Home() {
-	const { isLoggedIn, username, logout } = useAuth();
-	const navigate = useNavigate();
-
-	const [backendStatus, setBackendStatus] = useState("loading");
-
-	useEffect(() => {
-		async function checkBackendHealth() {
-			try {
-				const response = await fetch(
-					`${import.meta.env.VITE_API_URL}/health`
-				);
-
-				if (!response.ok) {
-					throw new Error("Backend response was not ok");
-				}
-
-				const data: BackendHealth = await response.json();
-				setBackendStatus(data.status);
-			} catch (error) {
-				console.error(error);
-				setBackendStatus("unreachable");
-			}
-		}
-
-		checkBackendHealth();
-
-		const intervalId = setInterval(checkBackendHealth, 2000);
-
-		return () => clearInterval(intervalId);
-	}, []);
-
-	function handleLogout() {
-		logout();
-		navigate("/");
-	}
+	const { isLoggedIn, username } = useAuth();
+	const { theme } = useTheme();
 
 	return (
-		<>
-		<Header/>
-		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-			<section className="text-center rounded-xl bg-slate-900 border border-slate-800 p-8">
-				<h1 className="text-6xl font-bold">
-					♟ ft_transcendence
-				</h1>
+		<main className="min-h-screen">
 
-				<p className="mt-4 text-xl text-slate-300">
-					Play Chess Online
-				</p>
+			<Header />
 
-				<p className="mt-2 text-slate-400">
-					Affrontez vos amis en ligne en temps réel.
-				</p>
+			<section className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
 
-				<div className="mt-6 rounded-lg bg-slate-800 p-4">
-					<p className="text-sm text-slate-400">
-						Backend status
-					</p>
+				<div className="w-full max-w-5xl text-center">
 
-					<p className="mt-1 text-xl font-bold">
-						{backendStatus}
-					</p>
+					{/* Hero */}
+
+					<div className="mb-10 sm:mb-12">
+
+						<p className={`font-semibold tracking-widest uppercase text-accent-${theme}`}>
+							Online Chess
+						</p>
+
+						<h1 className="mt-4 text-4xl font-bold leading-tight sm:text-6xl md:text-7xl">
+							<span>♟ Play Chess.</span>
+							<br />
+							<span className={`text-accent-${theme}`}>
+								Challenge Everyone.
+							</span>
+						</h1>
+
+						<p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-relaxed sm:mt-6 sm:text-xl md:text-2xl md:font-bold">
+							Challenge your friends
+							and master the board
+						</p>
+
+						{/* User state */}
+
+						{isLoggedIn ? (
+							<div className="mt-10">
+
+								<p className="text-xl">
+									Welcome back,{" "}
+									<span className={`text-accent-${theme} font-bold`}>
+										{username}
+									</span>
+								</p>
+
+								<div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+
+									<Link
+										to="/chess"
+										className="rounded-lg bg-blue-600 px-6 py-3 text-base font-bold transition hover:bg-blue-700 sm:px-8 sm:py-4 sm:text-lg"
+									>
+										♟ Play Now
+									</Link>
+
+									<Link
+										to={`/profile/${encodeURIComponent(username ?? "")}`}
+										className="rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 text-base font-semibold transition hover:bg-slate-700 sm:px-8 sm:py-4 sm:text-lg"
+									>
+										View Profile
+									</Link>
+
+								</div>
+
+							</div>
+						) : (
+							<div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+
+								<Link
+									to="/login"
+									className="rounded-lg bg-blue-600 px-6 py-3 text-base font-bold transition hover:bg-blue-700 sm:px-8 sm:py-4 sm:text-lg"
+								>
+									Login
+								</Link>
+
+								<Link
+									to="/register"
+									className="rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 text-base font-semibold transition hover:bg-slate-700 sm:px-8 sm:py-4 sm:text-lg"
+								>
+									Register
+								</Link>
+
+							</div>
+						)}
+
+					</div>
+
+					{/* Information cards */}
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-5 sm:p-6`}>
+
+							<div className="text-3xl">
+								♟
+							</div>
+
+							<h2 className="mt-4 text-xl font-bold">
+								Play
+							</h2>
+
+							<p className="mt-2">
+								Play chess against
+								other players
+							</p>
+
+						</div>
+
+						<div className={`rounded-xl container-theme-${theme} border border-slate-800 p-5 sm:p-6`}>
+
+							<div className="text-3xl">
+								⏱
+							</div>
+
+							<h2 className="mt-4 text-xl font-bold">
+								Real-time
+							</h2>
+
+							<p className="mt-2">
+								Face your opponents in real time
+							</p>
+
+						</div>
+
+					</div>
+
 				</div>
 
-				<div className="mt-10 flex justify-center gap-6">
-					{isLoggedIn ? (
-						<>
-							<Link
-								to={`/profile/${username}`}
-								className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
-							>
-								Profile
-							</Link>
-
-							<button
-								onClick={handleLogout}
-								className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600"
-							>
-								Logout
-							</button>
-						</>
-					) : (
-						<>
-							<Link
-								to="/login"
-								className="rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
-							>
-								Login
-							</Link>
-
-							<Link
-								to="/register"
-								className="rounded-lg bg-slate-700 px-6 py-3 font-semibold hover:bg-slate-600"
-							>
-								Register
-							</Link>
-						</>
-					)}
-				</div>
 			</section>
+			<Footer/>
 		</main>
-		</>
 	);
 }
 

@@ -1,113 +1,665 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getMyProfile, getUser, type User } from "../services/users";
+import { useParams, useNavigate } from "react-router-dom";
+import { getMyProfile, getUser, updateMyProfile, type User } from "../services/users";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
+import socket from "../services/socket";
+
+import {
+	getFriends,
+	getFriendRequests,
+	sendFriendRequest,
+	acceptFriendRequest,
+	deleteFriendRequest,
+	type Friend,
+	type FriendRequest,
+} from "../services/friends";
 
 function Profile() {
 	const { username } = useParams();
+	const { username: myUsername, updateUsername} = useAuth();
+	const navigate = useNavigate();
+	const theme = "blue";
+
 	const [user, setUser] = useState<User | null>(null);
-	const { username: myUsername } = useAuth();
+
+	const [editingUsername, setEditingUsername] = useState(false);
+	const [editingEmail, setEditingEmail] = useState(false);
+
+	const [newUsername, setNewUsername] = useState("");
+	const [newEmail, setNewEmail] = useState("");
+
+	const [savingProfile, setSavingProfile] = useState(false);
+	const [profileMessage, setProfileMessage] = useState("");
+
+	const [friends, setFriends] = useState<Friend[]>([]);
+	const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+	const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+
+	const [error, setError] = useState("");
+	const [loadingFriendAction, setLoadingFriendAction] = useState(false);
 
 	useEffect(() => {
 		async function loadUser() {
 			if (!username)
 				return;
 
-			let result;
+			const currentUsername = localStorage.getItem("username");
 
-			if (username !== myUsername)
-				result = await getUser(username);
-			else
-				result = await getMyProfile();
+			try {
+				let result;
 
-			if (result.ok) {
-				setUser(result.data);
+				if (username === currentUsername)
+					result = await getMyProfile();
+				else
+					result = await getUser(username);
+
+				if (result.ok)
+					setUser(result.data);
+				else
+					setUser(null);
+			} catch {
+			setUser(null);
 			}
 		}
 
 		loadUser();
 	}, [username]);
 
+
+	useEffect(() => {
+		async function loadFriendData() {
+			if (!username || username === myUsername)
+				return;
+
+			try {
+				const friendsResult = await getFriends();
+				const requestsResult = await getFriendRequests();
+
+				if (friendsResult.ok) {
+					setFriends(friendsResult.friends);
+				}
+
+				if (requestsResult.ok) {
+					setReceivedRequests(requestsResult.received);
+					setSentRequests(requestsResult.sent);
+				}
+			} catch {
+				setError("Unable to reach server");
+			}
+		}
+
+		loadFriendData();
+
+		socket.on("connect", loadFriendData);
+		socket.on("friends:changed", loadFriendData);
+
+		return () => {
+			socket.off("connect", loadFriendData);
+			socket.off("friends:changed", loadFriendData);
+		};
+	}, [username, myUsername]);
+
+
+	async function handleAddFriend() {
+		if (!username)
+			return;
+
+		setLoadingFriendAction(true);
+		setError("");
+
+		try {
+			const result = await sendFriendRequest(username);
+
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			const requestsResult = await getFriendRequests();
+
+			if (requestsResult.ok) {
+				setReceivedRequests(requestsResult.received);
+				setSentRequests(requestsResult.sent);
+			}
+		} catch {
+			setError("Unable to reach server");
+		} finally {
+			setLoadingFriendAction(false);
+		}
+	}
+
+
+	async function handleAccept(id: number) {
+		setLoadingFriendAction(true);
+		setError("");
+
+		try {
+			const result = await acceptFriendRequest(id);
+
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			const friendsResult = await getFriends();
+			const requestsResult = await getFriendRequests();
+
+			if (friendsResult.ok)
+				setFriends(friendsResult.friends);
+
+			if (requestsResult.ok) {
+				setReceivedRequests(requestsResult.received);
+				setSentRequests(requestsResult.sent);
+			}
+		} catch {
+			setError("Unable to reach server");
+		} finally {
+			setLoadingFriendAction(false);
+		}
+	}
+
+
+	async function handleReject(id: number) {
+		setLoadingFriendAction(true);
+		setError("");
+
+		try {
+			const result = await deleteFriendRequest(id);
+
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			setReceivedRequests((current) =>
+				current.filter((request) => request.id !== id)
+			);
+		} catch {
+			setError("Unable to reach server");
+		} finally {
+			setLoadingFriendAction(false);
+		}
+	}
+
+
+	async function handleSaveUsername() {
+		const username = newUsername.trim();
+
+		if (username.length < 3 || username.length > 20) {
+			setProfileMessage("Username must be between 3 and 20 characters");
+		return;
+		}
+
+		if (!/^[A-Za-z0-9_]+$/.test(username)) {
+			setProfileMessage("Username can only contain letters, numbers and underscores");
+			return;
+		}
+
+		setSavingProfile(true);
+		setProfileMessage("");
+
+		try {
+			const result = await updateMyProfile({
+				username,
+			});
+
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update username"
+				);
+				return;
+			}
+
+			const finalUsername = result.data.username;
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+
+			updateUsername(finalUsername);
+			navigate(`/profile/${encodeURIComponent(finalUsername)}`, {
+				replace: true,
+			});
+
+			setEditingUsername(false);
+		} catch {
+			setProfileMessage("An error occurred");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
+
+	async function handleSaveEmail() {
+		const email = newEmail.trim();
+
+		if (
+			email.length === 0 ||
+			email.length > 254 ||
+			!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+		) {
+			setProfileMessage("Invalid email address");
+			return;
+		}
+
+		setSavingProfile(true);
+		setProfileMessage("");
+
+		try {
+			const result = await updateMyProfile({
+				email,
+			});
+
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update email"
+				);
+				return;
+			}
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+			setEditingEmail(false);
+		} catch {
+			setProfileMessage("An error occurred");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
+	async function handleSaveAvatar(file: File) {
+		setSavingProfile(true);
+		setProfileMessage("");
+
+		try {
+			if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+				setProfileMessage("Choose a PNG, JPEG or WebP image");
+				return;
+			}
+
+			if (file.size > 180 * 1024) {
+				setProfileMessage("The image must be smaller than 180 KB");
+				return;
+			}
+
+			const avatar = await new Promise<string>((resolve, reject) => {
+				const reader = new FileReader();
+
+				reader.onload = () => {
+					if (typeof reader.result === "string") {
+						resolve(reader.result);
+					} else {
+						reject(new Error("Unable to read image"));
+					}
+				};
+
+				reader.onerror = () => reject(new Error("Unable to read image"));
+				reader.readAsDataURL(file);
+			});
+
+			const result = await updateMyProfile({ avatar });
+
+			if (!result.ok) {
+				setProfileMessage(
+					result.data.message || "Unable to update avatar"
+				);
+				return;
+			}
+
+			setUser((current) =>
+				current
+					? {
+							...current,
+							username: result.data.username,
+							email: result.data.email,
+							avatar: result.data.avatar,
+						}
+					: current
+			);
+		} catch {
+			setProfileMessage("An error occurred while updating the avatar");
+		} finally {
+			setSavingProfile(false);
+		}
+	}
+
 	if (!user) {
 		return (
-			<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-				<p className="text-xl text-slate-400">
-					Loading profile...
-				</p>
-			</main>
+			<div className="min-h-screen">
+				<Header />
+
+				<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
+					<p className="text-xl">
+						Profile not found
+					</p>
+				</main>
+
+				<Footer />
+			</div>
 		);
 	}
 
+	const isMyProfile = username === myUsername;
+
+	const isFriend = friends.some(
+		(friend) => friend.username === user.username
+	);
+	const sentRequest = sentRequests.find(
+		(request) => request.username === user.username
+	);
+	const receivedRequest = receivedRequests.find(
+		(request) => request.username === user.username
+	);
+
+
 	return (
-		<>
-		<Header/>
-		<main className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+		<div className="min-h-screen flex flex-col">
+			<Header />
 
-			<section className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-xl">
+			<main className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4">
 
-				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold">
-						♟ Profile
-					</h1>
+				<section className="w-full min-w-0 max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
 
-					<p className="mt-3 text-slate-400">
-						Player information
-					</p>
-				</div>
+					<div className="text-center mb-8">
 
+						<div className="flex justify-center mb-4">
+							<div className="relative">
+								{user.avatar ? (
+									<img
+										src={user.avatar}
+										alt={`${user.username}'s avatar`}
+										className="w-24 h-24 rounded-full object-cover"
+									/>
+								) : (
+									<div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center text-4xl">
+										♟
+									</div>
+								)}
 
-				<div className="space-y-4">
+								{isMyProfile && (
+									<>
+										<input
+											type="file"
+											accept="image/png,image/jpeg,image/webp"
+											id="avatar-upload"
+											className="hidden"
+											onChange={(event) => {
+												const file = event.target.files?.[0];
 
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							ID
+												if (file) {
+													void handleSaveAvatar(file);
+												}
+
+												event.target.value = "";
+											}}
+										/>
+
+										<label
+											htmlFor="avatar-upload"
+											title="Change avatar"
+											className="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-slate-900 bg-indigo-600 text-lg shadow-lg transition hover:bg-indigo-500"
+										>
+											✏️
+										</label>
+									</>
+								)}
+							</div>
+						</div>
+
+						<h1 className="text-3xl font-bold sm:text-4xl">
+							♟ Profile
+						</h1>
+
+						<p className="mt-3 text-slate-400">
+							Player information
 						</p>
 
-						<p className="text-xl font-semibold">
-							{user.id}
-						</p>
 					</div>
 
 
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Username
-						</p>
+					<div className="space-y-4">
 
-						<p className="text-xl font-semibold">
-							{user.username}
-						</p>
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
+							<p className="text-sm text-slate-400">
+								ID
+							</p>
+
+							<p className="break-words text-lg font-semibold sm:text-xl">
+								{user.id}
+							</p>
+						</div>
+
+
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
+							<p className="text-sm text-slate-400">Username</p>
+
+							{editingUsername ? (
+								<div className="mt-2 space-y-3">
+									<input
+										type="text"
+										minLength={3}
+										maxLength={20}
+										pattern="[A-Za-z0-9_]+"
+										value={newUsername}
+										onChange={(event) => setNewUsername(event.target.value)}
+										className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
+										placeholder="New username"
+									/>
+
+									<div className="flex flex-wrap gap-2">
+										<button
+											onClick={handleSaveUsername}
+											disabled={savingProfile || !newUsername.trim()}
+											className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
+										>
+											Save
+										</button>
+
+										<button
+											onClick={() => setEditingUsername(false)}
+											className="rounded-lg bg-slate-700 px-3 py-2"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							) : (
+								<div className="flex min-w-0 items-center justify-between gap-3">
+									<p className="min-w-0 break-words text-lg font-semibold sm:text-xl">{user.username}</p>
+
+									{isMyProfile && (
+										<button
+											onClick={() => {
+												setNewUsername(user.username);
+												setEditingUsername(true);
+												setProfileMessage("");
+											}}
+											title="edit"
+											className="text-blue-400 hover:text-blue-300"
+										>
+											✏️
+										</button>
+									)}
+								</div>
+							)}
+						</div>
+
+
+						{isMyProfile && (
+							<div className={`rounded-lg container-theme-${theme} p-4`}>
+								<p className="text-sm text-slate-400">Mail</p>
+
+								{editingEmail ? (
+									<div className="mt-2 space-y-3">
+										<input
+											type="email"
+											required
+											maxLength={254}
+											value={newEmail}
+											onChange={(event) => setNewEmail(event.target.value)}
+											className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
+											placeholder="New email"
+										/>
+
+										<div className="flex flex-wrap gap-2">
+											<button
+												onClick={handleSaveEmail}
+												disabled={savingProfile || !newEmail.trim()}
+												className="rounded-lg bg-blue-600 px-3 py-2 disabled:opacity-50"
+											>
+												Save
+											</button>
+
+											<button
+												onClick={() => setEditingEmail(false)}
+												className="rounded-lg bg-slate-700 px-3 py-2"
+											>
+												Cancel
+											</button>
+										</div>
+									</div>
+								) : (
+									<div className="flex min-w-0 items-center justify-between gap-3">
+										<p className="break-all text-white">
+											{user.email}
+										</p>
+
+										{isMyProfile && (
+											<button
+												onClick={() => {
+													setNewEmail(user.email || "");
+													setEditingEmail(true);
+													setProfileMessage("");
+												}}
+												title="edit"
+												className="text-blue-400 hover:text-blue-300"
+											>
+												✏️
+											</button>
+										)}
+									</div>
+								)}
+							</div>
+						)}
+
+
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
+							<p className="text-sm text-slate-400">
+								Created at
+							</p>
+
+							<p className="text-sm">
+								{new Date(user.createdAt).toLocaleString("en-GB")}
+							</p>
+						</div>
+
+
+						<div className={`rounded-lg container-theme-${theme} p-4`}>
+							<p className="text-sm text-slate-400">
+								Last update
+							</p>
+
+							<p className="text-sm">
+								{new Date(user.updatedAt).toLocaleString("en-GB")}
+							</p>
+						</div>
+
+						{profileMessage && (
+							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
+								{profileMessage}
+							</p>
+						)}
+
+						{!isMyProfile && (
+							<div className="pt-4">
+
+								{isFriend ? (
+
+									<div className="rounded-lg bg-green-900/40 border border-green-700 p-3 text-center text-green-300">
+										✓ Friends
+									</div>
+
+								) : receivedRequest ? (
+
+									<div className="space-y-3">
+
+										<p className="text-center text-slate-400">
+											{user.username} sent you a friend request
+										</p>
+
+										<div className="flex flex-col gap-3 sm:flex-row">
+
+											<button
+												onClick={() => handleAccept(receivedRequest.id)}
+												disabled={loadingFriendAction}
+												className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+											>
+												Accept
+											</button>
+
+											<button
+												onClick={() => handleReject(receivedRequest.id)}
+												disabled={loadingFriendAction}
+												className="flex-1 rounded-lg bg-slate-700 px-4 py-3 font-semibold hover:bg-slate-600 transition disabled:opacity-50"
+											>
+												Reject
+											</button>
+
+										</div>
+
+									</div>
+
+								) : sentRequest ? (
+
+									<div className="rounded-lg bg-slate-800 border border-slate-700 p-3 text-center text-slate-300">
+										Request sent
+									</div>
+
+								) : (
+
+									<button
+										onClick={handleAddFriend}
+										disabled={loadingFriendAction}
+										className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+									>
+										{loadingFriendAction
+											? "Sending..."
+											: "+ Add Friend"}
+									</button>
+
+								)}
+
+							</div>
+						)}
+
+						{error && (
+							<p className="rounded-lg bg-red-900/40 border border-red-700 p-3 text-center text-red-300">
+								{error}
+							</p>
+						)}
 					</div>
+				</section>
 
-
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Created at
-						</p>
-
-						<p className="text-sm">
-							{user.createdAt}
-						</p>
-					</div>
-
-
-					<div className="rounded-lg bg-slate-800 p-4">
-						<p className="text-sm text-slate-400">
-							Last update
-						</p>
-
-						<p className="text-sm">
-							{user.updatedAt}
-						</p>
-					</div>
-
-				</div>
-
-			</section>
-
-		</main>
-		</>
+			</main>
+			<Footer />
+			</div>
 	);
 }
 
