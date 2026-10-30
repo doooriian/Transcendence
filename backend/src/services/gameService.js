@@ -1,6 +1,9 @@
 import { randomUUID } from "crypto";
 import ChessEngine from "../games/chess/chess.engine.js";
-import { BOT_DIFFICULTIES, chooseBotMove } from "../games/chess/stockfish.bot.js";
+import {
+  BOT_DIFFICULTIES,
+  chooseBotMove,
+} from "../games/chess/stockfish.bot.js";
 
 const games = new Map();
 const chessEngines = new Map();
@@ -33,8 +36,13 @@ function createGame(authId, options = {}) {
     return null;
   }
 
-  if (mode === "bot" && !Object.hasOwn(BOT_DIFFICULTIES, difficulty)) {
-    return null;
+  if (mode === "bot") {
+    if (
+      typeof difficulty !== "string" ||
+      !Object.hasOwn(BOT_DIFFICULTIES, difficulty)
+    ) {
+      return null;
+    }
   }
 
   if (activeGameByUser.has(authId)) {
@@ -183,7 +191,9 @@ function offerDraw(gameId, authId) {
   const game = games.get(gameId);
   const engine = getChessEngine(gameId);
   if (!game || !game.black || !engine || engine.isGameFinished()) {
-    return { errorMessage: "A draw can only be offered during an active game." };
+    return {
+      errorMessage: "A draw can only be offered during an active game.",
+    };
   }
 
   const playerColor = getPlayerColor(game, authId);
@@ -191,18 +201,24 @@ function offerDraw(gameId, authId) {
     return { errorMessage: "You are not a player in this game." };
   }
   if (game.bot) {
-    return { errorMessage: "Draw offers are only available in two-player games." };
+    return {
+      errorMessage: "Draw offers are only available in two-player games.",
+    };
   }
   if (engine.getCurrentPlayerColor() !== playerColor) {
     return { errorMessage: "You can only offer a draw during your own turn." };
   }
   if (game.drawOffers[playerColor] >= MAX_DRAW_OFFERS) {
-    return { errorMessage: "You have already offered a draw 3 times in this game." };
+    return {
+      errorMessage: "You have already offered a draw 3 times in this game.",
+    };
   }
 
   const currentPly = engine.getMoveHistory().length;
   if (game.lastDrawOfferPly[playerColor] === currentPly) {
-    return { errorMessage: "You have already offered a draw during this turn." };
+    return {
+      errorMessage: "You have already offered a draw during this turn.",
+    };
   }
   if (game.drawOffer !== null) {
     return { errorMessage: "A draw offer is already waiting for a response." };
@@ -241,7 +257,9 @@ function respondToDraw(gameId, authId, offerId, accept) {
     return { errorMessage: "Only your opponent can answer your draw offer." };
   }
   if (Date.now() < offer.responseAvailableAt) {
-    return { errorMessage: "Please wait 3 seconds before answering the draw offer." };
+    return {
+      errorMessage: "Please wait 3 seconds before answering the draw offer.",
+    };
   }
 
   if (accept) {
@@ -289,7 +307,8 @@ function makeGameMove(gameId, authId, move) {
   if (game.drawOffer !== null) {
     return {
       moveWasSuccessful: false,
-      errorMessage: "Please wait for the response to the draw offer before playing.",
+      errorMessage:
+        "Please wait for the response to the draw offer before playing.",
     };
   }
 
@@ -324,7 +343,9 @@ async function makeBotMove(gameId, authId, selectMove = chooseBotMove) {
   const controller = new AbortController();
   botSearches.set(gameId, controller);
   try {
-    const move = await selectMove(fen, game.bot.difficulty, { signal: controller.signal });
+    const move = await selectMove(fen, game.bot.difficulty, {
+      signal: controller.signal,
+    });
     if (controller.signal.aborted) {
       return null;
     }
