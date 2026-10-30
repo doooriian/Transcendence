@@ -25,7 +25,7 @@ function Legal() {
 					</h1>
 
 					<p className="mt-3 text-sm text-slate-400">
-						ft_chess · Last updated: October 19, 2026
+						ft_chess · Last updated: October 30, 2026
 					</p>
 
 					<div className="flex flex-wrap gap-3 mt-6">
@@ -91,15 +91,19 @@ function Legal() {
 									friend requests.
 								</li>
 								<li>
-									<strong>Game information:</strong> information
-									needed to create and manage chess games, such
-									as player participation, moves and game results,
-									where these features are stored by the service.
+									<strong>Game information:</strong> active chess game data,
+									including player participation, moves and game state.
+									Game history and results are not stored permanently.
 								</li>
 								<li>
 									<strong>Technical information:</strong> limited
 									technical data may be processed to operate,
 									secure and troubleshoot the application.
+								</li>
+								<li>
+									<strong>Chat information:</strong> messages exchanged between
+									friends are transmitted in real time and are not stored
+									permanently by the application.
 								</li>
 							</ul>
 						</section>
@@ -124,12 +128,10 @@ function Legal() {
 								4. Passwords and Account Security
 							</h2>
 							<p className="text-slate-300 leading-7">
-								Authentication information must be protected using
-								appropriate security measures. Passwords should be
-								stored as secure password hashes rather than in
-								plain text. Users should keep their credentials
-								confidential and report suspected unauthorized
-								access to the project team.
+								Passwords are hashed using Argon2 before being stored and are
+								never stored in plain text. Authentication is handled using
+								JSON Web Tokens (JWT). Users should keep their credentials
+								confidential.
 							</p>
 						</section>
 
@@ -155,13 +157,11 @@ function Legal() {
 								6. Data Retention
 							</h2>
 							<p className="text-slate-300 leading-7">
-								Information should be kept only for as long as
-								necessary for the purposes described in this
-								policy, subject to applicable legal obligations.
-								Actual retention periods depend on the application's
-								storage and deletion procedures. Contact the
-								project team to ask about information associated
-								with your account.
+								Account, profile and friendship information is stored in the
+								application database. Active chess games and chat messages
+								are not stored permanently and are lost when their in-memory
+								state is cleared. Authentication information kept in browser
+								local storage is removed when the user logs out.
 							</p>
 						</section>
 
@@ -187,14 +187,10 @@ function Legal() {
 								8. Cookies and Local Storage
 							</h2>
 							<p className="text-slate-300 leading-7">
-								The application may use browser storage to maintain
-								login state or remember application settings.
-								Authentication tokens stored in the browser should
-								be protected against unauthorized access. If the
-								deployed application uses cookies, analytics or
-								other tracking technologies, those practices must
-								be documented here and any required consent must
-								be obtained.
+								The application uses browser local storage to keep the
+								authentication token and basic session information such as
+								the authenticated user identifier and username. The
+								application does not use analytics or advertising cookies.
 							</p>
 						</section>
 
