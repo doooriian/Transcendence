@@ -257,7 +257,11 @@ router.post("/requests/:id/accept", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
 
-    if (!Number.isInteger(requestId)) {
+    if (
+      !Number.isInteger(requestId) ||
+      requestId <= 0 ||
+      requestId > 2147483647
+    ) {
       return res.status(400).json({
         message: "Invalid friend request id",
       });
@@ -365,7 +369,11 @@ router.delete("/requests/:id", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
 
-    if (!Number.isInteger(requestId)) {
+    if (
+      !Number.isInteger(requestId) ||
+      requestId <= 0 ||
+      requestId > 2147483647
+    ) {
       return res.status(400).json({
         message: "Invalid friend request id",
       });
