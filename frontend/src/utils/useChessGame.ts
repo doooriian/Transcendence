@@ -15,13 +15,17 @@ export function useChessGame() {
   const [game, setGame] = useState<ChessGame | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [joinGameId, setJoinGameId] = useState("");
-  const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [botDifficulty, setBotDifficulty] = useState<
+    "easy" | "medium" | "hard"
+  >("medium");
   const [botError, setBotError] = useState(false);
   const [drawResponsePending, setDrawResponsePending] = useState(false);
   const [myAuthId, setMyAuthId] = useState<string | null>(null);
 
   const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
-  const [selectedSquare, setSelectedSquare] = useState<BoardPosition | null>(null);
+  const [selectedSquare, setSelectedSquare] = useState<BoardPosition | null>(
+    null,
+  );
   const [promotionSquare, setPromotionSquare] = useState<{
     startingSquare: string;
     targetSquare: string;
@@ -45,7 +49,10 @@ export function useChessGame() {
         const result = await getMyProfile();
         if (result.ok) setMyAuthId(result.data.authId);
       } catch (profileError) {
-        console.error("Unable to load the current user's profile:", profileError);
+        console.error(
+          "Unable to load the current user's profile:",
+          profileError,
+        );
       }
     }
 
@@ -72,10 +79,17 @@ export function useChessGame() {
       setGame(gameState);
       resetBoardInteraction();
       setDrawResponsePending(false);
-      setBotError(Boolean(gameState?.bot && gameState.chess.currentPlayerColor === "black"));
+      setBotError(
+        Boolean(
+          gameState?.bot && gameState.chess.currentPlayerColor === "black",
+        ),
+      );
     }
 
-    function handleLegalMoves(data: { startingSquare: string; legalMoves: ChessMove[] }) {
+    function handleLegalMoves(data: {
+      startingSquare: string;
+      legalMoves: ChessMove[];
+    }) {
       setLegalMoves(data.legalMoves);
     }
 
@@ -142,7 +156,13 @@ export function useChessGame() {
 
   function joinGame() {
     const gameId = joinGameId.trim();
-    if (!gameId) return;
+    const gameIdPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (!gameIdPattern.test(gameId)) {
+      setError("Invalid game ID");
+      return;
+    }
 
     setError(null);
     socket.emit("game:join", gameId);
@@ -200,13 +220,13 @@ export function useChessGame() {
   function getEndReasonText(reason: string | null) {
     switch (reason) {
       case "checkmate":
-        return "Mat";
+        return "Checkmate";
       case "resignation":
-        return "Give up";
+        return "Resignation";
       case "stalemate":
-        return "Pat";
+        return "Stalemate";
       case "draw":
-        return "Null";
+        return "Draw";
       case "agreement":
         return "Draw by agreement";
       default:
@@ -215,10 +235,19 @@ export function useChessGame() {
   }
 
   function getGameResult(result: string | null) {
-    if (result === "draw") return "Draw";
-    if (result === "whitePlayerWon") return myColor === "white" ? "Victoire" : "Défaite";
-    if (result === "blackPlayerWon") return myColor === "black" ? "Victoire" : "Défaite";
-    return "Partie terminée";
+    if (result === "draw") {
+      return "Draw";
+    }
+
+    if (result === "whitePlayerWon") {
+      return myColor === "white" ? "Victory" : "Defeat";
+    }
+
+    if (result === "blackPlayerWon") {
+      return myColor === "black" ? "Victory" : "Defeat";
+    }
+
+    return "Game over";
   }
 
   function getBackendCoordinates(row: number, col: number): BoardPosition {
@@ -238,20 +267,24 @@ export function useChessGame() {
       return;
     }
 
-    const { row: backendRow, col: backendCol } = getBackendCoordinates(row, col);
+    const { row: backendRow, col: backendCol } = getBackendCoordinates(
+      row,
+      col,
+    );
     const piece = game.chess.chessBoard[backendRow][backendCol];
     const square = displayedCaseBoard[row][col];
 
     if (selectedSquare) {
-      const { row: startBackendRow, col: startBackendCol } = getBackendCoordinates(
-        selectedSquare.row,
-        selectedSquare.col,
-      );
+      const { row: startBackendRow, col: startBackendCol } =
+        getBackendCoordinates(selectedSquare.row, selectedSquare.col);
       const startingSquare = caseBoard[startBackendRow][startBackendCol];
-      const moveIsLegal = legalMoves.some((move) => move.targetSquare === square);
+      const moveIsLegal = legalMoves.some(
+        (move) => move.targetSquare === square,
+      );
 
       if (moveIsLegal) {
-        const selectedPiece = game.chess.chessBoard[startBackendRow][startBackendCol];
+        const selectedPiece =
+          game.chess.chessBoard[startBackendRow][startBackendCol];
         const isPromotion =
           selectedPiece?.chessPieceType === "pawn" &&
           ((selectedPiece.chessPieceColor === "white" && square[1] === "8") ||
@@ -297,7 +330,10 @@ export function useChessGame() {
   ) {
     if (!game) return;
 
-    const { row: backendRow, col: backendCol } = getBackendCoordinates(row, col);
+    const { row: backendRow, col: backendCol } = getBackendCoordinates(
+      row,
+      col,
+    );
     const piece = game.chess.chessBoard[backendRow][backendCol];
 
     if (
@@ -348,18 +384,16 @@ export function useChessGame() {
     const targetCol = Math.floor(x / squareWidth);
     const targetRow = Math.floor(y / squareHeight);
 
-    const { row: startBackendRow, col: startBackendCol } = getBackendCoordinates(
-      draggedPiece.row,
-      draggedPiece.col,
-    );
+    const { row: startBackendRow, col: startBackendCol } =
+      getBackendCoordinates(draggedPiece.row, draggedPiece.col);
     const startingSquare = caseBoard[startBackendRow][startBackendCol];
 
-    const { row: targetBackendRow, col: targetBackendCol } = getBackendCoordinates(
-      targetRow,
-      targetCol,
-    );
+    const { row: targetBackendRow, col: targetBackendCol } =
+      getBackendCoordinates(targetRow, targetCol);
     const targetSquare = caseBoard[targetBackendRow][targetBackendCol];
-    const moveIsLegal = legalMoves.some((move) => move.targetSquare === targetSquare);
+    const moveIsLegal = legalMoves.some(
+      (move) => move.targetSquare === targetSquare,
+    );
 
     if (!moveIsLegal) {
       setDraggedPiece(null);
@@ -410,17 +444,24 @@ export function useChessGame() {
 
   const displayedBoard =
     myColor === "black"
-      ? [...(game?.chess.chessBoard ?? [])].reverse().map((row) => [...row].reverse())
-      : game?.chess.chessBoard ?? [];
+      ? [...(game?.chess.chessBoard ?? [])]
+          .reverse()
+          .map((row) => [...row].reverse())
+      : (game?.chess.chessBoard ?? []);
 
   const displayedCaseBoard =
     myColor === "black"
       ? [...caseBoard].reverse().map((row) => [...row].reverse())
       : caseBoard;
 
-  const mySideColor = myColor === "white" || myColor === "black" ? myColor : null;
+  const mySideColor =
+    myColor === "white" || myColor === "black" ? myColor : null;
   const hisSideColor: "white" | "black" | null =
-    mySideColor === "white" ? "black" : mySideColor === "black" ? "white" : null;
+    mySideColor === "white"
+      ? "black"
+      : mySideColor === "black"
+        ? "white"
+        : null;
 
   const searchingGame =
     game && !game.chess.isGameFinished && game.black === null ? game : null;
@@ -440,8 +481,8 @@ export function useChessGame() {
 
   const drawButtonColors =
     drawOffersMade >= 3
-      ? "from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500"
-      : "from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500";
+      ? "from-gray-500 to-gray-600"
+      : "from-cyan-900 to-teal-500 hover:from-emerald-600 hover:to-green-400";
 
   return {
     game,

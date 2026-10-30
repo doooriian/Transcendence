@@ -42,6 +42,17 @@ function handleGameCreate(io, socket, options) {
  */
 function handleGameJoin(io, socket, gameId) {
   const authId = socket.data.authId;
+
+  if (
+    typeof gameId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      gameId,
+    )
+  ) {
+    socket.emit("game:error", { message: "Invalid game ID" });
+    return;
+  }
+
   const game = joinGame(gameId, authId);
 
   if (!game) {

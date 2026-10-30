@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { loginResponse } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +13,7 @@ function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	const { login } = useAuth();
-	const { theme } = useTheme();
+	const theme = "blue";
 	const navigate = useNavigate();
 
 	const location = useLocation();
@@ -22,15 +21,20 @@ function Login() {
 
 	async function handleLogin() {
 		setError("");
-		const result = await loginResponse(email, password);
 
-		if (!result.ok) {
-			setError(result.data.message);
-			return;
+		try {
+			const result = await loginResponse(email, password);
+
+			if (!result.ok) {
+				setError(result.data.message);
+				return;
+			}
+
+			login(result.data.authId, result.data.username, result.data.token);
+			navigate("/");
+		} catch {
+			setError("Unable to reach server");
 		}
-
-		login(result.data.authId, result.data.username, result.data.token);
-		navigate("/");
 	}
 
 	return (
@@ -66,11 +70,12 @@ function Login() {
 				<div className="space-y-5">
 
 					<div>
-						<label className="block text-sm text-slate-300 mb-2">
+						<label htmlFor="email" className="block text-sm text-slate-300 mb-2">
 							Email
 						</label>
 
 						<input
+							id="email"
 							type="email"
 							required
 							maxLength={254}
@@ -83,12 +88,13 @@ function Login() {
 
 						<div>
 
-							<label className="block text-sm text-slate-300 mb-2">
+							<label htmlFor="password" className="block text-sm text-slate-300 mb-2">
 								Password
 							</label>
 
 							<div className="relative">
 									<input
+										id="password"
 										type={showPassword ? "text" : "password"}
 										required
 										minLength={8}

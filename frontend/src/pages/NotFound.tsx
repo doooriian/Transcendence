@@ -17,15 +17,15 @@ function NotFound() {
 					Page not found
 				</h1>
 
-				<p className="mt-4 text-slate-400">
-					Désolé, cette page n'existe pas.
+				<p className="mt-4 text-xl">
+					This page doesn't exist.
 				</p>
 
 				<Link
 					to="/"
 					className="inline-block mt-8 rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700 transition"
 				>
-					Retour à l'accueil
+					Back to home
 				</Link>
 
 			</section>

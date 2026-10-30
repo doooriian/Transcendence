@@ -135,27 +135,7 @@ function Chess() {
 
 			<div className="mx-auto grid w-full min-w-0 grid-cols-1 items-start gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)_minmax(0,1fr)] lg:gap-5">
 			  <aside className="order-2 mx-auto w-full min-w-0 max-w-[660px] lg:order-1">
-				{searchingGame ? (
-				  <div
-					className={`w-full min-w-0 rounded-2xl border border-white/20 container-theme-${theme} p-4 shadow-lg`}
-				  >
-					<p className="text-sm text-white/70">Game ID:</p>
-					<p className="mb-2 break-all font-mono text-sm">
-					  {searchingGame.id}
-					</p>
-
-					<div className="space-y-1 break-words">
-					  <p className="text-sm">
-						<span className="text-white/70">White:</span>{" "}
-						{searchingGame.white}
-					  </p>
-					  <p className="text-sm">
-						<span className="text-white/70">Black:</span>{" "}
-						{searchingGame.black ?? "Waiting..."}
-					  </p>
-					</div>
-				  </div>
-				) : game ? (
+				{game && !searchingGame ? (
 				  <CapturedTray
 					pieces={capturedByMe}
 					label="Captured by you"
@@ -207,9 +187,7 @@ function Chess() {
 			  </div>
 
 			  <aside className="order-3 mx-auto w-full min-w-0 max-w-[660px] lg:order-3">
-				{searchingGame ? (
-				  <div className="hidden w-full lg:block" aria-hidden="true" />
-				) : game ? (
+				{game && !searchingGame ? (
 				  <CapturedTray
 					pieces={capturedByOpponent}
 					label="Captured by opponent"

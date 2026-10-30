@@ -136,20 +136,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 						</div>
 
 						<h2 className="mb-3 text-2xl font-bold text-white">
-							Session expirée
+							Session expired
 						</h2>
 
 						<p className="mb-6 text-slate-400">
-							Votre session a expiré.
+							Your session has expired.
 							<br />
-							Veuillez vous reconnecter pour continuer.
+							Please log in again to continue.
 						</p>
 
 						<button
 							onClick={handleSessionExpired}
 							className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
 						>
-							Se reconnecter
+							Log in again
 						</button>
 					</div>
 				</div>

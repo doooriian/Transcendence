@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "../prismaClient.js";
 import authToken from "../middleware/authMiddleware.js";
+import { validateUsername } from "../utils/authValidation.js";
 import { isUserOnline } from "../services/presenceService.js";
 
 const router = express.Router();
@@ -55,7 +56,9 @@ router.get("/", async (req, res) => {
     res.json({ friends });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -130,7 +133,9 @@ router.get("/requests", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -148,13 +153,15 @@ router.get("/requests", async (req, res) => {
  */
 router.post("/requests", async (req, res) => {
   try {
-    const username = req.body?.username;
+    const usernameValidation = validateUsername(req.body?.username);
 
-    if (typeof username !== "string") {
+    if (usernameValidation.error) {
       return res.status(400).json({
-        message: "Username is required",
+        message: usernameValidation.error,
       });
     }
+
+    const username = usernameValidation.username;
 
     const sender = await prisma.user.findUnique({
       where: {
@@ -231,7 +238,9 @@ router.post("/requests", async (req, res) => {
       return res.status(409).json({ message: "Friend request already exists" });
     }
 
-    res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -248,7 +257,11 @@ router.post("/requests/:id/accept", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
 
-    if (!Number.isInteger(requestId)) {
+    if (
+      !Number.isInteger(requestId) ||
+      requestId <= 0 ||
+      requestId > 2147483647
+    ) {
       return res.status(400).json({
         message: "Invalid friend request id",
       });
@@ -336,7 +349,9 @@ router.post("/requests/:id/accept", async (req, res) => {
       });
     }
 
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -354,7 +369,11 @@ router.delete("/requests/:id", async (req, res) => {
   try {
     const requestId = Number(req.params.id);
 
-    if (!Number.isInteger(requestId)) {
+    if (
+      !Number.isInteger(requestId) ||
+      requestId <= 0 ||
+      requestId > 2147483647
+    ) {
       return res.status(400).json({
         message: "Invalid friend request id",
       });
@@ -427,7 +446,9 @@ router.delete("/requests/:id", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -442,6 +463,14 @@ router.delete("/requests/:id", async (req, res) => {
  * Returns 200 when the friendship is successfully removed.
  */
 router.delete("/users/:username", async (req, res) => {
+  const usernameValidation = validateUsername(req.params.username);
+
+  if (usernameValidation.error) {
+    return res.status(400).json({
+      message: usernameValidation.error,
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -460,7 +489,7 @@ router.delete("/users/:username", async (req, res) => {
 
     const friend = await prisma.user.findUnique({
       where: {
-        username: req.params.username,
+        username: usernameValidation.username,
       },
       select: {
         id: true,
@@ -506,7 +535,9 @@ router.delete("/users/:username", async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    return res.sendStatus(500);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 

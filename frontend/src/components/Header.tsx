@@ -6,7 +6,7 @@ import { searchUsers, type UserSearchResult } from "../services/users";
 
 function Header() {
 	const [menuOpen, setMenuOpen] = useState(false);
-	
+
 	const [searchName, setSearchName] = useState("");
 	const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
 
@@ -72,7 +72,7 @@ function Header() {
 		setSuggestions([]);
 		navigate(`/profile/${username}`);
 	}
-	
+
 	return (
 		<header className={`container-theme-${theme} border-b border-slate-800 text-white`}>
 			<div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:p-4">
@@ -126,6 +126,7 @@ function Header() {
 										type="text"
 										placeholder="Find a player..."
 										value={searchName}
+										maxLength={20}
 										onChange={(event) => {
 											const value = event.target.value;
 											setSearchName(value);
@@ -167,7 +168,7 @@ function Header() {
 												setSelectedIndex(-1);
 											}
 										}}
-										className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 outline-none focus:border-blue-500 md:w-64"
+										className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 outline-none focus:border-blue-500 md:w-64"
 									/>
 								</form>
 
@@ -215,7 +216,7 @@ function Header() {
 									handleLogout();
 									setMenuOpen(false);
 								}}
-								className="rounded-lg bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 transition"
+								className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 transition"
 							>
 								Logout
 							</button>
@@ -233,7 +234,7 @@ function Header() {
 							<Link
 								to="/register"
 								onClick={() => setMenuOpen(false)}
-								className="rounded-lg bg-blue-600 px-4 py-3 text-center font-semibold text-white hover:bg-blue-700 transition"
+								className="rounded-lg bg-blue-600 px-4 py-2 text-center font-semibold text-white hover:bg-blue-700 transition"
 							>
 								Register
 							</Link>

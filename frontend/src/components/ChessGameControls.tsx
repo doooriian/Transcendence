@@ -22,27 +22,14 @@ export default function ChessGameControls({
   onOfferDraw,
 }: ChessGameControlsProps) {
   return (
-    <div className="mx-auto mt-4 flex w-full max-w-[660px] min-w-0 flex-col items-stretch gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <div className={`flex min-w-0 items-center gap-3 rounded-2xl border border-white/20 container-theme-${theme} px-3 py-2 shadow-lg backdrop-blur-lg sm:px-5 sm:py-3`}>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-400 text-xl font-bold sm:h-12 sm:w-12">
-          T
-        </div>
-        <div>
-          <p className="text-base font-bold sm:text-lg">You</p>
-        </div>
-      </div>
-
-      <div className="flex min-w-0 flex-col items-stretch gap-2 sm:items-start sm:gap-3">
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+    <div className="mx-auto mt-4 w-full max-w-[460px] sm:mt-6">
+      <div className="rounded-2xl border-8 border-olive-950 bg-black p-2 shadow-2xl ring-4 ring-purple-500/20">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button
             type="button"
             disabled={game.chess.isGameFinished}
             onClick={onResign}
-            className={`min-w-0 rounded-xl border border-white/20 container-theme-${theme} px-2 py-3 text-sm font-semibold shadow-lg backdrop-blur-lg transition-all sm:px-5 sm:text-base ${
-                game.chess.isGameFinished
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:opacity-90 sm:hover:scale-105"
-            }`}
+            className="min-h-12 rounded-xl bg-gradient-to-r from-cyan-900 to-teal-500 px-4 font-semibold text-white shadow-lg transition-all hover:from-emerald-600 hover:to-green-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Give up
           </button>
@@ -50,20 +37,36 @@ export default function ChessGameControls({
           <button
             type="button"
             onClick={onOfferDraw}
-            disabled={!myColor || !game.black || game.chess.isGameFinished || Boolean(game.bot) || game.chess.currentPlayerColor !== myColor || game.draw.offer !== null || drawOffersMade >= game.draw.maxOffers}
-            title={game.bot ? "Draw offers are only available in two-player games." : "Offer your opponent a draw"}
-            className={`min-w-0 rounded-xl bg-gradient-to-r px-2 py-3 text-sm font-semibold shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:text-base ${drawButtonColors}`}
+            disabled={
+              !myColor ||
+              !game.black ||
+              game.chess.isGameFinished ||
+              Boolean(game.bot) ||
+              game.chess.currentPlayerColor !== myColor ||
+              game.draw.offer !== null ||
+              drawOffersMade >= game.draw.maxOffers
+            }
+            title={
+              game.bot
+                ? "Draw offers are only available in two-player games."
+                : "Offer your opponent a draw"
+            }
+            className={`min-h-12 rounded-xl bg-gradient-to-r px-4 font-semibold text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${drawButtonColors}`}
           >
             Offer draw ({drawOffersMade}/{game.draw.maxOffers})
           </button>
         </div>
+      </div>
 
-        {!game.chess.isGameFinished && game.draw.offer?.offeredBy === myAuthId && (
-          <p className="max-w-xs text-sm text-amber-300" role="status">
-            Draw offer sent. Waiting for your opponent’s response…
+      {!game.chess.isGameFinished &&
+        game.draw.offer?.offeredBy === myAuthId && (
+          <p
+            className={`mt-3 rounded-xl border border-white/20 container-theme-${theme} px-4 py-3 text-center text-sm text-amber-300`}
+            role="status"
+          >
+            Draw offer sent. Waiting for your opponent&apos;s response...
           </p>
         )}
-      </div>
     </div>
   );
 }

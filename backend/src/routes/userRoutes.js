@@ -9,6 +9,8 @@ import {
 
 const SEARCH_MIN_LENGTH = 2;
 const SEARCH_RESULT_LIMIT = 3;
+const SEARCH_MAX_LENGTH = 20;
+const SEARCH_REGEX = /^[a-zA-Z0-9_]+$/;
 
 const router = express.Router();
 
@@ -32,9 +34,13 @@ router.get("/", async (req, res) => {
 
   const username = query.trim();
 
-  if (username.length < SEARCH_MIN_LENGTH) {
+  if (
+    username.length < SEARCH_MIN_LENGTH ||
+    username.length > SEARCH_MAX_LENGTH ||
+    !SEARCH_REGEX.test(username)
+  ) {
     return res.status(400).json({
-      message: `Username query must contain at least ${SEARCH_MIN_LENGTH} characters`,
+      message: "Invalid username query",
     });
   }
 
@@ -58,7 +64,9 @@ router.get("/", async (req, res) => {
     res.json({ users });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -68,10 +76,18 @@ router.get("/", async (req, res) => {
  * Authentication is required before accessing this route.
  */
 router.get("/:username", async (req, res) => {
+  const usernameValidation = validateUsername(req.params.username);
+
+  if (usernameValidation.error) {
+    return res.status(400).json({
+      message: usernameValidation.error,
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: {
-        username: req.params.username,
+        username: usernameValidation.username,
       },
       select: {
         id: true,
@@ -89,7 +105,9 @@ router.get("/:username", async (req, res) => {
     res.json({ user });
   } catch (err) {
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -221,7 +239,9 @@ router.patch("/me", async (req, res) => {
     }
 
     console.error(err.message);
-    res.sendStatus(500);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 

@@ -13,11 +13,14 @@ type PromotionDialogProps = {
   onPromote: (pieceType: PromotionPiece) => void;
 };
 
-const promotionChoices: { type: PromotionPiece; label: string }[] = [
-  { type: "queen", label: "Dame" },
-  { type: "rook", label: "Tour" },
-  { type: "bishop", label: "Fou" },
-  { type: "knight", label: "Cavalier" },
+const promotionChoices: {
+  type: PromotionPiece;
+  label: string;
+}[] = [
+  { type: "queen", label: "Queen" },
+  { type: "rook", label: "Rook" },
+  { type: "bishop", label: "Bishop" },
+  { type: "knight", label: "Knight" },
 ];
 
 export default function PromotionDialog({
@@ -26,7 +29,9 @@ export default function PromotionDialog({
   pieceImages,
   onPromote,
 }: PromotionDialogProps) {
-  if (!promotionSquare) return null;
+  if (!promotionSquare) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-4 backdrop-blur-sm">
@@ -39,7 +44,9 @@ export default function PromotionDialog({
           {promotionChoices.map(({ type, label }) => (
             <button
               key={type}
+              type="button"
               onClick={() => onPromote(type)}
+              aria-label={`Promote to ${label}`}
               className={`flex h-20 min-w-0 items-center justify-center rounded-xl border border-white/20 container-theme-${theme} shadow-lg transition hover:opacity-90 sm:h-28 sm:w-24 sm:rounded-2xl sm:hover:scale-110`}
             >
               <img

@@ -36,8 +36,7 @@ function Friends() {
 
       setFriends(result.friends);
       setError("");
-    } catch (error) {
-      console.error(error);
+    } catch {
       setError("Unable to reach server");
     }
   }
@@ -54,8 +53,7 @@ function Friends() {
       setReceived(result.received);
       setSent(result.sent);
       setError("");
-    } catch (error) {
-      console.error(error);
+    } catch {
       setError("Unable to reach server");
     }
   }
@@ -82,48 +80,64 @@ function Friends() {
   }, []);
 
   async function handleAccept(id: number) {
-    const result = await acceptFriendRequest(id);
+    try {
+      const result = await acceptFriendRequest(id);
 
-    if (!result.ok) {
-      setError(result.data.message);
-      return;
+      if (!result.ok) {
+        setError(result.data.message);
+        return;
+      }
+
+      await loadFriends();
+      await loadRequests();
+    } catch {
+      setError("Unable to reach server");
     }
-
-    await loadFriends();
-    await loadRequests();
   }
 
   async function handleReject(id: number) {
-    const result = await deleteFriendRequest(id);
+    try {
+      const result = await deleteFriendRequest(id);
 
-    if (!result.ok) {
-      setError(result.data.message);
-      return;
+      if (!result.ok) {
+        setError(result.data.message);
+        return;
+      }
+
+      await loadRequests();
+    } catch {
+      setError("Unable to reach server");
     }
-
-    await loadRequests();
   }
 
   async function handleCancel(id: number) {
-    const result = await deleteFriendRequest(id);
+    try {
+      const result = await deleteFriendRequest(id);
 
-    if (!result.ok) {
-      setError(result.data.message);
-      return;
+      if (!result.ok) {
+        setError(result.data.message);
+        return;
+      }
+
+      await loadRequests();
+    } catch {
+      setError("Unable to reach server");
     }
-
-    await loadRequests();
   }
 
   async function handleRemove(username: string) {
-    const result = await removeFriend(username);
+    try {
+      const result = await removeFriend(username);
 
-    if (!result.ok) {
-      setError(result.data.message);
-      return;
+      if (!result.ok) {
+        setError(result.data.message);
+        return;
+      }
+
+      await loadFriends();
+    } catch {
+      setError("Unable to reach server");
     }
-
-    await loadFriends();
   }
 
   const selectedFriend = friends.find(

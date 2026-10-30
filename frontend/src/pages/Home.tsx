@@ -26,7 +26,7 @@ function Home() {
 						</p>
 
 						<h1 className="mt-4 text-4xl font-bold leading-tight sm:text-6xl md:text-7xl">
-							<span className="">♟ Play Chess.</span>
+							<span>♟ Play Chess.</span>
 							<br />
 							<span className={`text-accent-${theme}`}>
 								Challenge Everyone.
@@ -60,7 +60,7 @@ function Home() {
 									</Link>
 
 									<Link
-										to={`/profile/${username}`}
+										to={`/profile/${encodeURIComponent(username ?? "")}`}
 										className="rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 text-base font-semibold transition hover:bg-slate-700 sm:px-8 sm:py-4 sm:text-lg"
 									>
 										View Profile
