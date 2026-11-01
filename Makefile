@@ -49,8 +49,8 @@ fclean:
 
 re: fclean all
 
-# On Windows, install cloudflared if missing, then start a temporary public tunnel.
+# Start a temporary public tunnel through Docker.
 tunnel:
-	powershell -NoProfile -Command "if (-not (Get-Command cloudflared -ErrorAction SilentlyContinue)) { winget install --exact --id Cloudflare.cloudflared; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; $$env:Path += ';' + [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + [Environment]::GetEnvironmentVariable('Path', 'Machine'); }; cloudflared tunnel --url https://localhost:8443 --http-host-header localhost --no-tls-verify"
+	docker run --rm --add-host=host.docker.internal:host-gateway cloudflare/cloudflared:latest tunnel --no-autoupdate --url https://host.docker.internal:8443 --http-host-header localhost --no-tls-verify
 
 .PHONY: all up build down stop start restart ps logs logs-frontend logs-backend logs-db db clean fclean re tunnel
