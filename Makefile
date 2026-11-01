@@ -50,7 +50,8 @@ fclean:
 re: fclean all
 
 # Start a temporary public tunnel through Docker.
-tunnel:
+tunnel_win:
 	docker run --rm --add-host=host.docker.internal:host-gateway cloudflare/cloudflared:latest tunnel --no-autoupdate --url https://host.docker.internal:8443 --http-host-header localhost --no-tls-verify
 
-.PHONY: all up build down stop start restart ps logs logs-frontend logs-backend logs-db db clean fclean re tunnel
+
+.PHONY: all up build down stop start restart ps logs logs-frontend logs-backend logs-db db clean fclean re tunnel tunnelv2
