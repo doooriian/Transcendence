@@ -1,16 +1,33 @@
-# ft_transcendence
+<div align="center">
 
-> **42 School project** · Full-stack development · Real-time multiplayer · Team of 4
+<a href="https://42.fr/"><img src="https://raw.githubusercontent.com/doooriian/42-Badges/main/badges/ft_transcendencem.png" alt="Transcendence 42 badge" width="125" /></a>
+
+# Transcendence
+
+**42 School · ♟️ Full-stack chess project**
+
+<img src="https://img.shields.io/badge/42_Project-Full--stack%20%7C%20Real--time-2563EB?style=flat-square" alt="Transcendence technology" />
+<img src="https://img.shields.io/badge/Documentation-Project_Overview-334155?style=flat-square" alt="Project documentation" />
+
+</div>
+
+---
 
 An online chess platform built around authenticated accounts, real-time interactions and a containerized web infrastructure.
 
-## Overview
+
+---
+
+## 🔎 Overview
 
 This application brings together several backend engineering challenges: account security, persistent relational data, live messaging, multiplayer synchronization, reconnection handling and HTTPS deployment.
 
 It was developed as a **four-person 42 project**. The chess rules and game engine, frontend experience, backend services and visual design were implemented collaboratively by different team members.
 
-## Features
+
+---
+
+## ✨ Features
 
 - Registration, login and profile management using JWT and Argon2
 - Friends, requests and online presence
@@ -19,7 +36,10 @@ It was developed as a **four-person 42 project**. The chess rules and game engin
 - Chess rules powered by `chess.js` and an AI opponent using Stockfish
 - Responsive React frontend and HTTPS reverse proxy
 
-## Technical approach
+
+---
+
+## 🧩 Technical approach
 
 ```text
                    HTTPS / WSS
@@ -44,7 +64,10 @@ It was developed as a **four-person 42 project**. The chess rules and game engin
 
 PostgreSQL persists users, profiles and social relationships. Active games and chat messages are held in backend memory rather than being stored as history.
 
-## Build and usage
+
+---
+
+## 🚀 Build and usage
 
 **Requirements:** Docker, Docker Compose, Make and a recent browser.
 
@@ -67,13 +90,19 @@ Open **https://localhost:8443** by default. Caddy uses a local certificate autho
 
 `make fclean` removes application images and persistent Docker volumes, including database data.
 
-## Verification
+
+---
+
+## 🧪 Verification
 
 The project was tested manually as a team through user registration, authentication, friends, chat, local and remote chess games, connection loss and recovery, AI games and browser compatibility.
 
 The repository currently has **no automated CI test suite**. The frontend provides `npm run lint` and `npm run build` scripts, which can be used for local checks.
 
-## Team and contributions
+
+---
+
+## 👥 Team and contributions
 
 | Member | Primary contribution |
 | --- | --- |
@@ -86,18 +115,27 @@ My primary responsibility was building and integrating the backend and infrastru
 
 The team used feature branches, pull requests and a shared `dev` integration branch.
 
-## Notes and limitations
+
+---
+
+## ⚠️ Notes and limitations
 
 - Active chess games are lost when the backend restarts
 - Chat history and match history are not persisted
 - Local HTTPS certificate trust may require manual configuration
 - The implementation is a 42 learning project rather than a production-operated service
 
-## Further documentation
+
+---
+
+## 📚 Further documentation
 
 [Detailed project documentation](docs/PROJECT_DETAILS.md) includes the original architecture breakdown, database models, 42 module mapping, individual contribution details, testing notes, references and AI usage disclosure.
 
-## Resources and AI usage
+
+---
+
+## 📚 Resources and AI usage
 
 Documentation and technical references include [React](https://react.dev/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/docs/v4/), [Prisma](https://www.prisma.io/docs), [Docker](https://docs.docker.com/) and [Caddy](https://caddyserver.com/docs/).
 
@@ -105,4 +143,8 @@ AI tools were used as supplementary resources for research, troubleshooting, edg
 
 ---
 
-Part of the [42 curriculum](https://42.fr/). Explore the other projects on [my GitHub profile](https://github.com/doooriian).
+<div align="center">
+
+<sub>Part of the <a href="https://42.fr/">42 curriculum</a> · <a href="https://github.com/doooriian">Back to my GitHub profile</a></sub>
+
+</div>
