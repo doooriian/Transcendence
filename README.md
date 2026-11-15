@@ -2,30 +2,22 @@
 
 <a href="https://42.fr/"><img src="https://raw.githubusercontent.com/doooriian/42-Badges/main/badges/ft_transcendencem.png" alt="Transcendence 42 badge" width="125" /></a>
 
-# Transcendence
+# ft_transcendence
 
-**42 School · ♟️ Full-stack chess project**
+**42 School project · Real-time multiplayer chess**
 
 <img src="https://img.shields.io/badge/42_Project-Full--stack%20%7C%20Real--time-2563EB?style=flat-square" alt="Transcendence technology" />
 <img src="https://img.shields.io/badge/Documentation-Project_Overview-334155?style=flat-square" alt="Project documentation" />
 
 </div>
 
----
-
 An online chess platform built around authenticated accounts, real-time interactions and a containerized web infrastructure.
-
-
----
 
 ## 🔎 Overview
 
 This application brings together several backend engineering challenges: account security, persistent relational data, live messaging, multiplayer synchronization, reconnection handling and HTTPS deployment.
 
 It was developed as a **four-person 42 project**. The chess rules and game engine, frontend experience, backend services and visual design were implemented collaboratively by different team members.
-
-
----
 
 ## ✨ Features
 
@@ -35,9 +27,6 @@ It was developed as a **four-person 42 project**. The chess rules and game engin
 - Multiplayer session and reconnection handling
 - Chess rules powered by `chess.js` and an AI opponent using Stockfish
 - Responsive React frontend and HTTPS reverse proxy
-
-
----
 
 ## 🧩 Technical approach
 
@@ -64,9 +53,6 @@ It was developed as a **four-person 42 project**. The chess rules and game engin
 
 PostgreSQL persists users, profiles and social relationships. Active games and chat messages are held in backend memory rather than being stored as history.
 
-
----
-
 ## 🚀 Build and usage
 
 **Requirements:** Docker, Docker Compose, Make and a recent browser.
@@ -90,17 +76,11 @@ Open **https://localhost:8443** by default. Caddy uses a local certificate autho
 
 `make fclean` removes application images and persistent Docker volumes, including database data.
 
-
----
-
 ## 🧪 Verification
 
 The project was tested manually as a team through user registration, authentication, friends, chat, local and remote chess games, connection loss and recovery, AI games and browser compatibility.
 
 The repository currently has **no automated CI test suite**. The frontend provides `npm run lint` and `npm run build` scripts, which can be used for local checks.
-
-
----
 
 ## 👥 Team and contributions
 
@@ -115,9 +95,6 @@ My primary responsibility was building and integrating the backend and infrastru
 
 The team used feature branches, pull requests and a shared `dev` integration branch.
 
-
----
-
 ## ⚠️ Notes and limitations
 
 - Active chess games are lost when the backend restarts
@@ -125,15 +102,9 @@ The team used feature branches, pull requests and a shared `dev` integration bra
 - Local HTTPS certificate trust may require manual configuration
 - The implementation is a 42 learning project rather than a production-operated service
 
-
----
-
 ## 📚 Further documentation
 
 [Detailed project documentation](docs/PROJECT_DETAILS.md) includes the original architecture breakdown, database models, 42 module mapping, individual contribution details, testing notes, references and AI usage disclosure.
-
-
----
 
 ## 📚 Resources and AI usage
 
