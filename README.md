@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://42.fr/"><img src="https://raw.githubusercontent.com/doooriian/42-Badges/main/badges/ft_transcendencee.png" width="125" alt="ft_transcendence 42 badge" /></a>
+<a href="https://42.fr/"><img src="https://raw.githubusercontent.com/doooriian/42-Badges/main/badges/ft_transcendencem.png" width="125" alt="ft_transcendence 42 badge" /></a>
 
 # ft_transcendence
 
