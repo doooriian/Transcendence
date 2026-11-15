@@ -1,10 +1,22 @@
-*This project has been created as part of the 42 curriculum by doley, yel-mens, amairia, alexfuen.*
+<div align="center">
 
-# ft_transcendence — ft_chess
+<a href="https://42.fr/"><img src="https://raw.githubusercontent.com/doooriian/42-Badges/main/badges/ft_transcendencee.png" width="125" alt="ft_transcendence 42 badge" /></a>
 
-## Description
+# ft_transcendence
 
-**ft_chess** is a full-stack multiplayer chess web application developed for the 42 `ft_transcendence` project.
+**Full-stack multiplayer chess · Team of four**
+
+<img src="https://img.shields.io/badge/42%20School-Project-2563EB?style=flat-square" alt="42 School project" />
+
+</div>
+
+---
+
+*This project was created as part of the 42 curriculum by doley, yel-mens, amairia and alexfuen.*
+
+## 🔎 Description
+
+**ft_transcendence** is a full-stack multiplayer chess web application developed for the 42 `ft_transcendence` project.
 
 Users can create an account, manage their profile and friends, chat in real time, play chess remotely against another user, or play against a Stockfish AI opponent.
 
@@ -27,7 +39,7 @@ The application is designed as a complete client/server system with secure authe
 
 ---
 
-## Team Information
+## 👥 Team Information
 
 | Member | 42 login | Role | Main responsibilities |
 | --- | --- | --- | --- |
@@ -38,7 +50,7 @@ The application is designed as a complete client/server system with secure authe
 
 ---
 
-## Project Management
+## 🤝 Project Management
 
 Work was divided according to each member's main area of responsibility, while features requiring both frontend and backend work were integrated collaboratively.
 
@@ -65,7 +77,7 @@ Team communication was handled through a **Discord group and voice calls**, whic
 
 ---
 
-## Technical Stack
+## 🛠️ Technical Stack
 
 ### Frontend
 
@@ -113,7 +125,7 @@ Docker Compose provides a reproducible single-command deployment, while Caddy ce
 
 ---
 
-## Architecture
+## 🧩 Architecture
 
 ```text
                          HTTPS / WSS
@@ -150,7 +162,7 @@ The Docker environment contains four services:
 
 ---
 
-## Database Schema
+## 🗄️ Database Schema
 
 Persistent data is limited to accounts, profiles and social relationships.
 
@@ -219,7 +231,7 @@ Foreign-key relations use cascading deletion where appropriate.
 
 ---
 
-## Features
+## ✨ Features
 
 | Feature | Description | Main contributors |
 | --- | --- | --- |
@@ -415,7 +427,7 @@ Dorian primarily implemented the backend Socket.IO synchronization, while Yacine
 
 ---
 
-## Individual Contributions
+## 👥 Individual Contributions
 
 ### Dorian — `doley`
 
@@ -512,7 +524,7 @@ His main challenge was integrating a consistent visual identity into an already 
 
 # Instructions
 
-## Requirements
+## 📋 Requirements
 
 The project requires:
 
@@ -527,12 +539,12 @@ Firefox and Microsoft Edge are also supported and were tested for the additional
 
 ---
 
-## Environment Configuration
+## ⚙️ Environment Configuration
 
 Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/doooriian/Transcendence.git
 cd Transcendence
 ```
 
@@ -561,7 +573,7 @@ For testing from another computer on the same network, set `APP_HOST` to the hos
 
 ---
 
-## Start the Application
+## 🚀 Start the Application
 
 Build and start all services with:
 
@@ -593,7 +605,7 @@ Each browser or device may require this once.
 
 ---
 
-## Useful Make Commands
+## 🧰 Useful Make Commands
 
 ```bash
 make
@@ -650,7 +662,7 @@ Perform a full reset and rebuild.
 
 ---
 
-## Data Persistence
+## 💾 Data Persistence
 
 The PostgreSQL Docker volume persists:
 
@@ -666,7 +678,7 @@ They exist only while their in-memory server state is available.
 
 ---
 
-## Security
+## 🔐 Security
 
 The project includes:
 
@@ -685,7 +697,7 @@ No sensitive production credentials are stored in the repository.
 
 ---
 
-## Testing
+## 🧪 Testing
 
 Before the final delivery, the project was manually tested for the main user flows:
 
@@ -709,7 +721,7 @@ Before the final delivery, the project was manually tested for the main user flo
 
 ---
 
-## Known Limitations
+## ⚠️ Known Limitations
 
 - Chess game history and statistics are not persisted.
 - Chat history is not persisted.
@@ -735,7 +747,7 @@ Main documentation and references used during development:
 - chess.js — https://github.com/jhlywa/chess.js
 - Stockfish — https://github.com/official-stockfish/Stockfish
 
-## AI Usage
+## 🤖 AI Usage
 
 AI tools were used as a supplementary resource during the project, mainly for technical research, troubleshooting, reviewing edge cases, checking project requirements and assisting with documentation.
 
@@ -743,7 +755,7 @@ The team remained responsible for the technical decisions, implementation and fi
 
 ---
 
-## License and Credits
+## 📄 License and Credits
 
 Stockfish is distributed under the **GNU General Public License v3 (GPLv3)**.
 

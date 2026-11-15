@@ -1,0 +1,3 @@
+# Documentation ownership — enforcement requires a branch ruleset or protection rule.
+/README.md @doooriian
+/.github/CODEOWNERS @doooriian
